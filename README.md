@@ -105,15 +105,25 @@ install or keep running, and you get an `https://` address that works at home an
 
 1. Click **Deploy to Cloudflare** and sign in (a free account is fine). It copies this folder
    into your own GitHub account and deploys it.
-2. When asked, fill in **OCTOPUS_API_KEY** (your `sk_live_…` key) and **RELAY_TOKEN** (make up a
-   long random password). If you weren't asked: open the Worker in the Cloudflare dashboard →
+2. When asked, fill in **OCTOPUS_API_KEY** (your `sk_live_…` key) and **RELAY_TOKEN**.
+   **You make the relay token up yourself** — it's just a password that stops strangers reading
+   your usage, and you'll add it to your address as `?token=…`. Use letters and numbers only,
+   about 30 characters. To generate one on Windows, run this in PowerShell:
+   `-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 32 | % {[char]$_})`
+   Type the values in yourself — don't let the browser autofill a saved password here.
+   If you weren't asked: open the Worker in the Cloudflare dashboard →
    **Settings → Variables and Secrets → Add**, type **Secret**, and add both.
 3. Your address is shown after deploying, e.g. `https://octopus-live.yourname.workers.dev`.
    Open `https://octopus-live.yourname.workers.dev/?token=YOUR-TOKEN` to check it.
-4. Put that full address (with `?token=…`) into the apps — see *Point your devices at it* below.
+4. Put that full address (with `?token=…`) into the apps — see *Point your devices at a relay* below.
 
 It only calls Octopus when one of your devices asks, at most once a minute, so it stays well
 inside both Octopus's limit and Cloudflare's free allowance (100,000 requests a day).
+
+**Connected the repository yourself instead of using the button?** In the Worker's **Settings →
+Build**, set **Root directory** to `/worker` and **Deploy command** to `npx wrangler deploy`,
+then redeploy. You'll know it worked when **Settings → Bindings** lists a Durable Object called
+`RELAY`. Add the two secrets under **Settings → Variables and Secrets**.
 
 Prefer the command line? `cd worker && npm install && npx wrangler deploy`, then
 `npx wrangler secret put OCTOPUS_API_KEY` and `npx wrangler secret put RELAY_TOKEN`.

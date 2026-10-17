@@ -24,6 +24,13 @@ else
   echo "Keeping existing settings in /etc/octopus-relay.env"
 fi
 
+# A token is required before exposing the relay to the internet (e.g. via a Cloudflare tunnel).
+if ! grep -qE '^RELAY_TOKEN=.+' /etc/octopus-relay.env; then
+  token="$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')"
+  sed -i "s|^RELAY_TOKEN=.*|RELAY_TOKEN=${token}|" /etc/octopus-relay.env
+  echo "Generated a relay token (stored in /etc/octopus-relay.env)"
+fi
+
 systemctl daemon-reload
 systemctl enable --now octopus-relay
 systemctl restart octopus-relay
@@ -39,6 +46,9 @@ fi
 echo
 systemctl --no-pager --lines=5 status octopus-relay || true
 echo
-echo "Done. Server address for your devices:  http://${IP}:${PORT}"
+TOKEN="$(grep -E '^RELAY_TOKEN=' /etc/octopus-relay.env | cut -d= -f2)"
+Q=""; [[ -n "$TOKEN" ]] && Q="/?token=${TOKEN}"
+echo "Done. Server address for your devices (home network):  http://${IP}:${PORT}${Q}"
 echo "Open it in a browser to check it's working."
+echo "Publishing it through a Cloudflare tunnel? Use  https://YOUR-HOSTNAME${Q}"
 echo "Logs:  journalctl -u octopus-relay -f"

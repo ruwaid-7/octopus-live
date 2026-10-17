@@ -12,6 +12,7 @@ instead of each calling Octopus themselves.
 Python 3.8+ standard library only. Configure with environment variables (see octopus-relay.env).
 """
 
+import hmac
 import json
 import os
 import sys
@@ -306,7 +307,7 @@ class Handler(BaseHTTPRequestHandler):
         url = urlparse(self.path)
         if RELAY_TOKEN:
             token = (parse_qs(url.query).get("token") or [""])[0] or self.headers.get("X-Relay-Token", "")
-            if token != RELAY_TOKEN:
+            if not hmac.compare_digest(token.encode(), RELAY_TOKEN.encode()):
                 return self._send(401, json.dumps({"ok": False, "status": "Relay token required"}), "application/json")
         path = url.path.rstrip("/")
         if path in ("/api/live", "/api"):

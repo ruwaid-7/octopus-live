@@ -5,7 +5,7 @@
     <string name="api_key">Octopus API key</string>
     <string name="get_key">Where do I find my API key? →</string>
     <string name="account">Account number (optional — found automatically)</string>
-    <string name="interval">Refresh every (seconds, 30–3600)</string>
+    <string name="interval">Refresh every (seconds — 60 direct, 10–15 with a relay)</string>
     <string name="start_on_boot">Start automatically after the phone restarts</string>
     <string name="save_start">Save &amp; start</string>
     <string name="stop">Stop</string>
@@ -14,7 +14,7 @@
     <string name="stopped">Stopped.</string>
     <string name="key_required">Enter your API key or a relay address</string>
     <string name="relay_label">Relay address (optional)</string>
-    <string name="relay_help">Your Octopus Live relay — a free Cloudflare Worker or your own server, e.g. https://octopus-live.you.workers.dev/?token=… The app then reads from it instead of Octopus, so it can refresh every 10 seconds and doesn\'t need your API key. See the GitHub page for setup.</string>
+    <string name="relay_help">Your Octopus Live relay — a free Cloudflare Worker or your own server, e.g. https://octopus-live-worker.you.workers.dev/?token=… The app then reads from it instead of Octopus, so it can refresh every 10 seconds and doesn\'t need your API key. See the GitHub page for setup.</string>
     <string name="notify_denied">Notifications are off for this app — enable them in Settings to see live usage.</string>
     <string name="channel_name">Live usage</string>
     <string name="channel_description">Ongoing notification with live electricity demand</string>

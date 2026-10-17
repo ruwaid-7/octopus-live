@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/app_bg"
     android:fitsSystemWindows="true"
-    android:clipToPadding="false"
+    android:clipToPadding="true"
     android:fillViewport="true"
     android:scrollbars="none">
 

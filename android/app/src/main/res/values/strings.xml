@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Octopus Live</string>
+    <string name="tagline">Live electricity from your Octopus Home Mini, in your notifications.</string>
+    <string name="api_key">Octopus API key</string>
+    <string name="get_key">Where do I find my API key? →</string>
+    <string name="account">Account number (optional — found automatically)</string>
+    <string name="interval">Refresh every (seconds, 30–3600)</string>
+    <string name="start_on_boot">Start automatically after the phone restarts</string>
+    <string name="save_start">Save &amp; start</string>
+    <string name="stop">Stop</string>
+    <string name="not_started">Not running yet. Enter your API key and tap Save &amp; start.</string>
+    <string name="connecting">Connecting to Octopus…</string>
+    <string name="stopped">Stopped.</string>
+    <string name="key_required">Enter your API key</string>
+    <string name="notify_denied">Notifications are off for this app — enable them in Settings to see live usage.</string>
+    <string name="channel_name">Live usage</string>
+    <string name="channel_description">Ongoing notification with live electricity demand</string>
+    <string name="footnote">Updates pause while the screen is off and resume when you unlock. Your API key is stored only on this phone and is sent only to Octopus Energy. Octopus limits how often its API can be called, so keep the interval at 60 seconds or more, especially if the PC widget is also running.</string>
+    <string name="widget_description">Live electricity demand and today\'s usage</string>
+</resources>

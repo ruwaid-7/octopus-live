@@ -1,0 +1,23 @@
+# Android / Gradle
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/.kotlin/
+*.iml
+*.jks
+*.keystore
+
+# Rainmeter runtime files (contain tokens / personal data)
+rainmeter/OctopusLive/@Resources/cache.json
+rainmeter/OctopusLive/@Resources/last-error.txt
+rainmeter/OctopusLive/@Resources/data.txt.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+*.zip

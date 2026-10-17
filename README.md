@@ -91,7 +91,7 @@ If you have an always-on Linux box (Ubuntu server, Raspberry Pi…), run the sma
 [`server`](server) folder. It calls Octopus once for everyone and your PC and phone read from it:
 
 ```
-Octopus API  <-- one request every 45 s --  your server (relay)  -->  PC skin, phone app, widget
+Octopus API  <-- one request a minute --  your server (relay)  -->  PC skin, phone app, widget
 ```
 
 - No rate-limit juggling: refresh the PC and phone every 10–15 s from your server.
@@ -107,6 +107,23 @@ sudo ./install.sh          # asks for your API key, starts the service
 It prints the address to use, e.g. `http://192.168.1.50:8765`. Settings live in
 `/etc/octopus-relay.env`; logs: `journalctl -u octopus-relay -f`. To update later:
 `git pull && sudo ./install.sh`.
+
+**Or run it in Docker** (handy if your other services are containers): see
+[`server/docker-compose.yml`](server/docker-compose.yml).
+
+**Use it from anywhere with a Cloudflare tunnel** (no VPN needed on your phone):
+1. Make sure `RELAY_TOKEN` is set in `/etc/octopus-relay.env` (the installer generates one).
+2. In Cloudflare **Zero Trust → Networks → Tunnels → your tunnel → Routes → Add route →
+   Published application**: subdomain e.g. `energy`, your domain, service URL
+   `http://octopus-relay:8765` if cloudflared runs in Docker on the same network as the relay
+   container, or `http://SERVER-LAN-IP:8765` otherwise.
+3. Check DNS has a Tunnel/CNAME record for that name (Cloudflare usually adds it). Don't delete
+   the route or record afterwards — removing one can remove the other.
+4. Test from outside: `https://energy.yourdomain/?token=YOURTOKEN` should show the status page,
+   and without the token it should say "Relay token required".
+
+If a new hostname shows "can't be reached" at home but works on mobile data, your router is
+still caching the earlier "not found" answer — it clears within about 30 minutes.
 
 **Point your devices at it:**
 - **Rainmeter:** set `RelayUrl=http://192.168.1.50:8765` in `Settings.inc`, and `Interval=15`.

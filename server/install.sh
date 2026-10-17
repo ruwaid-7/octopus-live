@@ -37,7 +37,9 @@ systemctl restart octopus-relay
 sleep 3
 
 PORT="$(grep -E '^RELAY_PORT=' /etc/octopus-relay.env | cut -d= -f2)"; PORT="${PORT:-8765}"
-IP="$(hostname -I | awk '{print $1}')"
+# LAN address (the interface used for the default route), not a Docker bridge
+IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<NF;i++) if($i=="src"){print $(i+1); exit}}')"
+[[ -n "$IP" ]] || IP="$(hostname -I | awk '{print $1}')"
 
 if command -v ufw >/dev/null && ufw status | grep -q "Status: active"; then
   ufw allow "${PORT}/tcp" comment "Octopus Live relay" >/dev/null && echo "Opened port ${PORT} in ufw"

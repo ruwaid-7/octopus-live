@@ -27,12 +27,13 @@ from urllib.parse import parse_qs, urlparse
 API_URL = os.environ.get("OCTOPUS_API_URL", "https://api.octopus.energy/v1/graphql/")
 API_KEY = os.environ.get("OCTOPUS_API_KEY", "").strip()
 ACCOUNT = os.environ.get("OCTOPUS_ACCOUNT", "").strip()
-POLL_SECONDS = max(30, int(os.environ.get("POLL_SECONDS", "45")))   # ~80 requests/hour at 45 s
+POLL_SECONDS = max(30, int(os.environ.get("POLL_SECONDS", "60")))   # 1 telemetry request per poll
+RESYNC_SECONDS = 30 * 60                                              # re-check today's total from half-hourly data
 GAS_SECONDS = 30 * 60                                                 # gas meters report every 30 min
 HOST = os.environ.get("RELAY_HOST", "0.0.0.0")
 PORT = int(os.environ.get("RELAY_PORT", "8765"))
 RELAY_TOKEN = os.environ.get("RELAY_TOKEN", "").strip()              # optional shared secret
-VERSION = "1.4"
+VERSION = "1.5"
 
 
 def log(msg):
@@ -59,6 +60,13 @@ class Octopus:
         self.token_expires = 0.0
         self.elec_id = None
         self.gas_id = None            # "" = no smart gas meter
+        # "Today" for electricity is kept up to date from the meter's running total, so only the
+        # live reading is fetched each poll; the half-hourly total is re-checked every 30 minutes.
+        self.sync_day = None
+        self.sync_time = 0.0
+        self.sync_today_wh = 0.0
+        self.sync_meter_wh = None
+        self.last_today_wh = 0.0
         self.gas_kwh = None
         self.gas_at = None
         self.gas_kw = None            # average gas power over the latest half-hour
@@ -162,17 +170,36 @@ class Octopus:
 
     def _fetch_elec(self):
         now = datetime.now().astimezone()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         i = self.clean(self.elec_id)
-        d = self.gql(
-            'query { live: smartMeterTelemetry(deviceId: "%s") { readAt demand consumption } '
-            'today: smartMeterTelemetry(deviceId: "%s", grouping: HALF_HOURLY, start: "%s", end: "%s") { readAt consumptionDelta } }'
-            % (i, i, iso(start), iso(now)))
+        need_sync = (self.sync_day != now.date().isoformat() or self.sync_meter_wh is None
+                     or time.time() - self.sync_time >= RESYNC_SECONDS)
+        if need_sync:
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            d = self.gql(
+                'query { live: smartMeterTelemetry(deviceId: "%s") { readAt demand consumption } '
+                'today: smartMeterTelemetry(deviceId: "%s", grouping: HALF_HOURLY, start: "%s", end: "%s") { readAt consumptionDelta } }'
+                % (i, i, iso(start), iso(now)))
+        else:
+            d = self.gql('query { live: smartMeterTelemetry(deviceId: "%s") { readAt demand consumption } }' % i)
         live = [r for r in d.get("live") or [] if r]
         if not live:
             raise ApiError("No live reading - is the Home Mini online?")
         live = max(live, key=lambda r: r.get("readAt") or "")
-        today_wh = sum(float(r["consumptionDelta"]) for r in d.get("today") or [] if r and r.get("consumptionDelta") is not None)
+        meter_wh = float(live["consumption"]) if live.get("consumption") is not None else None
+
+        if need_sync:
+            today_wh = sum(float(r["consumptionDelta"]) for r in d.get("today") or []
+                           if r and r.get("consumptionDelta") is not None)
+            self.sync_day, self.sync_time = now.date().isoformat(), time.time()
+            self.sync_today_wh, self.sync_meter_wh = today_wh, meter_wh
+        elif meter_wh is not None and meter_wh >= self.sync_meter_wh:
+            today_wh = self.sync_today_wh + (meter_wh - self.sync_meter_wh)
+        else:
+            # Meter total missing or went backwards: keep the last figure, re-check next poll
+            today_wh = self.last_today_wh
+            self.sync_meter_wh = None
+        self.last_today_wh = today_wh
+
         demand = live.get("demand")
         demand = round(float(demand)) if demand is not None else None
         read_at = parse_dt(live.get("readAt"))

@@ -171,6 +171,7 @@ class LiveService : Service() {
             if (r != null) {
                 append(String.format(Locale.UK, "Today %.2f kWh", r.todayKwh))
                 r.gasTodayKwh?.let { append(String.format(Locale.UK, "  ·  Gas %.2f kWh", it)) }
+                r.gasKw?.let { if (r.gasTodayKwh != null) append(String.format(Locale.UK, " (%.1f kW)", it)) }
                 append("  ·  meter ").append(r.readAt)
             }
             if (lastError != null) {
@@ -238,6 +239,7 @@ class LiveService : Service() {
             r.gasTodayKwh?.let { gas ->
                 sb.append(String.format(Locale.UK, "\nGas today: %.2f kWh", gas))
                 r.gasReadAt?.let { sb.append(" (to ").append(it).append(")") }
+                r.gasKw?.let { sb.append(String.format(Locale.UK, "\nGas rate: %.1f kW (last half-hour)", it)) }
             }
             sb.append("\nMeter reading at ").append(r.readAt)
             if (r.viaServer) sb.append("  ·  via home server")

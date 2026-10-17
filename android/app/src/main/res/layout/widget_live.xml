@@ -56,25 +56,84 @@
         tools:visibility="visible" />
     </LinearLayout>
 
-    <!-- 2. ABOVE FOOTER: Horizontal Power Load Bar (0 - 4000W) -->
-    <ProgressBar
-        android:id="@+id/widgetBar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <!-- 2. ABOVE FOOTER: two bars - electricity (live, 0-4 kW) and gas (latest half-hour, 0-10 kW) -->
+    <LinearLayout
+        android:id="@+id/widgetBars"
         android:layout_width="match_parent"
-        android:layout_height="5dp"
+        android:layout_height="wrap_content"
         android:layout_above="@id/widgetFooterRow"
-        android:layout_marginTop="6dp"
-        android:layout_marginBottom="6dp"
-        android:indeterminate="false"
-        android:max="4000"
-        android:progress="850"
-        android:progressDrawable="@drawable/bg_widget_progress" />
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="26dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:text="ELEC"
+                android:textColor="@color/octopus_text_secondary"
+                android:textSize="7sp"
+                tools:ignore="SmallSp" />
+
+            <ProgressBar
+                android:id="@+id/widgetBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="5dp"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="4000"
+                android:progress="850"
+                android:progressDrawable="@drawable/bg_widget_progress" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/widgetGasBarRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="26dp"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif"
+                android:textStyle="bold"
+                android:includeFontPadding="false"
+                android:text="GAS"
+                android:textColor="@color/gas_orange"
+                android:textSize="7sp"
+                tools:ignore="SmallSp" />
+
+            <ProgressBar
+                android:id="@+id/widgetGasBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="5dp"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="100"
+                android:progress="30"
+                android:progressDrawable="@drawable/bg_widget_progress_gas" />
+        </LinearLayout>
+    </LinearLayout>
 
     <!-- 3. FLEXIBLE TOP/CENTER AREA: Main Metrics Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/widgetBar"
+        android:layout_above="@id/widgetBars"
         android:layout_alignParentTop="true"
         android:baselineAligned="false"
         android:gravity="center_vertical"

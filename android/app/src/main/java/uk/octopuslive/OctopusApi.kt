@@ -20,6 +20,7 @@ data class Reading(
     val gasTodayKwh: Double? = null,   // null = no smart gas meter / not known yet
     val gasReadAt: String? = null,     // local HH:mm of the latest half-hourly gas reading
     val viaServer: Boolean = false,    // true = read from your own relay server
+    val gasKw: Double? = null,         // average gas power over the latest half-hour
 )
 
 class ApiException(message: String, val code: String? = null) : Exception(message)
@@ -80,6 +81,7 @@ class OctopusApi(context: Context) {
                 gasTodayKwh = if (hasGas) j.optDouble("gasKwh", 0.0).let { if (it.isNaN()) 0.0 else it } else null,
                 gasReadAt = if (hasGas) hhmm(j.optString("gasAt", null)) else null,
                 viaServer = true,
+                gasKw = if (hasGas) j.optDouble("gasKw", 0.0).let { if (it.isNaN()) 0.0 else it } else null,
             )
         } finally {
             conn.disconnect()
@@ -143,7 +145,7 @@ class OctopusApi(context: Context) {
 
         return Reading(
             demand, todayWh / 1000.0, readAt, System.currentTimeMillis(),
-            gasTodayKwh = prefs.gasKwh, gasReadAt = prefs.gasAt,
+            gasTodayKwh = prefs.gasKwh, gasReadAt = prefs.gasAt, gasKw = prefs.gasKw,
         )
     }
 
@@ -154,7 +156,7 @@ class OctopusApi(context: Context) {
     private fun updateGas(token: String, start: ZonedDateTime, now: ZonedDateTime) {
         val gasId = prefs.gasDeviceId
         if (gasId == null || gasId == NO_GAS) {
-            prefs.gasKwh = null; prefs.gasAt = null
+            prefs.gasKwh = null; prefs.gasAt = null; prefs.gasKw = null
             return
         }
         val today = start.toLocalDate().toString()
@@ -170,14 +172,19 @@ class OctopusApi(context: Context) {
             )
             var wh = 0.0
             var last: String? = null
+            var latestAt = ""
+            var latestWh = 0.0
             for (row in d.optJSONArray("gas").objects()) {
                 if (row.isNull("consumptionDelta")) continue
                 val v = row.optDouble("consumptionDelta", 0.0)
                 if (v.isNaN()) continue
                 wh += v
                 if (v > 0) last = row.optString("readAt")
+                val at = row.optString("readAt")
+                if (at >= latestAt) { latestAt = at; latestWh = v }
             }
             prefs.gasKwh = wh / 1000.0
+            prefs.gasKw = latestWh / 500.0   // half-hour Wh -> average kW
             prefs.gasAt = last?.let {
                 try {
                     OffsetDateTime.parse(it).atZoneSameInstant(now.zone).format(DateTimeFormatter.ofPattern("HH:mm"))
@@ -187,7 +194,7 @@ class OctopusApi(context: Context) {
             prefs.gasFetched = System.currentTimeMillis()
         } catch (e: Exception) {
             // Keep yesterday's figure out of today's display
-            if (prefs.gasDay != today) { prefs.gasKwh = 0.0; prefs.gasAt = null }
+            if (prefs.gasDay != today) { prefs.gasKwh = 0.0; prefs.gasAt = null; prefs.gasKw = 0.0 }
         }
     }
 

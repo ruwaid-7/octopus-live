@@ -13,9 +13,10 @@ Octopus Home Mini you already have.
 > **Unofficial.** This project is not made, endorsed or supported by Octopus Energy. It uses the
 > public [Octopus Energy API](https://developer.octopus.energy/) with your own API key.
 
-**Gas:** if you have a smart gas meter, both apps also show today's gas usage in kWh. Gas meters
-only send a reading every 30 minutes, so gas is a running total for the day rather than a live
-figure, and is fetched every 30 minutes.
+**Gas:** if you have a smart gas meter, both apps also show today's gas usage in kWh and a **gas
+bar** next to the electricity bar. Gas meters only send a reading every 30 minutes, so the gas bar
+shows the average rate over the latest half-hour (e.g. 1.5 kWh in 30 min = 3.0 kW) rather than a
+second-by-second figure. The bar is full at 10 kW (`MaxGasKW` in the Rainmeter settings).
 
 ---
 

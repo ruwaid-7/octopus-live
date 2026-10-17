@@ -115,6 +115,8 @@ install or keep running, and you get an `https://` address that works at home an
    **Settings → Variables and Secrets → Add**, type **Secret**, and add both.
 3. Your address is shown after deploying, e.g. `https://octopus-live-worker.yourname.workers.dev`.
    Open `https://octopus-live-worker.yourname.workers.dev/?token=YOUR-TOKEN` to check it.
+   If it doesn't load, open the Worker → **Domains** and make sure the switch next to the
+   **Production** `workers.dev` address is **on**.
 4. Put that full address (with `?token=…`) into the apps — see *Point your devices at a relay* below.
 
 It only calls Octopus when one of your devices asks, at most once a minute, so it stays well

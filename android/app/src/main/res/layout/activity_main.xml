@@ -188,6 +188,36 @@
                 android:layout_marginBottom="16dp"
                 android:background="@color/divider_subtle" />
 
+            <!-- Home server (relay) address, optional -->
+            <TextView
+                style="@style/FieldLabel"
+                android:labelFor="@+id/relayUrl"
+                android:text="@string/relay_label" />
+
+            <EditText
+                android:id="@+id/relayUrl"
+                android:hint="http://192.168.1.50:8765"
+                style="@style/InputField"
+                android:layout_marginTop="6dp"
+                android:importantForAutofill="no"
+                android:inputType="textUri"
+                android:maxLines="1" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/relay_help"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/divider_subtle" />
+
             <!-- Refresh Interval Field (Seconds) -->
             <TextView
                 style="@style/FieldLabel"

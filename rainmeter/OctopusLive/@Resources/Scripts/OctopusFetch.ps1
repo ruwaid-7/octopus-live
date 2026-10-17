@@ -180,6 +180,34 @@ function Update-Gas([hashtable]$cache, [hashtable]$data, [string]$token) {
     }
 }
 
+# Reads the latest values from your own Octopus Live relay server (see /server in the repo).
+function Update-FromRelay([string]$relayUrl, [hashtable]$data) {
+    $ub = New-Object System.UriBuilder($relayUrl.Trim())
+    if ($ub.Path -eq '' -or $ub.Path -eq '/') { $ub.Path = '/api/live' }
+    try {
+        $r = Invoke-RestMethod -Uri $ub.Uri -Method Get -TimeoutSec 10 -UseBasicParsing
+    } catch {
+        throw "Server offline ($($ub.Host)) - $($_.Exception.Message)"
+    }
+    function LocalHHmm($s) {
+        $t = [DateTimeOffset]::MinValue
+        if ($s -and [DateTimeOffset]::TryParse("$s", [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$t)) { return $t.ToLocalTime().ToString('HH:mm') }
+        return '--:--'
+    }
+    $inv = [Globalization.CultureInfo]::InvariantCulture
+    if ($null -ne $r.demandW)  { $data.Demand = [Math]::Round([double]$r.demandW) }
+    if ($null -ne $r.todayKwh) { $data.TodayKWh = ([double]$r.todayKwh).ToString('0.00', $inv) }
+    if ($r.readAt) { $data.ReadAt = LocalHHmm $r.readAt }
+    if ($r.PSObject.Properties.Name -contains 'hasGas') {
+        if ($r.hasGas) {
+            $g = 0.0; if ($null -ne $r.gasKwh) { $g = [double]$r.gasKwh }
+            $data.GasKWh = $g.ToString('0.00', $inv)
+            $data.GasAt  = LocalHHmm $r.gasAt
+        } else { $data.GasKWh = ''; $data.GasAt = '' }
+    }
+    $data.Status = if ($r.ok) { 'OK' } else { "Relay: $($r.status)" }
+}
+
 # ---------- main ----------
 
 $data = Read-KeyValueFile $DataFile
@@ -188,12 +216,31 @@ foreach ($k in $DataKeys) { if (-not $data.ContainsKey($k)) { $data[$k] = '' } }
 try {
     $settings = Read-Settings
     $apiKey = "$($settings.ApiKey)"
-    if (-not $apiKey) { throw 'Add your Octopus API key to Settings.inc (right-click skin > Edit settings).' }
+    $relayUrl = "$($settings.RelayUrl)"
+    $done = $false
+    if ($relayUrl) {
+        try {
+            Update-FromRelay $relayUrl $data
+            $done = $true
+            if (Test-Path $ErrorFile) { Remove-Item $ErrorFile -Force -ErrorAction SilentlyContinue }
+        } catch {
+            # No API key to fall back on: report the relay problem
+            if (-not $apiKey) { throw }
+        }
+    }
+    if (-not $done) {
+    if (-not $apiKey) { throw 'Add your Octopus API key (or RelayUrl) to Settings.inc (right-click skin > Edit settings).' }
 
     $cache = Read-Cache
+    # When the relay is down and the skin refreshes quickly, call Octopus at most once a minute
+    $nowS = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    if ($relayUrl -and $cache.lastDirect -and ($nowS - [long]$cache.lastDirect) -lt 60) {
+        throw 'Server offline - using Octopus once a minute'
+    }
+    $cache.lastDirect = $nowS
     # Forget cached token/device if the key or account number changed
     $fingerprint = $apiKey.Substring([Math]::Max(0, $apiKey.Length - 6)) + '|' + "$($settings.AccountNumber)"
-    if ($cache.fingerprint -ne $fingerprint) { $cache = @{ fingerprint = $fingerprint } }
+    if ($cache.fingerprint -ne $fingerprint) { $cache = @{ fingerprint = $fingerprint; lastDirect = $nowS } }
 
     $result = $null
     for ($attempt = 1; $attempt -le 2; $attempt++) {
@@ -232,6 +279,7 @@ try {
         $data.ReadAt = "$($live.readAt)"
     }
     $data.Status   = 'OK'
+    }
 } catch {
     $msg = "$($_.Exception.Message)"
     $data.Status = $msg

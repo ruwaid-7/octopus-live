@@ -84,6 +84,39 @@ If you run **both** the PC skin and the phone app at the same time, set both int
 seconds or more** to stay under the limit. If you see "Rate limited", raise the interval. Please
 don't set it lower than 60.
 
+## Optional: one home server for all your devices
+
+If you have an always-on Linux box (Ubuntu server, Raspberry Pi…), run the small **relay** in the
+[`server`](server) folder. It calls Octopus once for everyone and your PC and phone read from it:
+
+```
+Octopus API  <-- one request every 45 s --  your server (relay)  -->  PC skin, phone app, widget
+```
+
+- No rate-limit juggling: refresh the PC and phone every 10–15 s from your server.
+- Your API key lives only on the server.
+- A status page at `http://SERVER-IP:8765` you can open in any browser.
+
+**Install (Ubuntu/Debian, needs Python 3.8+ — already installed on Ubuntu):**
+```bash
+git clone https://github.com/ruwaid-7/octopus-live.git
+cd octopus-live/server
+sudo ./install.sh          # asks for your API key, starts the service
+```
+It prints the address to use, e.g. `http://192.168.1.50:8765`. Settings live in
+`/etc/octopus-relay.env`; logs: `journalctl -u octopus-relay -f`. To update later:
+`git pull && sudo ./install.sh`.
+
+**Point your devices at it:**
+- **Rainmeter:** set `RelayUrl=http://192.168.1.50:8765` in `Settings.inc`, and `Interval=15`.
+- **Android:** enter the address in **Home server address**, set the interval to 15, Save & start.
+
+If you also keep your API key on a device, it falls back to calling Octopus directly (at most once a
+minute) when the server can't be reached — e.g. your phone away from home. To use the server from
+outside your home without that fallback, put it on a VPN such as Tailscale and use its Tailscale address.
+Optional: set `RELAY_TOKEN` in `/etc/octopus-relay.env` and add `?token=YOURSECRET` to the address on
+each device.
+
 ## How it works
 
 The Home Mini reads your smart meter about every 10 seconds and uploads the readings to Octopus.

@@ -134,7 +134,8 @@ class LiveService : Service() {
 
         if (!screenOn) return
         // Back off after failures (doubling, max 10 min) so rate limits recover.
-        val base = prefs.intervalSeconds.coerceAtLeast(30).toLong()
+        val minSecs = if (prefs.relayUrl.isNullOrBlank()) 30 else 10   // home server can be polled often
+        val base = prefs.intervalSeconds.coerceAtLeast(minSecs).toLong()
         val delay = if (failures == 0) base else (base shl (failures - 1).coerceAtMost(4)).coerceAtMost(600L)
         schedule(delay)
     }
@@ -239,6 +240,7 @@ class LiveService : Service() {
                 r.gasReadAt?.let { sb.append(" (to ").append(it).append(")") }
             }
             sb.append("\nMeter reading at ").append(r.readAt)
+            if (r.viaServer) sb.append("  ·  via home server")
         }
         if (lastError != null) sb.append(if (sb.isEmpty()) "" else "\n").append("Problem: ").append(lastError)
         if (!screenOn) sb.append("\n(paused while screen off)")

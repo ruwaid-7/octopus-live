@@ -11,8 +11,8 @@ android {
         applicationId = "uk.octopuslive.app"
         minSdk = 29          // Android 10+
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
     }
 
     // Release signing: uses a real keystore when the CI secrets are set (so updates install over

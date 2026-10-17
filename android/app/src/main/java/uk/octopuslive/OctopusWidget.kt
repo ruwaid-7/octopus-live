@@ -25,7 +25,7 @@ class OctopusWidget : AppWidgetProvider() {
 
         val prefs = Prefs(context)
         val stale = System.currentTimeMillis() - (prefs.loadReading()?.fetchedAt ?: 0L) > 10 * 60 * 1000L
-        if (!prefs.running && stale && !prefs.apiKey.isNullOrBlank()) {
+        if (!prefs.running && stale && prefs.isConfigured) {
             // Fetch in the background without the live service, then redraw.
             val pending = goAsync()
             Thread {
@@ -55,7 +55,7 @@ class OctopusWidget : AppWidgetProvider() {
             val prefs = Prefs(context)
             val r = prefs.loadReading()
             val error = prefs.lastError
-            val hasKey = !prefs.apiKey.isNullOrBlank()
+            val hasKey = prefs.isConfigured
 
             val views = RemoteViews(context.packageName, R.layout.widget_live)
 

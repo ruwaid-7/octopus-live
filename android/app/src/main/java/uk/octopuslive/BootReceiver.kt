@@ -11,7 +11,7 @@ class BootReceiver : BroadcastReceiver() {
         // Redraw any widgets already on the home screen with the (possibly new) layout
         OctopusWidget.updateAll(context)
         val relevant = intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED
-        if (relevant && prefs.startOnBoot && prefs.running && !prefs.apiKey.isNullOrBlank()) {
+        if (relevant && prefs.startOnBoot && prefs.running && prefs.isConfigured) {
             try {
                 LiveService.start(context)
             } catch (e: Exception) {

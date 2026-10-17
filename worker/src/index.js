@@ -10,7 +10,8 @@
  *   GET /health?token=...     -> "ok" / error
  *
  * Secrets:  OCTOPUS_API_KEY, RELAY_TOKEN
- * Vars:     OCTOPUS_ACCOUNT (optional), POLL_SECONDS (default 60), TZ (default Europe/London)
+ * Vars:     POLL_SECONDS (default 60), TZ (default Europe/London)
+ *           OCTOPUS_ACCOUNT (optional - add it in the dashboard if you have more than one account)
  */
 import { DurableObject } from "cloudflare:workers";
 

@@ -7,8 +7,7 @@
   "workers_dev": true,
   "vars": {
     "POLL_SECONDS": "60",
-    "TZ": "Europe/London",
-    "OCTOPUS_ACCOUNT": ""
+    "TZ": "Europe/London"
   },
   "durable_objects": {
     "bindings": [{ "name": "RELAY", "class_name": "Relay" }]

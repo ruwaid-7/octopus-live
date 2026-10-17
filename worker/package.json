@@ -15,9 +15,6 @@
       "RELAY_TOKEN": {
         "description": "A password your devices add to the address (?token=...). Use a long random string."
       },
-      "OCTOPUS_ACCOUNT": {
-        "description": "Optional. Your account number (A-1234ABCD). Leave blank to detect it automatically."
-      },
       "POLL_SECONDS": {
         "description": "Seconds between Octopus requests. 60 keeps you safely under Octopus's rate limit."
       },

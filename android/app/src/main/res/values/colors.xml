@@ -50,6 +50,7 @@
     <color name="power_Low_Green">#FF00E676</color>
     <color name="power_Normal_Amber">#FFFFB300</color>
     <color name="power_High_Red">#FFFF5252</color>
+    <color name="gas_orange">#FFFF8A3D</color>
     <!-- Launcher icon -->
     <color name="launcher_bg">#FFE8478B</color>
 </resources>

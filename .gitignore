@@ -26,3 +26,7 @@ dist/
 worker/node_modules/
 worker/.dev.vars
 worker/.wrangler/
+
+# Python
+__pycache__/
+*.pyc

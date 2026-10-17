@@ -1,7 +1,7 @@
 {
   // Octopus Live relay on Cloudflare Workers (free plan).
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "octopus-live",
+  "name": "octopus-live-worker",
   "main": "src/index.js",
   "compatibility_date": "2025-09-01",
   "workers_dev": true,

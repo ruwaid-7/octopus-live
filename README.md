@@ -62,6 +62,12 @@ The skin uses the PowerShell built into Windows — nothing else to install.
 ## Android app
 
 1. Download `OctopusLive.apk` to your phone and open it. Allow "install unknown apps" when asked.
+   - If **Google Play Protect** says *"App blocked to protect your device"* or *"unsafe"*, that's
+     because the app isn't from the Play Store and Google hasn't seen this developer before — not
+     because anything was found in it. Tap **More details → Install anyway**. If that option isn't
+     shown: Play Store → your profile → **Play Protect → ⚙** → turn off *Scan apps with Play
+     Protect*, install, then turn it back on. The full source code is in this repository and
+     every APK is built from it by GitHub Actions.
 2. Open **Octopus Live**, paste your API key, tap **Save & start**, and allow notifications.
 3. **Widget:** long-press your home screen → **Widgets** → **Octopus Live**, and drag it on.
    It updates every minute while the live notification is running (otherwise every 30 minutes).

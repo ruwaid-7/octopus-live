@@ -1,5 +1,6 @@
 package uk.octopuslive
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -21,6 +22,8 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
+import java.time.LocalDate
 import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
@@ -29,7 +32,9 @@ import java.util.concurrent.TimeUnit
 /**
  * Foreground service that polls the Octopus API and keeps an ongoing notification
  * showing live demand (also drawn into the status-bar icon) and today's usage.
- * Polling pauses while the screen is off to save battery and API calls.
+ * While the screen is on it refreshes at the chosen interval. While it's off it keeps going
+ * every few minutes (using allow-while-idle alarms, so it survives Doze), which keeps the
+ * widget current and lets the gas warning fire even when the phone is in a pocket.
  */
 class LiveService : Service() {
 
@@ -42,16 +47,27 @@ class LiveService : Service() {
     private var lastError: String? = null
     private var failures = 0
     private var screenOn = true
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                Intent.ACTION_SCREEN_OFF -> { screenOn = false; nextPoll?.cancel(false) }
+                Intent.ACTION_SCREEN_OFF -> {
+                    screenOn = false
+                    nextPoll?.cancel(false)
+                    scheduleBackground()
+                }
                 Intent.ACTION_SCREEN_ON -> {
                     screenOn = true
+                    cancelBackground()
                     // Refresh on unlock, but never sooner than the interval since the last fetch
                     val sinceLast = (System.currentTimeMillis() - (last?.fetchedAt ?: 0L)) / 1000
                     schedule((prefs.intervalSeconds - sinceLast).coerceAtLeast(0L))
+                }
+                ACTION_BG_POLL -> {
+                    // Alarm while the screen is off: keep the CPU awake until this refresh is done
+                    acquireWakeLock()
+                    schedule(0)
                 }
             }
         }
@@ -68,8 +84,13 @@ class LiveService : Service() {
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(ACTION_BG_POLL)
         }
-        registerReceiver(screenReceiver, filter)
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenReceiver, filter)
+        }
         screenOn = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
     }
 
@@ -85,6 +106,7 @@ class LiveService : Service() {
         when (intent?.action) {
             ACTION_STOP -> {
                 prefs.running = false
+                cancelBackground()
                 OctopusWidget.updateAll(this)
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
@@ -100,6 +122,8 @@ class LiveService : Service() {
 
     override fun onDestroy() {
         try { unregisterReceiver(screenReceiver) } catch (e: Exception) {}
+        cancelBackground()
+        releaseWakeLock()
         executor.shutdownNow()
         super.onDestroy()
     }
@@ -131,13 +155,80 @@ class LiveService : Service() {
         OctopusWidget.updateAll(this)
         prefs.lastSummary = summaryText()
         listener?.invoke(summaryText())
+        if (lastError == null) last?.let { checkGasAlert(it) }
 
-        if (!screenOn) return
+        if (!screenOn) {
+            scheduleBackground()
+            releaseWakeLock()
+            return
+        }
         // Back off after failures (doubling, max 10 min) so rate limits recover.
         val minSecs = if (prefs.relayUrl.isNullOrBlank()) 30 else 10   // home server can be polled often
         val base = prefs.intervalSeconds.coerceAtLeast(minSecs).toLong()
         val delay = if (failures == 0) base else (base shl (failures - 1).coerceAtMost(4)).coerceAtMost(600L)
         schedule(delay)
+    }
+
+    // ---------- background (screen off) ----------
+
+    private fun bgPendingIntent(): PendingIntent = PendingIntent.getBroadcast(
+        this, 3, Intent(ACTION_BG_POLL).setPackage(packageName),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    /** Next refresh while the screen is off. Allow-while-idle alarms still fire in Doze. */
+    private fun scheduleBackground() {
+        if (!prefs.running) return
+        val am = getSystemService(AlarmManager::class.java)
+        val delayMs = BG_INTERVAL_MS.coerceAtLeast(prefs.intervalSeconds * 1000L)
+        am.setAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + delayMs, bgPendingIntent())
+    }
+
+    private fun cancelBackground() {
+        getSystemService(AlarmManager::class.java).cancel(bgPendingIntent())
+    }
+
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        wakeLock = (getSystemService(POWER_SERVICE) as PowerManager)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OctopusLive:poll")
+            .apply { acquire(60_000L) }
+    }
+
+    private fun releaseWakeLock() {
+        try { wakeLock?.takeIf { it.isHeld }?.release() } catch (e: Exception) {}
+        wakeLock = null
+    }
+
+    // ---------- gas warning ----------
+
+    /** Warn once per run when gas has been on for [GAS_ALERT_MINUTES] or more. */
+    private fun checkGasAlert(r: Reading) {
+        if (!prefs.gasAlert || r.gasTodayKwh == null) return
+        if (r.gasRunMinutes < GAS_ALERT_MINUTES) return
+        val runKey = "${LocalDate.now()}@${r.gasRunSince}"
+        if (prefs.gasAlertSentFor == runKey) return
+        prefs.gasAlertSentFor = runKey
+
+        val hours = r.gasRunMinutes / 60
+        val mins = r.gasRunMinutes % 60
+        val duration = if (mins == 0) "$hours h" else "$hours h $mins min"
+        val since = r.gasRunSince?.let { " since $it" } ?: ""
+        val openApp = PendingIntent.getActivity(this, 4, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        val text = "Your gas has been in use for about $duration$since " +
+            String.format(Locale.UK, "(%.1f kW in the latest half-hour). ", r.gasKw ?: 0.0) +
+            "Gas readings arrive about an hour late, so it may already be off."
+        val n = Notification.Builder(this, GAS_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_flame)
+            .setContentTitle("🔥 Gas on for $duration")
+            .setContentText(text)
+            .setStyle(Notification.BigTextStyle().bigText(text))
+            .setColor(Color.rgb(255, 138, 61))
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setContentIntent(openApp)
+            .setAutoCancel(true)
+            .build()
+        getSystemService(NotificationManager::class.java).notify(GAS_NOTIF_ID, n)
     }
 
     // ---------- notification ----------
@@ -147,7 +238,10 @@ class LiveService : Service() {
             description = getString(R.string.channel_description)
             setShowBadge(false)
         }
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        val gas = NotificationChannel(GAS_CHANNEL_ID, getString(R.string.gas_channel_name), NotificationManager.IMPORTANCE_HIGH).apply {
+            description = getString(R.string.gas_channel_description)
+        }
+        getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, gas))
     }
 
     private fun buildNotification(): Notification {
@@ -245,7 +339,8 @@ class LiveService : Service() {
             if (r.viaServer) sb.append("  ·  via relay")
         }
         if (lastError != null) sb.append(if (sb.isEmpty()) "" else "\n").append("Problem: ").append(lastError)
-        if (!screenOn) sb.append("\n(paused while screen off)")
+        r?.let { if (it.gasTodayKwh != null && it.gasRunMinutes >= 30) sb.append("\nGas on for ${it.gasRunMinutes} min") }
+        if (!screenOn) sb.append("\n(screen off: updating every few minutes)")
         return sb.toString()
     }
 
@@ -255,6 +350,11 @@ class LiveService : Service() {
         const val ACTION_START = "uk.octopuslive.START"
         const val ACTION_REFRESH = "uk.octopuslive.REFRESH"
         const val ACTION_STOP = "uk.octopuslive.STOP"
+        const val ACTION_BG_POLL = "uk.octopuslive.BG_POLL"
+        const val GAS_CHANNEL_ID = "gas_alerts"
+        const val GAS_NOTIF_ID = 2
+        const val GAS_ALERT_MINUTES = 90
+        const val BG_INTERVAL_MS = 5 * 60 * 1000L   // refresh every 5 min while the screen is off
 
         /** Set by MainActivity while visible, to show the latest result. */
         @Volatile var listener: ((String) -> Unit)? = null

@@ -20,7 +20,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -30,10 +30,11 @@ ACCOUNT = os.environ.get("OCTOPUS_ACCOUNT", "").strip()
 POLL_SECONDS = max(30, int(os.environ.get("POLL_SECONDS", "60")))   # 1 telemetry request per poll
 RESYNC_SECONDS = 30 * 60                                              # re-check today's total from half-hourly data
 GAS_SECONDS = 30 * 60                                                 # gas meters report every 30 min
+GAS_ON_WH = 100.0                       # a half-hour with at least this much gas (0.2 kW average) counts as "on"
 HOST = os.environ.get("RELAY_HOST", "0.0.0.0")
 PORT = int(os.environ.get("RELAY_PORT", "8765"))
 RELAY_TOKEN = os.environ.get("RELAY_TOKEN", "").strip()              # optional shared secret
-VERSION = "1.5"
+VERSION = "1.6"
 
 
 def log(msg):
@@ -71,6 +72,8 @@ class Octopus:
         self.gas_at = None
         self.gas_kw = None            # average gas power over the latest half-hour
         self.gas_kw_at = None
+        self.gas_run_min = 0          # how long the gas has been on (latest consecutive half-hours)
+        self.gas_run_since = None
         self.gas_day = None
         self.gas_fetched = 0.0
 
@@ -207,41 +210,51 @@ class Octopus:
 
     def update_gas(self):
         if not self.gas_id:
-            self.gas_kwh, self.gas_at, self.gas_kw, self.gas_kw_at = None, None, None, None
+            self.gas_kwh = self.gas_at = self.gas_kw = self.gas_kw_at = None
+            self.gas_run_min, self.gas_run_since = 0, None
             return
         now = datetime.now().astimezone()
         today = now.date().isoformat()
         if self.gas_day == today and time.time() - self.gas_fetched < GAS_SECONDS:
             return
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        start = midnight - timedelta(hours=3)   # a little of yesterday, so a run over midnight is counted
         try:
             d = self.gql(
                 'query { gas: smartMeterTelemetry(deviceId: "%s", grouping: HALF_HOURLY, start: "%s", end: "%s") { readAt consumptionDelta } }'
                 % (self.clean(self.gas_id), iso(start), iso(now)))
-            wh, last, latest = 0.0, None, None
+            rows = []
             for r in d.get("gas") or []:
                 if not r or r.get("consumptionDelta") is None:
                     continue
-                v = float(r["consumptionDelta"])
-                wh += v
-                if v > 0:
-                    last = r.get("readAt")
-                if latest is None or (r.get("readAt") or "") >= (latest.get("readAt") or ""):
-                    latest = r
-            self.gas_kwh = wh / 1000.0
-            self.gas_at = parse_dt(last)
+                dt = parse_dt(r.get("readAt"))
+                if dt is not None:
+                    rows.append((dt, float(r["consumptionDelta"])))
+            rows.sort(key=lambda x: x[0])
+            today_rows = [(dt, v) for dt, v in rows if dt >= midnight]
+            self.gas_kwh = sum(v for _, v in today_rows) / 1000.0
+            used = [dt for dt, v in today_rows if v > 0]
+            self.gas_at = used[-1] if used else None
             # Half-hour Wh -> average kW over that half-hour (Wh / 1000 * 2)
-            if latest is not None:
-                self.gas_kw = float(latest["consumptionDelta"]) / 500.0
-                self.gas_kw_at = parse_dt(latest.get("readAt"))
+            if rows:
+                self.gas_kw, self.gas_kw_at = rows[-1][1] / 500.0, rows[-1][0]
             else:
                 self.gas_kw, self.gas_kw_at = 0.0, None
+            # How long the gas has been on: consecutive latest half-hours with real use
+            n = 0
+            for dt, v in reversed(rows):
+                if v < GAS_ON_WH:
+                    break
+                n += 1
+            self.gas_run_min = n * 30
+            self.gas_run_since = rows[-n][0] if n else None
             self.gas_day = today
             self.gas_fetched = time.time()
         except ApiError as e:
             log(f"Gas: {e}")
             if self.gas_day != today:
                 self.gas_kwh, self.gas_at, self.gas_kw, self.gas_kw_at = 0.0, None, 0.0, None
+                self.gas_run_min, self.gas_run_since = 0, None
 
 
 def parse_dt(s):
@@ -287,6 +300,7 @@ def poller(client):
                       readAt=iso(read_at), gasKwh=None if client.gas_kwh is None else round(client.gas_kwh, 3),
                       gasAt=iso(client.gas_at), hasGas=bool(client.gas_id),
                       gasKw=None if client.gas_kw is None else round(client.gas_kw, 2), gasKwAt=iso(client.gas_kw_at),
+                      gasRunMinutes=client.gas_run_min, gasRunSince=iso(client.gas_run_since),
                       updated=iso(datetime.now(timezone.utc)), pollSeconds=POLL_SECONDS)
             if failures:
                 log("Recovered")

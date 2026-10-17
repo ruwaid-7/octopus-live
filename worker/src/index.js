@@ -15,9 +15,10 @@
  */
 import { DurableObject } from "cloudflare:workers";
 
-const VERSION = "1.5-worker";
+const VERSION = "1.6-worker";
 const GAS_MS = 30 * 60 * 1000;
 const SYNC_MS = 30 * 60 * 1000;
+const GAS_ON_WH = 100;   // a half-hour with at least this much gas (0.2 kW average) counts as "on"
 
 // ---------------------------------------------------------------- entry point
 
@@ -125,6 +126,7 @@ export class Relay extends DurableObject {
         hasGas: !!s.gasId,
         gasKwh: s.gasId ? round(s.gasKwh ?? 0, 3) : null, gasAt: s.gasId ? s.gasAt ?? null : null,
         gasKw: s.gasId ? round(s.gasKw ?? 0, 2) : null, gasKwAt: s.gasId ? s.gasKwAt ?? null : null,
+        gasRunMinutes: s.gasId ? s.gasRunMin || 0 : 0, gasRunSince: s.gasId ? s.gasRunSince ?? null : null,
         updated: new Date().toISOString(), pollSeconds: this.pollMs / 1000,
       };
     } catch (e) {
@@ -231,26 +233,32 @@ export class Relay extends DurableObject {
 
   async updateGas() {
     const s = this.s;
-    if (!s.gasId) { s.gasKwh = s.gasAt = s.gasKw = s.gasKwAt = null; return; }
+    if (!s.gasId) { s.gasKwh = s.gasAt = s.gasKw = s.gasKwAt = null; s.gasRunMin = 0; s.gasRunSince = null; return; }
     const { start, end, day } = dayBounds(this.tz);
     if (s.gasDay === day && Date.now() - (s.gasFetched || 0) < GAS_MS) return;
+    const midnight = Date.parse(start);
+    // Start 3 hours before midnight so a run that began yesterday evening is counted
+    const from = new Date(midnight - 3 * 3600 * 1000).toISOString();
     try {
-      const d = await this.gql(`query { gas: smartMeterTelemetry(deviceId: "${clean(s.gasId)}", grouping: HALF_HOURLY, start: "${start}", end: "${end}") { readAt consumptionDelta } }`);
-      let wh = 0, last = null, latest = null;
-      for (const r of d.gas || []) {
-        if (!r || r.consumptionDelta == null) continue;
-        const v = Number(r.consumptionDelta);
-        wh += v;
-        if (v > 0) last = r.readAt;
-        if (!latest || String(r.readAt) >= String(latest.readAt)) latest = r;
-      }
-      s.gasKwh = wh / 1000;
-      s.gasAt = last;
-      s.gasKw = latest ? Number(latest.consumptionDelta) / 500 : 0;   // half-hour Wh -> average kW
-      s.gasKwAt = latest ? latest.readAt : null;
+      const d = await this.gql(`query { gas: smartMeterTelemetry(deviceId: "${clean(s.gasId)}", grouping: HALF_HOURLY, start: "${from}", end: "${end}") { readAt consumptionDelta } }`);
+      const rows = (d.gas || [])
+        .filter((r) => r && r.consumptionDelta != null && !isNaN(Date.parse(r.readAt)))
+        .map((r) => ({ t: Date.parse(r.readAt), at: r.readAt, v: Number(r.consumptionDelta) }))
+        .sort((a, b) => a.t - b.t);
+      const today = rows.filter((r) => r.t >= midnight);
+      s.gasKwh = today.reduce((t, r) => t + r.v, 0) / 1000;
+      const used = today.filter((r) => r.v > 0);
+      s.gasAt = used.length ? used[used.length - 1].at : null;
+      const latest = rows[rows.length - 1];
+      s.gasKw = latest ? latest.v / 500 : 0;          // half-hour Wh -> average kW
+      s.gasKwAt = latest ? latest.at : null;
+      let n = 0;                                      // consecutive latest half-hours with gas on
+      for (let i = rows.length - 1; i >= 0 && rows[i].v >= GAS_ON_WH; i--) n++;
+      s.gasRunMin = n * 30;
+      s.gasRunSince = n ? rows[rows.length - n].at : null;
       s.gasDay = day; s.gasFetched = Date.now();
     } catch {
-      if (s.gasDay !== day) { s.gasKwh = 0; s.gasAt = null; s.gasKw = 0; s.gasKwAt = null; }
+      if (s.gasDay !== day) { s.gasKwh = 0; s.gasAt = null; s.gasKw = 0; s.gasKwAt = null; s.gasRunMin = 0; s.gasRunSince = null; }
     }
   }
 }

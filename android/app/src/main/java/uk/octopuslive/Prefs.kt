@@ -61,6 +61,23 @@ class Prefs(context: Context) {
         get() = if (p.contains("gasKw")) p.getFloat("gasKw", 0f).toDouble() else null
         set(v) { if (v == null) p.edit().remove("gasKw").apply() else p.edit().putFloat("gasKw", v.toFloat()).apply() }
 
+    var gasRunMinutes: Int
+        get() = p.getInt("gasRunMinutes", 0)
+        set(v) = p.edit().putInt("gasRunMinutes", v).apply()
+
+    var gasRunSince: String?
+        get() = p.getString("gasRunSince", null)
+        set(v) = p.edit().putString("gasRunSince", v).apply()
+
+    // Gas alert setting, and which run we've already warned about (so it's sent once per run)
+    var gasAlert: Boolean
+        get() = p.getBoolean("gasAlert", true)
+        set(v) = p.edit().putBoolean("gasAlert", v).apply()
+
+    var gasAlertSentFor: String?
+        get() = p.getString("gasAlertSentFor", null)
+        set(v) = p.edit().putString("gasAlertSentFor", v).apply()
+
     var gasAt: String?
         get() = p.getString("gasAt", null)
         set(v) = p.edit().putString("gasAt", v).apply()
@@ -116,6 +133,8 @@ class Prefs(context: Context) {
         gasKwh = r.gasTodayKwh
         gasAt = r.gasReadAt
         gasKw = r.gasKw
+        gasRunMinutes = r.gasRunMinutes
+        gasRunSince = r.gasRunSince
     }
 
     fun loadReading(): Reading? {
@@ -129,6 +148,8 @@ class Prefs(context: Context) {
             gasTodayKwh = gasKwh,
             gasReadAt = gasAt,
             gasKw = gasKw,
+            gasRunMinutes = gasRunMinutes,
+            gasRunSince = gasRunSince,
             viaServer = p.getBoolean("lastViaServer", false),
         )
     }

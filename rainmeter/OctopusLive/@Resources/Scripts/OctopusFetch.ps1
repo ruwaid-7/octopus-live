@@ -131,16 +131,19 @@ function Get-DeviceId([hashtable]$cache, [string]$token, [string]$accountSetting
     throw 'No smart electricity meter found on this account. Is your Home Mini set up?'
 }
 
-function Get-Telemetry([string]$token, [string]$deviceId) {
+# Usually asks only for the live reading (one telemetry request). Today's half-hourly total is
+# added when $withToday is set (every 30 minutes and at midnight); in between, "today" is kept up
+# to date from the meter's running total. Octopus counts each telemetry series against its limit.
+function Get-Telemetry([string]$token, [string]$deviceId, [bool]$withToday) {
     $now      = Get-Date
     $start    = $now.Date.ToString('yyyy-MM-ddTHH:mm:sszzz')      # local midnight, with UTC offset
     $end      = $now.ToString('yyyy-MM-ddTHH:mm:sszzz')
     $id       = Clean $deviceId
-    # One request: the latest reading (live) plus today's half-hourly totals (today)
-    $q = 'query { ' +
-         'live: smartMeterTelemetry(deviceId: "' + $id + '") { readAt demand consumption } ' +
-         'today: smartMeterTelemetry(deviceId: "' + $id + '", grouping: HALF_HOURLY, start: "' + $start + '", end: "' + $end + '") { readAt consumptionDelta } }'
-    return Invoke-Gql $q $token
+    $q = 'query { live: smartMeterTelemetry(deviceId: "' + $id + '") { readAt demand consumption } '
+    if ($withToday) {
+        $q += 'today: smartMeterTelemetry(deviceId: "' + $id + '", grouping: HALF_HOURLY, start: "' + $start + '", end: "' + $end + '") { readAt consumptionDelta } '
+    }
+    return Invoke-Gql ($q + '}') $token
 }
 
 # Today's gas usage (kWh). Gas meters only send a reading every 30 minutes, so this
@@ -253,7 +256,11 @@ try {
         try {
             $token    = Get-Token $cache $apiKey
             $deviceId = Get-DeviceId $cache $token "$($settings.AccountNumber)"
-            $result   = Get-Telemetry $token $deviceId
+            $todayKey = (Get-Date).ToString('yyyy-MM-dd')
+            $nowSync  = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+            $needSync = ($cache.syncDay -ne $todayKey) -or ($null -eq $cache.syncMeterWh) -or
+                        (-not $cache.syncTime) -or (($nowSync - [long]$cache.syncTime) -ge 1800)
+            $result   = Get-Telemetry $token $deviceId $needSync
             break
         } catch {
             $code = "$($_.Exception.Data['code'])"
@@ -271,10 +278,24 @@ try {
     $live = @($result.live) | Where-Object { $_ } | Sort-Object { "$($_.readAt)" } | Select-Object -Last 1
     if (-not $live) { throw 'No live reading returned. Check the Home Mini is online.' }
 
-    $todayWh = 0.0
-    foreach ($row in @($result.today)) {
-        if ($row -and $null -ne $row.consumptionDelta) { $todayWh += [double]$row.consumptionDelta }
+    $meterWh = $null
+    if ($null -ne $live.consumption -and "$($live.consumption)" -ne '') { $meterWh = [double]$live.consumption }
+    if ($needSync) {
+        $todayWh = 0.0
+        foreach ($row in @($result.today)) {
+            if ($row -and $null -ne $row.consumptionDelta) { $todayWh += [double]$row.consumptionDelta }
+        }
+        $cache.syncDay = $todayKey; $cache.syncTime = $nowSync
+        $cache.syncTodayWh = $todayWh; $cache.syncMeterWh = $meterWh
+    } elseif ($null -ne $meterWh -and $meterWh -ge [double]$cache.syncMeterWh) {
+        $todayWh = [double]$cache.syncTodayWh + ($meterWh - [double]$cache.syncMeterWh)
+    } else {
+        # Meter total missing or went backwards: keep the last figure, re-check next time
+        $todayWh = [double]$cache.lastTodayWh
+        $cache.syncMeterWh = $null
     }
+    $cache.lastTodayWh = $todayWh
+    Save-Cache $cache
 
     $data.Demand   = if ($null -ne $live.demand) { [Math]::Round([double]$live.demand) } else { $data.Demand }
     $data.TodayKWh = ([Math]::Round($todayWh / 1000.0, 2)).ToString('0.00', [Globalization.CultureInfo]::InvariantCulture)

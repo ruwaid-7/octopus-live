@@ -21,3 +21,8 @@ Thumbs.db
 # Build outputs
 dist/
 *.zip
+
+# Cloudflare Worker
+worker/node_modules/
+worker/.dev.vars
+worker/.wrangler/

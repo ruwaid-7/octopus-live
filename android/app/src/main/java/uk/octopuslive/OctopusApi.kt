@@ -42,8 +42,8 @@ class OctopusApi(context: Context) {
                 // Server unreachable (e.g. away from home): fall back to Octopus, at most once a minute
                 val hasKey = !prefs.apiKey.isNullOrBlank()
                 val sinceDirect = System.currentTimeMillis() - prefs.lastDirectAt
-                if (!hasKey) throw ApiException("Home server offline")
-                if (sinceDirect < 60_000L) throw ApiException("Home server offline - using Octopus once a minute")
+                if (!hasKey) throw ApiException("Relay offline")
+                if (sinceDirect < 60_000L) throw ApiException("Relay offline - using Octopus once a minute")
             }
         }
         if (prefs.apiKey.isNullOrBlank()) throw ApiException("Add your API key in the app")
@@ -63,8 +63,8 @@ class OctopusApi(context: Context) {
         }
         try {
             val code = conn.responseCode
-            if (code == 401) throw ApiException("Home server needs ?token=… in its address")
-            if (code !in 200..299) throw ApiException("Home server error $code")
+            if (code == 401) throw ApiException("Relay needs ?token=… in its address")
+            if (code !in 200..299) throw ApiException("Relay error $code")
             val j = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
             if (!j.optBoolean("ok", false)) throw ApiException("Server: " + j.optString("status", "not ready"))
             val zone = ZoneId.systemDefault()
@@ -111,24 +111,43 @@ class OctopusApi(context: Context) {
         val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
         val id = clean(deviceId)
 
-        // One request: latest reading (live) + today's half-hourly totals (today)
-        val query = """
-            query {
-              live: smartMeterTelemetry(deviceId: "$id") { readAt demand consumption }
+        // Octopus counts each telemetry series against its rate limit, so usually only the live
+        // reading is requested. Today's half-hourly total is added every 30 minutes (and at
+        // midnight); in between, "today" is kept up to date from the meter's running total.
+        val todayKey = start.toLocalDate().toString()
+        val needSync = prefs.syncDay != todayKey || prefs.syncMeterWh == null ||
+            System.currentTimeMillis() - prefs.syncTime >= SYNC_EVERY_MS
+        val todayPart = if (needSync) """
               today: smartMeterTelemetry(deviceId: "$id", grouping: HALF_HOURLY,
-                start: "${start.withNano(0).format(fmt)}", end: "${now.withNano(0).format(fmt)}") { readAt consumptionDelta }
-            }
-        """.trimIndent()
+                start: "${start.withNano(0).format(fmt)}", end: "${now.withNano(0).format(fmt)}") { readAt consumptionDelta }""" else ""
+        val query = """query { live: smartMeterTelemetry(deviceId: "$id") { readAt demand consumption } $todayPart }"""
         val data = graphql(query, token)
 
         val live = data.optJSONArray("live").objects()
             .maxByOrNull { it.optString("readAt") }
             ?: throw ApiException("No live reading - is the Home Mini online?")
 
-        var todayWh = 0.0
-        for (row in data.optJSONArray("today").objects()) {
-            if (!row.isNull("consumptionDelta")) todayWh += row.optDouble("consumptionDelta", 0.0)
+        val meterWh = if (live.isNull("consumption")) null else live.optDouble("consumption").takeUnless { it.isNaN() }
+        val syncMeter = prefs.syncMeterWh
+        val todayWh: Double
+        if (needSync) {
+            var sum = 0.0
+            for (row in data.optJSONArray("today").objects()) {
+                if (!row.isNull("consumptionDelta")) sum += row.optDouble("consumptionDelta", 0.0).takeUnless { it.isNaN() } ?: 0.0
+            }
+            todayWh = sum
+            prefs.syncDay = todayKey
+            prefs.syncTime = System.currentTimeMillis()
+            prefs.syncTodayWh = sum
+            prefs.syncMeterWh = meterWh
+        } else if (meterWh != null && syncMeter != null && meterWh >= syncMeter) {
+            todayWh = prefs.syncTodayWh + (meterWh - syncMeter)
+        } else {
+            // Meter total missing or went backwards: keep the last figure, re-check next time
+            todayWh = prefs.lastTodayWh
+            prefs.syncMeterWh = null
         }
+        prefs.lastTodayWh = todayWh
 
         val demand = if (live.isNull("demand")) null else live.optDouble("demand").let {
             if (it.isNaN()) null else Math.round(it).toInt()
@@ -292,5 +311,6 @@ class OctopusApi(context: Context) {
         const val ENDPOINT = "https://api.octopus.energy/v1/graphql/"
         const val NO_GAS = "none"
         const val GAS_EVERY_MS = 30 * 60 * 1000L
+        const val SYNC_EVERY_MS = 30 * 60 * 1000L
     }
 }

@@ -12,13 +12,13 @@
     <string name="not_started">Not running yet. Enter your API key and tap Save &amp; start.</string>
     <string name="connecting">Connecting to Octopus…</string>
     <string name="stopped">Stopped.</string>
-    <string name="key_required">Enter your API key or a home server address</string>
-    <string name="relay_label">Home server address (optional)</string>
-    <string name="relay_help">If you run the Octopus Live relay on a home server, the app reads from it instead of Octopus, so refreshes can be as often as every 10 seconds. Away from home it falls back to Octopus using your API key.</string>
+    <string name="key_required">Enter your API key or a relay address</string>
+    <string name="relay_label">Relay address (optional)</string>
+    <string name="relay_help">Your Octopus Live relay — a free Cloudflare Worker or your own server, e.g. https://octopus-live.you.workers.dev/?token=… The app then reads from it instead of Octopus, so it can refresh every 10 seconds and doesn\'t need your API key. See the GitHub page for setup.</string>
     <string name="notify_denied">Notifications are off for this app — enable them in Settings to see live usage.</string>
     <string name="channel_name">Live usage</string>
     <string name="channel_description">Ongoing notification with live electricity demand</string>
-    <string name="footnote">Updates pause while the screen is off and resume when you unlock. Your API key is stored only on this phone and is sent only to Octopus Energy. Octopus limits how often its API can be called, so keep the interval at 60 seconds or more, especially if the PC widget is also running.</string>
+    <string name="footnote">Updates pause while the screen is off and resume when you unlock. Your API key is stored only on this phone and is sent only to Octopus Energy. Without a relay, Octopus limits how often its API can be called: keep the interval at 60 seconds or more, or 90 if the PC skin also calls Octopus directly.</string>
     <string name="widget_description">Live electricity demand and today\'s usage</string>
     <string name="widget_footer_placeholder">Tap to load</string>
 </resources>

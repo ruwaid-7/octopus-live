@@ -1,0 +1,18 @@
+{
+  // Octopus Live relay on Cloudflare Workers (free plan).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "octopus-live",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  "vars": {
+    "POLL_SECONDS": "60",
+    "TZ": "Europe/London",
+    "OCTOPUS_ACCOUNT": ""
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY", "class_name": "Relay" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Relay"] }],
+  "observability": { "enabled": true }
+}

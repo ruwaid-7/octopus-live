@@ -51,6 +51,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         status.text = prefs.lastSummary ?: getString(R.string.not_started)
+        OctopusWidget.updateAll(this)   // keep widgets in step with the installed version
         LiveService.listener = { text -> runOnUiThread { status.text = text } }
     }
 

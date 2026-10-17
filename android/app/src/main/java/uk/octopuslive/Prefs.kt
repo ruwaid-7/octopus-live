@@ -65,6 +65,27 @@ class Prefs(context: Context) {
         get() = p.getString("gasAt", null)
         set(v) = p.edit().putString("gasAt", v).apply()
 
+    // Electricity "today": baseline from the last half-hourly re-check + meter running total
+    var syncDay: String?
+        get() = p.getString("syncDay", null)
+        set(v) = p.edit().putString("syncDay", v).apply()
+
+    var syncTime: Long
+        get() = p.getLong("syncTime", 0)
+        set(v) = p.edit().putLong("syncTime", v).apply()
+
+    var syncTodayWh: Double
+        get() = java.lang.Double.longBitsToDouble(p.getLong("syncTodayWh", 0L))
+        set(v) = p.edit().putLong("syncTodayWh", java.lang.Double.doubleToRawLongBits(v)).apply()
+
+    var syncMeterWh: Double?
+        get() = if (p.contains("syncMeterWh")) java.lang.Double.longBitsToDouble(p.getLong("syncMeterWh", 0L)) else null
+        set(v) { if (v == null) p.edit().remove("syncMeterWh").apply() else p.edit().putLong("syncMeterWh", java.lang.Double.doubleToRawLongBits(v)).apply() }
+
+    var lastTodayWh: Double
+        get() = java.lang.Double.longBitsToDouble(p.getLong("lastTodayWh", 0L))
+        set(v) = p.edit().putLong("lastTodayWh", java.lang.Double.doubleToRawLongBits(v)).apply()
+
     var gasDay: String?
         get() = p.getString("gasDay", null)
         set(v) = p.edit().putString("gasDay", v).apply()
@@ -118,6 +139,6 @@ class Prefs(context: Context) {
 
     fun clearCachedApiState() {
         p.edit().remove("token").remove("tokenExpires").remove("deviceId")
-            .remove("gasDeviceId").remove("gasKwh").remove("gasKw").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
+            .remove("gasDeviceId").remove("gasKwh").remove("gasKw").remove("syncDay").remove("syncMeterWh").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
     }
 }

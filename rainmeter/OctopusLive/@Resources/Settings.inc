@@ -7,8 +7,9 @@
 ; It starts with sk_live_
 ApiKey=
 
-; Optional: address of your Octopus Live relay server (see the "server" folder on GitHub),
-; e.g. http://192.168.1.50:8765  - the skin then reads from your server instead of Octopus,
+; Optional: address of your Octopus Live relay - a free Cloudflare Worker or your own server
+; (see GitHub), including ?token=..., e.g. https://octopus-live.you.workers.dev/?token=XXXX
+; The skin then reads from the relay instead of Octopus,
 ; so you can use a short Interval like 15. If you also fill in ApiKey, the skin falls back
 ; to calling Octopus directly when the server can't be reached.
 RelayUrl=

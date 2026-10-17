@@ -242,7 +242,7 @@ class LiveService : Service() {
                 r.gasKw?.let { sb.append(String.format(Locale.UK, "\nGas rate: %.1f kW (last half-hour)", it)) }
             }
             sb.append("\nMeter reading at ").append(r.readAt)
-            if (r.viaServer) sb.append("  ·  via home server")
+            if (r.viaServer) sb.append("  ·  via relay")
         }
         if (lastError != null) sb.append(if (sb.isEmpty()) "" else "\n").append("Problem: ").append(lastError)
         if (!screenOn) sb.append("\n(paused while screen off)")

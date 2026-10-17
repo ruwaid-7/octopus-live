@@ -77,13 +77,46 @@ The skin uses the PowerShell built into Windows — nothing else to install.
 ## Rate limits — please read
 
 Octopus allows about **100 API requests per hour per account**, shared by everything using your
-key. Each app makes **one request per refresh** (live reading + today's electricity together), plus
-one gas request every 30 minutes, and defaults to every **60 seconds** — the PC only while it's on,
-the phone only while its screen is on.
+key. Each app makes **one request per refresh** (today's total is worked out from the meter's
+running total and re-checked every 30 minutes), plus one gas request every 30 minutes, and
+defaults to every **60 seconds** — the PC only while it's on, the phone only while its screen is on.
 
 If you run **both** the PC skin and the phone app at the same time, set both intervals to **90
-seconds or more** to stay under the limit. If you see "Rate limited", raise the interval. Please
-don't set it lower than 60.
+seconds or more** — or use a relay (below) so only one thing talks to Octopus. If you see "Rate
+limited", raise the interval. Please don't set it lower than 60.
+
+## Choose your setup
+
+| Setup | Best for | What talks to Octopus |
+|---|---|---|
+| **Just the apps** (above) | One device, or PC + phone at 90 s | Each device directly |
+| **Free Cloudflare Worker** | Several devices, no server, works anywhere | The Worker, once a minute |
+| **Home server relay** | You already run a Linux box / Docker | Your server, once a minute |
+
+With either relay, your devices read from the relay instead of Octopus, can refresh every 10–15 s,
+and don't need your API key at all.
+
+## Optional: free Cloudflare Worker (no server needed)
+
+The [`worker`](worker) folder is the same relay running on Cloudflare's free plan — nothing to
+install or keep running, and you get an `https://` address that works at home and away.
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ruwaid-7/octopus-live/tree/main/worker)
+
+1. Click **Deploy to Cloudflare** and sign in (a free account is fine). It copies this folder
+   into your own GitHub account and deploys it.
+2. When asked, fill in **OCTOPUS_API_KEY** (your `sk_live_…` key) and **RELAY_TOKEN** (make up a
+   long random password). If you weren't asked: open the Worker in the Cloudflare dashboard →
+   **Settings → Variables and Secrets → Add**, type **Secret**, and add both.
+3. Your address is shown after deploying, e.g. `https://octopus-live.yourname.workers.dev`.
+   Open `https://octopus-live.yourname.workers.dev/?token=YOUR-TOKEN` to check it.
+4. Put that full address (with `?token=…`) into the apps — see *Point your devices at it* below.
+
+It only calls Octopus when one of your devices asks, at most once a minute, so it stays well
+inside both Octopus's limit and Cloudflare's free allowance (100,000 requests a day).
+
+Prefer the command line? `cd worker && npm install && npx wrangler deploy`, then
+`npx wrangler secret put OCTOPUS_API_KEY` and `npx wrangler secret put RELAY_TOKEN`.
 
 ## Optional: one home server for all your devices
 
@@ -125,15 +158,17 @@ It prints the address to use, e.g. `http://192.168.1.50:8765`. Settings live in
 If a new hostname shows "can't be reached" at home but works on mobile data, your router is
 still caching the earlier "not found" answer — it clears within about 30 minutes.
 
-**Point your devices at it:**
-- **Rainmeter:** set `RelayUrl=http://192.168.1.50:8765` in `Settings.inc`, and `Interval=15`.
-- **Android:** enter the address in **Home server address**, set the interval to 15, Save & start.
+## Point your devices at a relay
+
+Works the same for the Cloudflare Worker and the home server — use the full address including
+`?token=…`:
+- **Rainmeter:** in `Settings.inc` set `RelayUrl=https://…/?token=YOUR-TOKEN`, `Interval=15`, and
+  you can clear `ApiKey`.
+- **Android:** enter the address in **Relay address**, set the interval to 15, Save & start. You
+  can clear the API key.
 
 If you also keep your API key on a device, it falls back to calling Octopus directly (at most once a
-minute) when the server can't be reached — e.g. your phone away from home. To use the server from
-outside your home without that fallback, put it on a VPN such as Tailscale and use its Tailscale address.
-Optional: set `RELAY_TOKEN` in `/etc/octopus-relay.env` and add `?token=YOURSECRET` to the address on
-each device.
+minute) when the relay can't be reached — e.g. a home-only server while you're out.
 
 ## How it works
 
@@ -142,11 +177,13 @@ Octopus makes them available through its GraphQL API:
 
 1. Exchange the API key for a short-lived token (`obtainKrakenToken`) — cached ~50 minutes.
 2. Find the meter's device ID from the account (`account → electricityAgreements → meters`) — cached.
-3. Each refresh runs one query with two parts:
-   - `smartMeterTelemetry(deviceId)` → latest `demand` (watts) and `readAt`
-   - `smartMeterTelemetry(deviceId, grouping: HALF_HOURLY, start: midnight)` → sum of
-     `consumptionDelta` = today's usage
-4. Every 30 minutes, the same half-hourly query on the **gas** meter's device ID gives today's gas.
+3. Each refresh asks for `smartMeterTelemetry(deviceId)` → latest `demand` (watts), `readAt`
+   and `consumption` (the meter's running total).
+4. Every 30 minutes (and at midnight) it also asks for
+   `smartMeterTelemetry(deviceId, grouping: HALF_HOURLY, start: midnight)`; the sum of
+   `consumptionDelta` is today's usage. In between, today = that sum + how far the running total
+   has moved since. This keeps it to one request per refresh.
+5. Every 30 minutes, the same half-hourly query on the **gas** meter's device ID gives today's gas.
 
 ## Privacy
 

@@ -21,4 +21,20 @@
     <string name="footnote">Updates pause while the screen is off and resume when you unlock. Your API key is stored only on this phone and is sent only to Octopus Energy. Without a relay, Octopus limits how often its API can be called: keep the interval at 60 seconds or more, or 90 if the PC skin also calls Octopus directly.</string>
     <string name="widget_description">Live electricity demand and today\'s usage</string>
     <string name="widget_footer_placeholder">Tap to load</string>
+    <string name="saved_started">Saved — live updates started</string>
+    <string name="saved_restarted">Saved — settings updated</string>
+    <string name="gas_alert">Warn me if the gas has been on for 1½ hours or more</string>
+    <string name="gas_alert_help">Gas meters report every half-hour and readings reach Octopus about an hour late, so the warning comes roughly an hour after the 1½-hour mark. Useful for catching a boiler or hob left on.</string>
+    <string name="gas_channel_name">Gas warnings</string>
+    <string name="gas_channel_description">Warns when gas has been in use for a long time</string>
+    <string name="bg_title">Background running</string>
+    <string name="bg_help">So the notification, widget and gas warning keep working while the phone is locked or the app hasn\'t been opened for a while.</string>
+    <string name="bg_battery">Allow unrestricted battery use</string>
+    <string name="bg_unused">Don\'t pause app when unused</string>
+    <string name="bg_battery_ok">✓ Battery: unrestricted</string>
+    <string name="bg_battery_no">✗ Battery: optimised — Android may stop updates</string>
+    <string name="bg_unused_ok">✓ Won\'t be paused when unused</string>
+    <string name="bg_unused_no">✗ May be paused if unused for a few months</string>
+    <string name="bg_samsung">Samsung: also go to Settings → Battery → Background usage limits → Never sleeping apps, and add Octopus Live.</string>
+    <string name="bg_unused_tip">Turn off “Pause app activity if unused” (or “Remove permissions if app isn\'t used”) on the next screen.</string>
 </resources>

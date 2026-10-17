@@ -21,6 +21,8 @@ data class Reading(
     val gasReadAt: String? = null,     // local HH:mm of the latest half-hourly gas reading
     val viaServer: Boolean = false,    // true = read from your own relay server
     val gasKw: Double? = null,         // average gas power over the latest half-hour
+    val gasRunMinutes: Int = 0,        // how long the gas has been on (consecutive half-hours)
+    val gasRunSince: String? = null,   // local HH:mm when that run started
 )
 
 class ApiException(message: String, val code: String? = null) : Exception(message)
@@ -82,6 +84,8 @@ class OctopusApi(context: Context) {
                 gasReadAt = if (hasGas) hhmm(j.optString("gasAt", null)) else null,
                 viaServer = true,
                 gasKw = if (hasGas) j.optDouble("gasKw", 0.0).let { if (it.isNaN()) 0.0 else it } else null,
+                gasRunMinutes = if (hasGas) j.optInt("gasRunMinutes", 0) else 0,
+                gasRunSince = if (hasGas) hhmm(j.optString("gasRunSince", null)) else null,
             )
         } finally {
             conn.disconnect()
@@ -165,6 +169,7 @@ class OctopusApi(context: Context) {
         return Reading(
             demand, todayWh / 1000.0, readAt, System.currentTimeMillis(),
             gasTodayKwh = prefs.gasKwh, gasReadAt = prefs.gasAt, gasKw = prefs.gasKw,
+            gasRunMinutes = prefs.gasRunMinutes, gasRunSince = prefs.gasRunSince,
         )
     }
 
@@ -176,6 +181,7 @@ class OctopusApi(context: Context) {
         val gasId = prefs.gasDeviceId
         if (gasId == null || gasId == NO_GAS) {
             prefs.gasKwh = null; prefs.gasAt = null; prefs.gasKw = null
+            prefs.gasRunMinutes = 0; prefs.gasRunSince = null
             return
         }
         val today = start.toLocalDate().toString()
@@ -183,37 +189,41 @@ class OctopusApi(context: Context) {
         if (fresh) return
 
         val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+        val from = start.minusHours(3)   // a little of yesterday, so a run over midnight is counted
         try {
             val d = graphql(
                 """query { gas: smartMeterTelemetry(deviceId: "${clean(gasId)}", grouping: HALF_HOURLY,
-                     start: "${start.withNano(0).format(fmt)}", end: "${now.withNano(0).format(fmt)}") { readAt consumptionDelta } }""",
+                     start: "${from.withNano(0).format(fmt)}", end: "${now.withNano(0).format(fmt)}") { readAt consumptionDelta } }""",
                 token,
             )
-            var wh = 0.0
-            var last: String? = null
-            var latestAt = ""
-            var latestWh = 0.0
-            for (row in d.optJSONArray("gas").objects()) {
-                if (row.isNull("consumptionDelta")) continue
-                val v = row.optDouble("consumptionDelta", 0.0)
-                if (v.isNaN()) continue
-                wh += v
-                if (v > 0) last = row.optString("readAt")
-                val at = row.optString("readAt")
-                if (at >= latestAt) { latestAt = at; latestWh = v }
-            }
-            prefs.gasKwh = wh / 1000.0
-            prefs.gasKw = latestWh / 500.0   // half-hour Wh -> average kW
-            prefs.gasAt = last?.let {
-                try {
-                    OffsetDateTime.parse(it).atZoneSameInstant(now.zone).format(DateTimeFormatter.ofPattern("HH:mm"))
-                } catch (e: Exception) { null }
-            }
+            val rows = d.optJSONArray("gas").objects().mapNotNull { row ->
+                if (row.isNull("consumptionDelta")) return@mapNotNull null
+                val v = row.optDouble("consumptionDelta", Double.NaN)
+                val t = try { OffsetDateTime.parse(row.optString("readAt")) } catch (e: Exception) { null }
+                if (v.isNaN() || t == null) null else t to v
+            }.sortedBy { it.first }
+
+            val midnight = start.toOffsetDateTime()
+            val todayRows = rows.filter { !it.first.isBefore(midnight) }
+            prefs.gasKwh = todayRows.sumOf { it.second } / 1000.0
+            val hhmm = DateTimeFormatter.ofPattern("HH:mm")
+            prefs.gasAt = todayRows.lastOrNull { it.second > 0 }?.first?.atZoneSameInstant(now.zone)?.format(hhmm)
+            prefs.gasKw = (rows.lastOrNull()?.second ?: 0.0) / 500.0   // half-hour Wh -> average kW
+
+            // How long the gas has been on: consecutive latest half-hours with real use
+            var n = 0
+            for (k in rows.indices.reversed()) { if (rows[k].second >= GAS_ON_WH) n++ else break }
+            prefs.gasRunMinutes = n * 30
+            prefs.gasRunSince = if (n > 0) rows[rows.size - n].first.atZoneSameInstant(now.zone).format(hhmm) else null
+
             prefs.gasDay = today
             prefs.gasFetched = System.currentTimeMillis()
         } catch (e: Exception) {
             // Keep yesterday's figure out of today's display
-            if (prefs.gasDay != today) { prefs.gasKwh = 0.0; prefs.gasAt = null; prefs.gasKw = 0.0 }
+            if (prefs.gasDay != today) {
+                prefs.gasKwh = 0.0; prefs.gasAt = null; prefs.gasKw = 0.0
+                prefs.gasRunMinutes = 0; prefs.gasRunSince = null
+            }
         }
     }
 
@@ -312,5 +322,6 @@ class OctopusApi(context: Context) {
         const val NO_GAS = "none"
         const val GAS_EVERY_MS = 30 * 60 * 1000L
         const val SYNC_EVERY_MS = 30 * 60 * 1000L
+        const val GAS_ON_WH = 100.0   // a half-hour with at least this much gas (0.2 kW average) counts as "on"
     }
 }

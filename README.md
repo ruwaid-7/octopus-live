@@ -73,6 +73,15 @@ The skin uses the PowerShell built into Windows — nothing else to install.
    It updates every minute while the live notification is running (otherwise every 30 minutes).
    Tap it to refresh.
 
+**Gas warning:** with *Warn me if the gas has been on for 1½ hours or more* ticked (on by
+default), you get a notification when the meter shows three half-hours in a row with gas in use.
+Gas readings reach Octopus about an hour late, so the warning arrives roughly an hour after the
+1½-hour mark — good for catching a boiler or hob left on, not an instant alarm.
+
+**Background running:** while the screen is off the app keeps updating every 5 minutes (so the
+widget and gas warning work with the phone locked). In the app's **Background running** section,
+tap **Allow unrestricted battery use** and **Don't pause app when unused** until both show ✓.
+
 **Tips**
 - Samsung / Xiaomi / OnePlus phones can stop background apps. If the notification disappears, set
   *Settings → Apps → Octopus Live → Battery* to **Unrestricted**.

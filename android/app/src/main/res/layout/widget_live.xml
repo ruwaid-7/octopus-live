@@ -14,12 +14,20 @@
     tools:layout_height="84dp"
     tools:layout_width="220dp">
 
-    <!-- 1. BOTTOM ANCHOR: Status Line Footer -->
-    <TextView
-        android:id="@+id/widgetFooter"
+    <!-- 1. BOTTOM ANCHOR: Status line on the left, gas today on the right -->
+    <LinearLayout
+        android:id="@+id/widgetFooterRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/widgetFooter"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:includeFontPadding="false"
@@ -30,13 +38,31 @@
         android:textSize="11sp"
         tools:text="● Live · meter 18:05" />
 
+    <!-- Gas today (hidden when the account has no smart gas meter) -->
+    <TextView
+        android:id="@+id/widgetGas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="sans-serif"
+        android:textStyle="bold"
+        android:includeFontPadding="false"
+        android:maxLines="1"
+        android:text=""
+        android:textColor="@color/gas_orange"
+        android:textSize="11sp"
+        android:visibility="gone"
+        tools:text="Gas 3.75 kWh"
+        tools:visibility="visible" />
+    </LinearLayout>
+
     <!-- 2. ABOVE FOOTER: Horizontal Power Load Bar (0 - 4000W) -->
     <ProgressBar
         android:id="@+id/widgetBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="5dp"
-        android:layout_above="@id/widgetFooter"
+        android:layout_above="@id/widgetFooterRow"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="6dp"
         android:indeterminate="false"

@@ -6,12 +6,16 @@ Octopus Home Mini you already have.
 | Windows (Rainmeter skin) | Android |
 |---|---|
 | Live watts, colour-coded green / amber / red | Ongoing notification with live watts and today's kWh |
-| Today's kWh | Live watts drawn into the **status-bar icon** |
+| Today's electricity and **gas** kWh | Live watts drawn into the **status-bar icon** |
 | Usage bar + ~3.5 h mini graph | **Home-screen widget** |
 | Click to refresh | Pauses while the screen is off to save battery |
 
 > **Unofficial.** This project is not made, endorsed or supported by Octopus Energy. It uses the
 > public [Octopus Energy API](https://developer.octopus.energy/) with your own API key.
+
+**Gas:** if you have a smart gas meter, both apps also show today's gas usage in kWh. Gas meters
+only send a reading every 30 minutes, so gas is a running total for the day rather than a live
+figure, and is fetched every 30 minutes.
 
 ---
 
@@ -71,10 +75,14 @@ The skin uses the PowerShell built into Windows — nothing else to install.
 
 ## Rate limits — please read
 
-Octopus limits how often each account can call its API. Both apps make **one request per refresh**
-(live reading + today's total together) and default to every **60 seconds** — the PC only while it's
-on, the phone only while its screen is on. If you see "Rate limited", raise the interval to 90–120
-seconds. Please don't set it lower than 60.
+Octopus allows about **100 API requests per hour per account**, shared by everything using your
+key. Each app makes **one request per refresh** (live reading + today's electricity together), plus
+one gas request every 30 minutes, and defaults to every **60 seconds** — the PC only while it's on,
+the phone only while its screen is on.
+
+If you run **both** the PC skin and the phone app at the same time, set both intervals to **90
+seconds or more** to stay under the limit. If you see "Rate limited", raise the interval. Please
+don't set it lower than 60.
 
 ## How it works
 
@@ -87,6 +95,7 @@ Octopus makes them available through its GraphQL API:
    - `smartMeterTelemetry(deviceId)` → latest `demand` (watts) and `readAt`
    - `smartMeterTelemetry(deviceId, grouping: HALF_HOURLY, start: midnight)` → sum of
      `consumptionDelta` = today's usage
+4. Every 30 minutes, the same half-hourly query on the **gas** meter's device ID gives today's gas.
 
 ## Privacy
 

@@ -39,6 +39,27 @@ class Prefs(context: Context) {
         get() = p.getString("deviceId", null)
         set(v) = p.edit().putString("deviceId", v).apply()
 
+    var gasDeviceId: String?
+        get() = p.getString("gasDeviceId", null)
+        set(v) = p.edit().putString("gasDeviceId", v).apply()
+
+    // Gas: cached today's total (fetched every 30 minutes)
+    var gasKwh: Double?
+        get() = if (p.contains("gasKwh")) p.getFloat("gasKwh", 0f).toDouble() else null
+        set(v) { if (v == null) p.edit().remove("gasKwh").apply() else p.edit().putFloat("gasKwh", v.toFloat()).apply() }
+
+    var gasAt: String?
+        get() = p.getString("gasAt", null)
+        set(v) = p.edit().putString("gasAt", v).apply()
+
+    var gasDay: String?
+        get() = p.getString("gasDay", null)
+        set(v) = p.edit().putString("gasDay", v).apply()
+
+    var gasFetched: Long
+        get() = p.getLong("gasFetched", 0)
+        set(v) = p.edit().putLong("gasFetched", v).apply()
+
     // Last result, shown in the app
     var lastSummary: String?
         get() = p.getString("lastSummary", null)
@@ -66,10 +87,13 @@ class Prefs(context: Context) {
             todayKwh = p.getFloat("lastToday", 0f).toDouble(),
             readAt = p.getString("lastReadAt", "--:--") ?: "--:--",
             fetchedAt = fetchedAt,
+            gasTodayKwh = gasKwh,
+            gasReadAt = gasAt,
         )
     }
 
     fun clearCachedApiState() {
-        p.edit().remove("token").remove("tokenExpires").remove("deviceId").apply()
+        p.edit().remove("token").remove("tokenExpires").remove("deviceId")
+            .remove("gasDeviceId").remove("gasKwh").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
     }
 }

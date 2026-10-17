@@ -167,7 +167,11 @@ class LiveService : Service() {
             else -> "Connecting to Octopus…"
         }
         val text = buildString {
-            if (r != null) append(String.format(Locale.UK, "Today %.2f kWh  ·  meter %s", r.todayKwh, r.readAt))
+            if (r != null) {
+                append(String.format(Locale.UK, "Today %.2f kWh", r.todayKwh))
+                r.gasTodayKwh?.let { append(String.format(Locale.UK, "  ·  Gas %.2f kWh", it)) }
+                append("  ·  meter ").append(r.readAt)
+            }
             if (lastError != null) {
                 if (isNotEmpty()) append("  ·  ")
                 append("⚠ ").append(lastError)
@@ -229,7 +233,12 @@ class LiveService : Service() {
         val sb = StringBuilder()
         if (r != null) {
             sb.append(r.demandWatts?.let { formatWatts(it) } ?: "-- W")
-            sb.append(String.format(Locale.UK, "\nToday: %.2f kWh\nMeter reading at %s", r.todayKwh, r.readAt))
+            sb.append(String.format(Locale.UK, "\nToday: %.2f kWh", r.todayKwh))
+            r.gasTodayKwh?.let { gas ->
+                sb.append(String.format(Locale.UK, "\nGas today: %.2f kWh", gas))
+                r.gasReadAt?.let { sb.append(" (to ").append(it).append(")") }
+            }
+            sb.append("\nMeter reading at ").append(r.readAt)
         }
         if (lastError != null) sb.append(if (sb.isEmpty()) "" else "\n").append("Problem: ").append(lastError)
         if (!screenOn) sb.append("\n(paused while screen off)")

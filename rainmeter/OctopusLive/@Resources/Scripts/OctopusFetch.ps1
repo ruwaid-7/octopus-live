@@ -13,7 +13,8 @@ $DataFile     = Join-Path $Res 'data.txt'
 $CacheFile    = Join-Path $Res 'cache.json'
 $ErrorFile    = Join-Path $Res 'last-error.txt'
 $Api          = if ($env:OCTOPUS_API_URL) { $env:OCTOPUS_API_URL } else { 'https://api.octopus.energy/v1/graphql/' }
-$DataKeys     = 'Status', 'Demand', 'TodayKWh', 'ReadAt', 'Updated'
+$DataKeys     = 'Status', 'Demand', 'TodayKWh', 'ReadAt', 'Updated', 'GasKWh', 'GasAt'
+$GasEverySecs = 30 * 60      # gas meters only report every 30 minutes
 
 # ---------- helpers ----------
 
@@ -95,7 +96,7 @@ function Get-Token([hashtable]$cache, [string]$apiKey) {
 }
 
 function Get-DeviceId([hashtable]$cache, [string]$token, [string]$accountSetting) {
-    if ($cache.deviceId) { return $cache.deviceId }
+    if ($cache.deviceId -and $null -ne $cache.gasDeviceId) { return $cache.deviceId }
 
     $account = $accountSetting
     if (-not $account) {
@@ -105,8 +106,18 @@ function Get-DeviceId([hashtable]$cache, [string]$token, [string]$accountSetting
     }
 
     $q = 'query { account(accountNumber: "' + (Clean $account) + '") { electricityAgreements(active: true) { ' +
-         'meterPoint { direction meters(includeInactive: false) { smartImportElectricityMeter { deviceId } } } } } }'
+         'meterPoint { direction meters(includeInactive: false) { smartImportElectricityMeter { deviceId } } } } ' +
+         'gasAgreements(active: true) { meterPoint { meters(includeInactive: false) { smartGasMeter { deviceId } } } } } }'
     $d = Invoke-Gql $q $token
+
+    # Gas meter is optional: 'none' means the account has no smart gas meter
+    $cache.gasDeviceId = 'none'
+    foreach ($ag in @($d.account.gasAgreements)) {
+        foreach ($m in @($ag.meterPoint.meters)) {
+            if ($m.smartGasMeter -and $m.smartGasMeter.deviceId) { $cache.gasDeviceId = $m.smartGasMeter.deviceId; break }
+        }
+        if ($cache.gasDeviceId -ne 'none') { break }
+    }
     foreach ($ag in @($d.account.electricityAgreements)) {
         if ($ag.meterPoint.direction -eq 'EXPORT') { continue }
         foreach ($m in @($ag.meterPoint.meters)) {
@@ -130,6 +141,43 @@ function Get-Telemetry([string]$token, [string]$deviceId) {
          'live: smartMeterTelemetry(deviceId: "' + $id + '") { readAt demand consumption } ' +
          'today: smartMeterTelemetry(deviceId: "' + $id + '", grouping: HALF_HOURLY, start: "' + $start + '", end: "' + $end + '") { readAt consumptionDelta } }'
     return Invoke-Gql $q $token
+}
+
+# Today's gas usage (kWh). Gas meters only send a reading every 30 minutes, so this
+# is fetched at most every $GasEverySecs seconds and never affects the electricity status.
+function Update-Gas([hashtable]$cache, [hashtable]$data, [string]$token) {
+    if (-not $cache.gasDeviceId -or $cache.gasDeviceId -eq 'none') { $data.GasKWh = ''; $data.GasAt = ''; return }
+    $now   = Get-Date
+    $today = $now.ToString('yyyy-MM-dd')
+    $nowS  = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    if ($cache.gasDay -eq $today -and $cache.gasFetched -and ($nowS - [long]$cache.gasFetched) -lt $GasEverySecs) { return }
+
+    $start = $now.Date.ToString('yyyy-MM-ddTHH:mm:sszzz')
+    $end   = $now.ToString('yyyy-MM-ddTHH:mm:sszzz')
+    $q = 'query { gas: smartMeterTelemetry(deviceId: "' + (Clean $cache.gasDeviceId) + '", grouping: HALF_HOURLY, start: "' + $start + '", end: "' + $end + '") { readAt consumptionDelta } }'
+    try {
+        $d = Invoke-Gql $q $token
+        $wh = 0.0; $last = $null
+        foreach ($row in @($d.gas)) {
+            if ($row -and $null -ne $row.consumptionDelta) {
+                $wh += [double]$row.consumptionDelta
+                if ([double]$row.consumptionDelta -gt 0) { $last = "$($row.readAt)" }
+            }
+        }
+        $data.GasKWh = ([Math]::Round($wh / 1000.0, 2)).ToString('0.00', [Globalization.CultureInfo]::InvariantCulture)
+        $at = [DateTimeOffset]::MinValue
+        if ($last -and [DateTimeOffset]::TryParse($last, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$at)) {
+            $data.GasAt = $at.ToLocalTime().ToString('HH:mm')
+        } else {
+            $data.GasAt = '--:--'
+        }
+        $cache.gasDay = $today
+        $cache.gasFetched = $nowS
+    } catch {
+        # Keep the last gas figure; try again on the next refresh
+        Add-Content -Path $ErrorFile -Value ("{0}  Gas: {1}" -f (Get-Date -Format 's'), $_.Exception.Message) -Encoding ASCII
+        if ($cache.gasDay -ne $today) { $data.GasKWh = '0.00'; $data.GasAt = '--:--' }
+    }
 }
 
 # ---------- main ----------
@@ -163,6 +211,8 @@ try {
             throw
         }
     }
+    if (Test-Path $ErrorFile) { Remove-Item $ErrorFile -Force -ErrorAction SilentlyContinue }
+    Update-Gas $cache $data $token
     Save-Cache $cache
 
     $live = @($result.live) | Where-Object { $_ } | Sort-Object { "$($_.readAt)" } | Select-Object -Last 1
@@ -182,7 +232,6 @@ try {
         $data.ReadAt = "$($live.readAt)"
     }
     $data.Status   = 'OK'
-    if (Test-Path $ErrorFile) { Remove-Item $ErrorFile -Force -ErrorAction SilentlyContinue }
 } catch {
     $msg = "$($_.Exception.Message)"
     $data.Status = $msg

@@ -3,3 +3,5 @@ Demand=0
 TodayKWh=0.00
 ReadAt=--:--
 Updated=--:--:--
+GasKWh=--
+GasAt=--:--

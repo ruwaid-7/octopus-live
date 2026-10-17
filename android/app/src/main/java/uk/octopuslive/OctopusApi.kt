@@ -17,6 +17,8 @@ data class Reading(
     val todayKwh: Double,
     val readAt: String,      // local HH:mm of the meter reading
     val fetchedAt: Long,
+    val gasTodayKwh: Double? = null,   // null = no smart gas meter / not known yet
+    val gasReadAt: String? = null,     // local HH:mm of the latest half-hourly gas reading
 )
 
 class ApiException(message: String, val code: String? = null) : Exception(message)
@@ -82,7 +84,56 @@ class OctopusApi(context: Context) {
             live.optString("readAt")
         }
 
-        return Reading(demand, todayWh / 1000.0, readAt, System.currentTimeMillis())
+        updateGas(token, start, now)
+
+        return Reading(
+            demand, todayWh / 1000.0, readAt, System.currentTimeMillis(),
+            gasTodayKwh = prefs.gasKwh, gasReadAt = prefs.gasAt,
+        )
+    }
+
+    /**
+     * Today's gas usage. Gas meters only send a reading every 30 minutes, so this runs at most
+     * every [GAS_EVERY_MS] (and at midnight). Failures are ignored: electricity keeps working.
+     */
+    private fun updateGas(token: String, start: ZonedDateTime, now: ZonedDateTime) {
+        val gasId = prefs.gasDeviceId
+        if (gasId == null || gasId == NO_GAS) {
+            prefs.gasKwh = null; prefs.gasAt = null
+            return
+        }
+        val today = start.toLocalDate().toString()
+        val fresh = prefs.gasDay == today && System.currentTimeMillis() - prefs.gasFetched < GAS_EVERY_MS
+        if (fresh) return
+
+        val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+        try {
+            val d = graphql(
+                """query { gas: smartMeterTelemetry(deviceId: "${clean(gasId)}", grouping: HALF_HOURLY,
+                     start: "${start.withNano(0).format(fmt)}", end: "${now.withNano(0).format(fmt)}") { readAt consumptionDelta } }""",
+                token,
+            )
+            var wh = 0.0
+            var last: String? = null
+            for (row in d.optJSONArray("gas").objects()) {
+                if (row.isNull("consumptionDelta")) continue
+                val v = row.optDouble("consumptionDelta", 0.0)
+                if (v.isNaN()) continue
+                wh += v
+                if (v > 0) last = row.optString("readAt")
+            }
+            prefs.gasKwh = wh / 1000.0
+            prefs.gasAt = last?.let {
+                try {
+                    OffsetDateTime.parse(it).atZoneSameInstant(now.zone).format(DateTimeFormatter.ofPattern("HH:mm"))
+                } catch (e: Exception) { null }
+            }
+            prefs.gasDay = today
+            prefs.gasFetched = System.currentTimeMillis()
+        } catch (e: Exception) {
+            // Keep yesterday's figure out of today's display
+            if (prefs.gasDay != today) { prefs.gasKwh = 0.0; prefs.gasAt = null }
+        }
     }
 
     private fun token(): String {
@@ -98,7 +149,8 @@ class OctopusApi(context: Context) {
     }
 
     private fun deviceId(token: String): String {
-        prefs.deviceId?.let { return it }
+        val cachedId = prefs.deviceId
+        if (cachedId != null && prefs.gasDeviceId != null) return cachedId
 
         val account = prefs.accountNumber?.takeIf { it.isNotBlank() } ?: run {
             val d = graphql("query { viewer { accounts { number } } }", token)
@@ -109,9 +161,16 @@ class OctopusApi(context: Context) {
 
         val d = graphql(
             """query { account(accountNumber: "${clean(account)}") { electricityAgreements(active: true) {
-                 meterPoint { direction meters(includeInactive: false) { smartImportElectricityMeter { deviceId } } } } } }""",
+                 meterPoint { direction meters(includeInactive: false) { smartImportElectricityMeter { deviceId } } } }
+               gasAgreements(active: true) { meterPoint { meters(includeInactive: false) { smartGasMeter { deviceId } } } } } }""",
             token,
         )
+
+        // Gas meter is optional
+        prefs.gasDeviceId = d.getJSONObject("account").optJSONArray("gasAgreements").objects()
+            .flatMap { it.optJSONObject("meterPoint")?.optJSONArray("meters").objects() }
+            .mapNotNull { it.optJSONObject("smartGasMeter")?.optString("deviceId")?.takeIf { id -> id.isNotBlank() } }
+            .firstOrNull() ?: NO_GAS
         for (ag in d.getJSONObject("account").optJSONArray("electricityAgreements").objects()) {
             val mp = ag.optJSONObject("meterPoint") ?: continue
             if (mp.optString("direction") == "EXPORT") continue
@@ -169,5 +228,7 @@ class OctopusApi(context: Context) {
 
     companion object {
         const val ENDPOINT = "https://api.octopus.energy/v1/graphql/"
+        const val NO_GAS = "none"
+        const val GAS_EVERY_MS = 30 * 60 * 1000L
     }
 }

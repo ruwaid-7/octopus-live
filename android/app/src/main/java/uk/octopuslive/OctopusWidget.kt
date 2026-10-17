@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.view.View
 import android.widget.RemoteViews
 import java.util.Locale
 
@@ -84,6 +85,15 @@ class OctopusWidget : AppWidgetProvider() {
                 else -> "Meter $readAt"
             }
             views.setTextViewText(R.id.widgetFooter, footer)
+
+            // Gas: today's total (updates every 30 min); hidden when there's no smart gas meter
+            val gas = r?.gasTodayKwh
+            if (gas != null) {
+                views.setViewVisibility(R.id.widgetGas, View.VISIBLE)
+                views.setTextViewText(R.id.widgetGas, String.format(Locale.UK, "Gas %.2f kWh", gas))
+            } else {
+                views.setViewVisibility(R.id.widgetGas, View.GONE)
+            }
 
             // Tap: start/refresh live updates, or open settings if there's no key yet.
             val tap = if (hasKey) {

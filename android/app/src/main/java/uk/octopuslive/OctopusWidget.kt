@@ -6,7 +6,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.widget.RemoteViews
 import java.util.Locale
 
@@ -61,7 +60,14 @@ class OctopusWidget : AppWidgetProvider() {
 
             val watts = r?.demandWatts
             views.setTextViewText(R.id.widgetDemand, if (watts != null) LiveService.formatWatts(watts) else "-- W")
-            views.setTextColor(R.id.widgetDemand, if (watts != null) brighter(LiveService.levelColor(watts)) else Color.WHITE)
+            val colorRes = when {
+                watts == null -> R.color.octopus_text_primary
+                watts < 500 -> R.color.power_Low_Green
+                watts <= 2000 -> R.color.power_Normal_Amber
+                else -> R.color.power_High_Red
+            }
+            views.setTextColor(R.id.widgetDemand, context.getColor(colorRes))
+            views.setProgressBar(R.id.widgetBar, BAR_MAX_WATTS, (watts ?: 0).coerceIn(0, BAR_MAX_WATTS), false)
             views.setTextViewText(
                 R.id.widgetToday,
                 if (r != null) String.format(Locale.UK, "%.2f kWh", r.todayKwh) else "-- kWh",
@@ -74,7 +80,7 @@ class OctopusWidget : AppWidgetProvider() {
                 error != null && (r == null || ageMin > 5) -> "⚠ $error"
                 r == null -> "Tap to load"
                 !prefs.running && ageMin > 30 -> "Meter $readAt · tap for live"
-                prefs.running -> "Live · meter $readAt"
+                prefs.running -> "● Live · meter $readAt"
                 else -> "Meter $readAt"
             }
             views.setTextViewText(R.id.widgetFooter, footer)
@@ -97,10 +103,6 @@ class OctopusWidget : AppWidgetProvider() {
             for (id in ids) manager.updateAppWidget(id, views)
         }
 
-        /** Lighten the notification colours a little so they read well on the dark widget. */
-        private fun brighter(c: Int): Int {
-            fun ch(v: Int) = (v + (255 - v) * 0.25).toInt().coerceIn(0, 255)
-            return Color.rgb(ch(Color.red(c)), ch(Color.green(c)), ch(Color.blue(c)))
-        }
+        private const val BAR_MAX_WATTS = 4000
     }
 }

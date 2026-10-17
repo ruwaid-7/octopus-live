@@ -91,8 +91,13 @@ class OctopusWidget : AppWidgetProvider() {
             if (gas != null) {
                 views.setViewVisibility(R.id.widgetGas, View.VISIBLE)
                 views.setTextViewText(R.id.widgetGas, String.format(Locale.UK, "Gas %.2f kWh", gas))
+                // Gas bar: average gas power over the latest half-hour (gas meters report every 30 min)
+                val kw = (r?.gasKw ?: 0.0).coerceIn(0.0, GAS_BAR_MAX_KW)
+                views.setViewVisibility(R.id.widgetGasBarRow, View.VISIBLE)
+                views.setProgressBar(R.id.widgetGasBar, 100, (kw / GAS_BAR_MAX_KW * 100).toInt(), false)
             } else {
                 views.setViewVisibility(R.id.widgetGas, View.GONE)
+                views.setViewVisibility(R.id.widgetGasBarRow, View.GONE)
             }
 
             // Tap: start/refresh live updates, or open settings if there's no key yet.
@@ -114,5 +119,6 @@ class OctopusWidget : AppWidgetProvider() {
         }
 
         private const val BAR_MAX_WATTS = 4000
+        private const val GAS_BAR_MAX_KW = 10.0
     }
 }

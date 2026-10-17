@@ -32,7 +32,7 @@ GAS_SECONDS = 30 * 60                                                 # gas mete
 HOST = os.environ.get("RELAY_HOST", "0.0.0.0")
 PORT = int(os.environ.get("RELAY_PORT", "8765"))
 RELAY_TOKEN = os.environ.get("RELAY_TOKEN", "").strip()              # optional shared secret
-VERSION = "1.3"
+VERSION = "1.4"
 
 
 def log(msg):
@@ -61,6 +61,8 @@ class Octopus:
         self.gas_id = None            # "" = no smart gas meter
         self.gas_kwh = None
         self.gas_at = None
+        self.gas_kw = None            # average gas power over the latest half-hour
+        self.gas_kw_at = None
         self.gas_day = None
         self.gas_fetched = 0.0
 
@@ -178,7 +180,7 @@ class Octopus:
 
     def update_gas(self):
         if not self.gas_id:
-            self.gas_kwh, self.gas_at = None, None
+            self.gas_kwh, self.gas_at, self.gas_kw, self.gas_kw_at = None, None, None, None
             return
         now = datetime.now().astimezone()
         today = now.date().isoformat()
@@ -189,7 +191,7 @@ class Octopus:
             d = self.gql(
                 'query { gas: smartMeterTelemetry(deviceId: "%s", grouping: HALF_HOURLY, start: "%s", end: "%s") { readAt consumptionDelta } }'
                 % (self.clean(self.gas_id), iso(start), iso(now)))
-            wh, last = 0.0, None
+            wh, last, latest = 0.0, None, None
             for r in d.get("gas") or []:
                 if not r or r.get("consumptionDelta") is None:
                     continue
@@ -197,14 +199,22 @@ class Octopus:
                 wh += v
                 if v > 0:
                     last = r.get("readAt")
+                if latest is None or (r.get("readAt") or "") >= (latest.get("readAt") or ""):
+                    latest = r
             self.gas_kwh = wh / 1000.0
             self.gas_at = parse_dt(last)
+            # Half-hour Wh -> average kW over that half-hour (Wh / 1000 * 2)
+            if latest is not None:
+                self.gas_kw = float(latest["consumptionDelta"]) / 500.0
+                self.gas_kw_at = parse_dt(latest.get("readAt"))
+            else:
+                self.gas_kw, self.gas_kw_at = 0.0, None
             self.gas_day = today
             self.gas_fetched = time.time()
         except ApiError as e:
             log(f"Gas: {e}")
             if self.gas_day != today:
-                self.gas_kwh, self.gas_at = 0.0, None
+                self.gas_kwh, self.gas_at, self.gas_kw, self.gas_kw_at = 0.0, None, 0.0, None
 
 
 def parse_dt(s):
@@ -249,6 +259,7 @@ def poller(client):
             STATE.set(ok=True, status="OK", demandW=demand, todayKwh=round(today_kwh, 3),
                       readAt=iso(read_at), gasKwh=None if client.gas_kwh is None else round(client.gas_kwh, 3),
                       gasAt=iso(client.gas_at), hasGas=bool(client.gas_id),
+                      gasKw=None if client.gas_kw is None else round(client.gas_kw, 2), gasKwAt=iso(client.gas_kw_at),
                       updated=iso(datetime.now(timezone.utc)), pollSeconds=POLL_SECONDS)
             if failures:
                 log("Recovered")
@@ -273,16 +284,22 @@ PAGE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 body{margin:0;background:var(--bg);color:#fff;font:15px system-ui,sans-serif;display:grid;place-items:center;min-height:100vh}
 .c{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 24px;width:min(340px,90vw)}
 .t{color:var(--pink);font-weight:700;font-size:11px;letter-spacing:.1em}.w{font-size:44px;font-weight:900;margin:6px 0}
-.r{display:flex;justify-content:space-between;color:var(--dim);margin-top:6px}.r b{color:#fff}.s{color:var(--dim);font-size:12px;margin-top:14px}
+.r{display:flex;justify-content:space-between;color:var(--dim);margin-top:6px}
+.b{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:10px;font-weight:700;color:var(--dim)}
+.b span{width:32px}.k{flex:1;height:6px;border-radius:3px;background:#ffffff38;overflow:hidden}.k i{display:block;height:100%;width:0;border-radius:3px;transition:width .6s}.r b{color:#fff}.s{color:var(--dim);font-size:12px;margin-top:14px}
 </style></head><body><div class="c"><div class="t">OCTOPUS LIVE · RELAY</div><div class="w" id="w">-- W</div>
-<div class="r">Today electricity<b id="e">--</b></div><div class="r">Today gas<b id="g">--</b></div>
+<div class="b"><span>ELEC</span><div class="k"><i id="eb"></i></div></div>
+<div class="b" id="gr"><span style="color:#ff8a3d">GAS</span><div class="k"><i id="gb" style="background:#ff8a3d"></i></div></div>
+<div class="r" style="margin-top:14px">Today electricity<b id="e">--</b></div><div class="r">Today gas<b id="g">--</b></div>
 <div class="s" id="s">Loading…</div></div><script>
 const q=location.search;function hm(x){return x?new Date(x).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'--:--'}
 async function u(){try{const d=await (await fetch('api/live'+q)).json();const w=d.demandW;
 document.getElementById('w').textContent=w==null?'-- W':(w>=1000?(w/1000).toFixed(2)+' kW':w+' W');
-document.getElementById('w').style.color=w==null?'#fff':w<500?'#00e676':w<=2000?'#ffb300':'#ff5252';
+const col=w==null?'#fff':w<500?'#00e676':w<=2000?'#ffb300':'#ff5252';document.getElementById('w').style.color=col;
+const eb=document.getElementById('eb');eb.style.background=col;eb.style.width=Math.min(100,(w||0)/40)+'%';
+document.getElementById('gr').style.display=d.hasGas?'flex':'none';document.getElementById('gb').style.width=Math.min(100,(d.gasKw||0)*10)+'%';
 document.getElementById('e').textContent=d.todayKwh==null?'--':d.todayKwh.toFixed(2)+' kWh';
-document.getElementById('g').textContent=!d.hasGas?'no gas meter':(d.gasKwh??0).toFixed(2)+' kWh · '+hm(d.gasAt);
+document.getElementById('g').textContent=!d.hasGas?'no gas meter':(d.gasKwh??0).toFixed(2)+' kWh · '+(d.gasKw??0).toFixed(1)+' kW · '+hm(d.gasKwAt||d.gasAt);
 document.getElementById('s').textContent=(d.ok?'● live':'⚠ '+d.status)+' · meter '+hm(d.readAt);}catch(e){document.getElementById('s').textContent='Relay not reachable';}}
 u();setInterval(u,10000);</script></body></html>"""
 

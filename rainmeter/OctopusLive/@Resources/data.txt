@@ -5,3 +5,4 @@ ReadAt=--:--
 Updated=--:--:--
 GasKWh=--
 GasAt=--:--
+GasKW=0.00

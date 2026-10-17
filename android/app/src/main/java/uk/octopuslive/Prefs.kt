@@ -57,6 +57,10 @@ class Prefs(context: Context) {
         get() = if (p.contains("gasKwh")) p.getFloat("gasKwh", 0f).toDouble() else null
         set(v) { if (v == null) p.edit().remove("gasKwh").apply() else p.edit().putFloat("gasKwh", v.toFloat()).apply() }
 
+    var gasKw: Double?
+        get() = if (p.contains("gasKw")) p.getFloat("gasKw", 0f).toDouble() else null
+        set(v) { if (v == null) p.edit().remove("gasKw").apply() else p.edit().putFloat("gasKw", v.toFloat()).apply() }
+
     var gasAt: String?
         get() = p.getString("gasAt", null)
         set(v) = p.edit().putString("gasAt", v).apply()
@@ -85,7 +89,12 @@ class Prefs(context: Context) {
             .putFloat("lastToday", r.todayKwh.toFloat())
             .putString("lastReadAt", r.readAt)
             .putLong("lastFetchedAt", r.fetchedAt)
+            .putBoolean("lastViaServer", r.viaServer)
             .apply()
+        // Keep gas in step too (in home-server mode it comes from the server, not the cache)
+        gasKwh = r.gasTodayKwh
+        gasAt = r.gasReadAt
+        gasKw = r.gasKw
     }
 
     fun loadReading(): Reading? {
@@ -98,6 +107,8 @@ class Prefs(context: Context) {
             fetchedAt = fetchedAt,
             gasTodayKwh = gasKwh,
             gasReadAt = gasAt,
+            gasKw = gasKw,
+            viaServer = p.getBoolean("lastViaServer", false),
         )
     }
 
@@ -107,6 +118,6 @@ class Prefs(context: Context) {
 
     fun clearCachedApiState() {
         p.edit().remove("token").remove("tokenExpires").remove("deviceId")
-            .remove("gasDeviceId").remove("gasKwh").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
+            .remove("gasDeviceId").remove("gasKwh").remove("gasKw").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
     }
 }

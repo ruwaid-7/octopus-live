@@ -13,7 +13,7 @@ $DataFile     = Join-Path $Res 'data.txt'
 $CacheFile    = Join-Path $Res 'cache.json'
 $ErrorFile    = Join-Path $Res 'last-error.txt'
 $Api          = if ($env:OCTOPUS_API_URL) { $env:OCTOPUS_API_URL } else { 'https://api.octopus.energy/v1/graphql/' }
-$DataKeys     = 'Status', 'Demand', 'TodayKWh', 'ReadAt', 'Updated', 'GasKWh', 'GasAt'
+$DataKeys     = 'Status', 'Demand', 'TodayKWh', 'ReadAt', 'Updated', 'GasKWh', 'GasAt', 'GasKW'
 $GasEverySecs = 30 * 60      # gas meters only report every 30 minutes
 
 # ---------- helpers ----------
@@ -146,7 +146,7 @@ function Get-Telemetry([string]$token, [string]$deviceId) {
 # Today's gas usage (kWh). Gas meters only send a reading every 30 minutes, so this
 # is fetched at most every $GasEverySecs seconds and never affects the electricity status.
 function Update-Gas([hashtable]$cache, [hashtable]$data, [string]$token) {
-    if (-not $cache.gasDeviceId -or $cache.gasDeviceId -eq 'none') { $data.GasKWh = ''; $data.GasAt = ''; return }
+    if (-not $cache.gasDeviceId -or $cache.gasDeviceId -eq 'none') { $data.GasKWh = ''; $data.GasAt = ''; $data.GasKW = ''; return }
     $now   = Get-Date
     $today = $now.ToString('yyyy-MM-dd')
     $nowS  = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
@@ -157,13 +157,17 @@ function Update-Gas([hashtable]$cache, [hashtable]$data, [string]$token) {
     $q = 'query { gas: smartMeterTelemetry(deviceId: "' + (Clean $cache.gasDeviceId) + '", grouping: HALF_HOURLY, start: "' + $start + '", end: "' + $end + '") { readAt consumptionDelta } }'
     try {
         $d = Invoke-Gql $q $token
-        $wh = 0.0; $last = $null
+        $wh = 0.0; $last = $null; $latest = $null
         foreach ($row in @($d.gas)) {
             if ($row -and $null -ne $row.consumptionDelta) {
                 $wh += [double]$row.consumptionDelta
                 if ([double]$row.consumptionDelta -gt 0) { $last = "$($row.readAt)" }
+                if (-not $latest -or "$($row.readAt)" -ge "$($latest.readAt)") { $latest = $row }
             }
         }
+        # Latest half-hour in Wh -> average kW over that half-hour
+        $kw = 0.0; if ($latest) { $kw = [double]$latest.consumptionDelta / 500.0 }
+        $data.GasKW = $kw.ToString('0.00', [Globalization.CultureInfo]::InvariantCulture)
         $data.GasKWh = ([Math]::Round($wh / 1000.0, 2)).ToString('0.00', [Globalization.CultureInfo]::InvariantCulture)
         $at = [DateTimeOffset]::MinValue
         if ($last -and [DateTimeOffset]::TryParse($last, [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$at)) {
@@ -176,7 +180,7 @@ function Update-Gas([hashtable]$cache, [hashtable]$data, [string]$token) {
     } catch {
         # Keep the last gas figure; try again on the next refresh
         Add-Content -Path $ErrorFile -Value ("{0}  Gas: {1}" -f (Get-Date -Format 's'), $_.Exception.Message) -Encoding ASCII
-        if ($cache.gasDay -ne $today) { $data.GasKWh = '0.00'; $data.GasAt = '--:--' }
+        if ($cache.gasDay -ne $today) { $data.GasKWh = '0.00'; $data.GasAt = '--:--'; $data.GasKW = '0.00' }
     }
 }
 
@@ -203,7 +207,9 @@ function Update-FromRelay([string]$relayUrl, [hashtable]$data) {
             $g = 0.0; if ($null -ne $r.gasKwh) { $g = [double]$r.gasKwh }
             $data.GasKWh = $g.ToString('0.00', $inv)
             $data.GasAt  = LocalHHmm $r.gasAt
-        } else { $data.GasKWh = ''; $data.GasAt = '' }
+            $k = 0.0; if ($null -ne $r.gasKw) { $k = [double]$r.gasKw }
+            $data.GasKW  = $k.ToString('0.00', $inv)
+        } else { $data.GasKWh = ''; $data.GasAt = ''; $data.GasKW = '' }
     }
     $data.Status = if ($r.ok) { 'OK' } else { "Relay: $($r.status)" }
 }

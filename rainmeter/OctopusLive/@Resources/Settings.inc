@@ -22,5 +22,7 @@ Interval=60
 
 ; Power (watts) that fills the bar completely, and the colour thresholds.
 MaxWatts=4000
+; Gas (kW) that fills the gas bar completely. A typical combi boiler runs at 10-30 kW.
+MaxGasKW=10
 AmberWatts=500
 RedWatts=2000

@@ -10,6 +10,15 @@ class Prefs(context: Context) {
         get() = p.getString("apiKey", null)
         set(v) = p.edit().putString("apiKey", v).apply()
 
+    /** Optional address of your own relay server, e.g. http://192.168.1.50:8765 */
+    var relayUrl: String?
+        get() = p.getString("relayUrl", null)
+        set(v) = p.edit().putString("relayUrl", v).apply()
+
+    var lastDirectAt: Long
+        get() = p.getLong("lastDirectAt", 0)
+        set(v) = p.edit().putLong("lastDirectAt", v).apply()
+
     var accountNumber: String?
         get() = p.getString("account", null)
         set(v) = p.edit().putString("account", v).apply()
@@ -91,6 +100,10 @@ class Prefs(context: Context) {
             gasReadAt = gasAt,
         )
     }
+
+    /** True when there's an API key or a home server to read from. */
+    val isConfigured: Boolean
+        get() = !apiKey.isNullOrBlank() || !relayUrl.isNullOrBlank()
 
     fun clearCachedApiState() {
         p.edit().remove("token").remove("tokenExpires").remove("deviceId")

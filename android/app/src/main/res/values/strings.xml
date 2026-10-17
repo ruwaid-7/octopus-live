@@ -12,7 +12,9 @@
     <string name="not_started">Not running yet. Enter your API key and tap Save &amp; start.</string>
     <string name="connecting">Connecting to Octopus…</string>
     <string name="stopped">Stopped.</string>
-    <string name="key_required">Enter your API key</string>
+    <string name="key_required">Enter your API key or a home server address</string>
+    <string name="relay_label">Home server address (optional)</string>
+    <string name="relay_help">If you run the Octopus Live relay on a home server, the app reads from it instead of Octopus, so refreshes can be as often as every 10 seconds. Away from home it falls back to Octopus using your API key.</string>
     <string name="notify_denied">Notifications are off for this app — enable them in Settings to see live usage.</string>
     <string name="channel_name">Live usage</string>
     <string name="channel_description">Ongoing notification with live electricity demand</string>

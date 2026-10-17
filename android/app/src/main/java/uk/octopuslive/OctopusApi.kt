@@ -19,6 +19,7 @@ data class Reading(
     val fetchedAt: Long,
     val gasTodayKwh: Double? = null,   // null = no smart gas meter / not known yet
     val gasReadAt: String? = null,     // local HH:mm of the latest half-hourly gas reading
+    val viaServer: Boolean = false,    // true = read from your own relay server
 )
 
 class ApiException(message: String, val code: String? = null) : Exception(message)
@@ -32,6 +33,60 @@ class OctopusApi(context: Context) {
     private val prefs = Prefs(context)
 
     fun fetch(): Reading {
+        val relay = prefs.relayUrl?.trim().orEmpty()
+        if (relay.isNotEmpty()) {
+            try {
+                return fetchFromServer(relay)
+            } catch (e: Exception) {
+                // Server unreachable (e.g. away from home): fall back to Octopus, at most once a minute
+                val hasKey = !prefs.apiKey.isNullOrBlank()
+                val sinceDirect = System.currentTimeMillis() - prefs.lastDirectAt
+                if (!hasKey) throw ApiException("Home server offline")
+                if (sinceDirect < 60_000L) throw ApiException("Home server offline - using Octopus once a minute")
+            }
+        }
+        if (prefs.apiKey.isNullOrBlank()) throw ApiException("Add your API key in the app")
+        prefs.lastDirectAt = System.currentTimeMillis()
+        return fetchDirect()
+    }
+
+    /** Reads the latest values from your Octopus Live relay server (see /server in the repo). */
+    private fun fetchFromServer(base: String): Reading {
+        val withScheme = if (base.contains("://")) base else "http://$base"
+        val uri = android.net.Uri.parse(withScheme)
+        val url = if (uri.path.isNullOrEmpty() || uri.path == "/") uri.buildUpon().path("/api/live").build() else uri
+        val conn = (URL(url.toString()).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 4_000
+            readTimeout = 6_000
+            setRequestProperty("User-Agent", "OctopusLive-Android")
+        }
+        try {
+            val code = conn.responseCode
+            if (code == 401) throw ApiException("Home server needs ?token=… in its address")
+            if (code !in 200..299) throw ApiException("Home server error $code")
+            val j = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+            if (!j.optBoolean("ok", false)) throw ApiException("Server: " + j.optString("status", "not ready"))
+            val zone = ZoneId.systemDefault()
+            fun hhmm(s: String?): String? = s?.takeIf { it.isNotBlank() && it != "null" }?.let {
+                try { OffsetDateTime.parse(it).atZoneSameInstant(zone).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (e: Exception) { null }
+            }
+            val demand = if (j.isNull("demandW")) null else j.optDouble("demandW").let { if (it.isNaN()) null else Math.round(it).toInt() }
+            val hasGas = j.optBoolean("hasGas", false)
+            return Reading(
+                demandWatts = demand,
+                todayKwh = j.optDouble("todayKwh", 0.0).let { if (it.isNaN()) 0.0 else it },
+                readAt = hhmm(j.optString("readAt", null)) ?: "--:--",
+                fetchedAt = System.currentTimeMillis(),
+                gasTodayKwh = if (hasGas) j.optDouble("gasKwh", 0.0).let { if (it.isNaN()) 0.0 else it } else null,
+                gasReadAt = if (hasGas) hhmm(j.optString("gasAt", null)) else null,
+                viaServer = true,
+            )
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    private fun fetchDirect(): Reading {
         try {
             return fetchOnce()
         } catch (e: ApiException) {

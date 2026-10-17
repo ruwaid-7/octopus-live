@@ -19,6 +19,7 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var apiKey: EditText
     private lateinit var account: EditText
+    private lateinit var relayUrl: EditText
     private lateinit var interval: EditText
     private lateinit var boot: CheckBox
 
@@ -30,11 +31,13 @@ class MainActivity : Activity() {
         status = findViewById(R.id.status)
         apiKey = findViewById(R.id.apiKey)
         account = findViewById(R.id.account)
+        relayUrl = findViewById(R.id.relayUrl)
         interval = findViewById(R.id.interval)
         boot = findViewById(R.id.boot)
 
         apiKey.setText(prefs.apiKey.orEmpty())
         account.setText(prefs.accountNumber.orEmpty())
+        relayUrl.setText(prefs.relayUrl.orEmpty())
         interval.setText(prefs.intervalSeconds.toString())
         boot.isChecked = prefs.startOnBoot
 
@@ -62,12 +65,15 @@ class MainActivity : Activity() {
 
     private fun saveAndStart() {
         val key = apiKey.text.toString().trim()
-        if (key.isEmpty()) {
+        val relay = relayUrl.text.toString().trim()
+        if (key.isEmpty() && relay.isEmpty()) {
             apiKey.error = getString(R.string.key_required)
             return
         }
         val acct = account.text.toString().trim().uppercase()
-        val secs = interval.text.toString().toIntOrNull()?.coerceIn(30, 3600) ?: 60
+        val minSecs = if (relay.isEmpty()) 30 else 10
+        val secs = interval.text.toString().toIntOrNull()?.coerceIn(minSecs, 3600) ?: 60
+        prefs.relayUrl = relay
 
         if (key != prefs.apiKey || acct != prefs.accountNumber.orEmpty()) prefs.clearCachedApiState()
         prefs.apiKey = key

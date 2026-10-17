@@ -1,4 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="launcher_bg">#E8478B</color>
+    <!-- System bar icon tint toggle for DayNight -->
+    <bool name="use_light_system_bars">true</bool>
+
+    <!-- Core Brand Palette -->
+    <color name="brand_pink">#FFE8478B</color>
+    <color name="brand_pink_pressed">#FFC93373</color>
+    <color name="brand_live_green">#FF00E676</color>
+
+    <!-- Light Mode Screen & Card Surfaces -->
+    <color name="app_bg">#FFF4F5FA</color>
+    <color name="card_surface">#FFFFFFFF</color>
+    <color name="card_stroke">#FFE2E5F0</color>
+    <color name="divider_subtle">#FFEEF0F7</color>
+
+    <!-- Hero Status Card (Signature Deep Navy in both modes for brand anchor) -->
+    <color name="status_card_bg">#FF10002B</color>
+    <color name="status_card_stroke">#FF29154E</color>
+    <color name="status_card_text">#FFFFFFFF</color>
+
+    <!-- Input Fields (Light Mode) -->
+    <color name="input_bg">#FFF8F9FC</color>
+    <color name="input_bg_focused">#FFFFFFFF</color>
+    <color name="input_stroke">#FFD5D9E8</color>
+
+    <!-- Typography (Light Mode) -->
+    <color name="text_primary">#FF120826</color>
+    <color name="text_secondary">#FF554E68</color>
+    <color name="text_muted">#FF847E96</color>
+
+    <!-- Buttons (Light Mode) -->
+    <color name="btn_primary_text">#FFFFFFFF</color>
+    <color name="btn_secondary_bg">#FFEAEBF4</color>
+    <color name="btn_secondary_bg_pressed">#FFDADCEB</color>
+    <color name="btn_secondary_stroke">#FFD2D5E6</color>
+    <color name="btn_secondary_text">#FF281E3D</color>
+
+    <!-- ========================================================== -->
+    <!-- Widget Colors (Preserved from Home Screen Widget)          -->
+    <!-- ========================================================== -->
+    <color name="octopus_surface_dark">#F210002B</color>
+    <color name="octopus_surface_pill">#FF1D0B40</color>
+    <color name="octopus_card_stroke">#33FFFFFF</color>
+    <color name="octopus_pill_stroke">#1AFFFFFF</color>
+    <color name="octopus_progress_track">#38FFFFFF</color>
+    <color name="octopus_accent_pink">#FFF050F8</color>
+    <color name="octopus_text_primary">#FFFFFFFF</color>
+    <color name="octopus_text_secondary">#FFB8B2C8</color>
+    <color name="power_Low_Green">#FF00E676</color>
+    <color name="power_Normal_Amber">#FFFFB300</color>
+    <color name="power_High_Red">#FFFF5252</color>
+    <!-- Launcher icon -->
+    <color name="launcher_bg">#FFE8478B</color>
 </resources>

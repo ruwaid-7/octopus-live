@@ -18,4 +18,5 @@
     <string name="channel_description">Ongoing notification with live electricity demand</string>
     <string name="footnote">Updates pause while the screen is off and resume when you unlock. Your API key is stored only on this phone and is sent only to Octopus Energy. Octopus limits how often its API can be called, so keep the interval at 60 seconds or more, especially if the PC widget is also running.</string>
     <string name="widget_description">Live electricity demand and today\'s usage</string>
+    <string name="widget_footer_placeholder">Tap to load</string>
 </resources>

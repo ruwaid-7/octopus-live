@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode uses light status/nav bar icons -->
+    <bool name="use_light_system_bars">false</bool>
+
+    <!-- Core Brand Palette -->
+    <color name="brand_pink">#FFE8478B</color>
+    <color name="brand_pink_pressed">#FFF268A2</color>
+    <color name="brand_live_green">#FF00E676</color>
+
+    <!-- Dark Mode Screen & Card Surfaces (Deep Octopus Cosmic Navy) -->
+    <color name="app_bg">#FF0B021D</color>
+    <color name="card_surface">#FF160830</color>
+    <color name="card_stroke">#FF2B184E</color>
+    <color name="divider_subtle">#FF231142</color>
+
+    <!-- Hero Status Card (Elevated Midnight Violet) -->
+    <color name="status_card_bg">#FF1E0B42</color>
+    <color name="status_card_stroke">#FF3F2270</color>
+    <color name="status_card_text">#FFFFFFFF</color>
+
+    <!-- Input Fields (Dark Mode) -->
+    <color name="input_bg">#FF0F0425</color>
+    <color name="input_bg_focused">#FF13062C</color>
+    <color name="input_stroke">#FF331F59</color>
+
+    <!-- Typography (Dark Mode) -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFC2BBD1</color>
+    <color name="text_muted">#FF847B99</color>
+
+    <!-- Buttons (Dark Mode) -->
+    <color name="btn_primary_text">#FFFFFFFF</color>
+    <color name="btn_secondary_bg">#FF1E0E3B</color>
+    <color name="btn_secondary_bg_pressed">#FF2C1752</color>
+    <color name="btn_secondary_stroke">#FF382261</color>
+    <color name="btn_secondary_text">#FFE6E1F0</color>
+</resources>

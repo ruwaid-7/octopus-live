@@ -1,5 +1,7 @@
 • New design: Home, Usage, Alerts and Settings tabs
-• Gas-on and high-use warnings stay on screen until usage drops, with "Mute until off" (can be turned off)
-• Cleaner notifications
-• Gemini and other on-device assistants can ask for your live usage (Android 16+, as Google opens this up)
-• "Open in Octopus Live" button on your relay's web page fills in the app for you
+• Quick setup on first launch, with a free relay option
+• Gas-on and high-use warnings can stay until usage drops, with "Mute until off"
+• Separate notifications, so live watts show on the lock screen
+• About screen with privacy policy, terms and licences
+• Gemini can ask for your live usage (Android 16+, as Google opens this up)
+• Fix: Hide on the API key now works

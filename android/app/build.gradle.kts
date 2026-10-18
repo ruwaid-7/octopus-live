@@ -1,12 +1,11 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
 
 android {
     namespace = "uk.octopuslive"
-    compileSdk = 36   // needed by the AppFunctions library (Gemini integration)
+    compileSdk = 37   // needed by the AppFunctions library (Gemini integration)
 
     defaultConfig {
         applicationId = "uk.octopuslive.app"
@@ -43,11 +42,6 @@ android {
     }
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-    }
-}
 
 // Networking uses HttpURLConnection and JSON uses the built-in org.json.
 // The only libraries are Google's AppFunctions (lets Gemini ask the app for your usage on

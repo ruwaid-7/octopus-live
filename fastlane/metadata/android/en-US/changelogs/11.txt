@@ -1,0 +1,5 @@
+• Today's cost in £ and the current electricity price
+• Cheap-price, high-usage, Home Mini offline and daily summary alerts
+• 7-day history chart and always-on baseload
+• Quick Settings tile
+• Prices and tariff changes picked up automatically

@@ -1,0 +1,16 @@
+<p><b>Unofficial.</b> Not made, endorsed or supported by Octopus Energy.</p>
+
+<p>If you're an Octopus Energy customer with a <b>Home Mini</b>, Octopus Live shows what your home is using right now without opening the Octopus app.</p>
+
+<ul>
+<li><b>Live watts in the status bar</b> and an ongoing notification with today's kWh</li>
+<li><b>Home-screen widget</b> with electricity and gas bars</li>
+<li><b>Quick Settings tile</b> with live watts and today's cost</li>
+<li><b>Costs and prices:</b> today's cost in £ including the standing charge, the current price and when it changes (fixed, Agile, Go, Intelligent and Tracker tariffs)</li>
+<li><b>History:</b> today's half-hourly chart, the last 7 days of electricity and gas, and your always-on baseload</li>
+<li><b>Alerts:</b> gas left on for 1½ hours, high electricity use, Home Mini offline, cheap or negative Agile prices, and a daily summary</li>
+</ul>
+
+<p>You need your own Octopus API key, from your account's developer settings. The app talks directly to the Octopus Energy API. You can optionally point it at your own relay (a home server or a free Cloudflare Worker), so several devices share one connection.</p>
+
+<p>No ads, no analytics, no tracking. A Rainmeter skin for Windows and the relay code are in the same repository.</p>

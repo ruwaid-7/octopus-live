@@ -9,10 +9,10 @@
     <color name="brand_live_green">#FF00E676</color>
 
     <!-- Dark Mode Screen & Card Surfaces (Deep Octopus Cosmic Navy) -->
-    <color name="app_bg">#FF0B021D</color>
-    <color name="card_surface">#FF160830</color>
-    <color name="card_stroke">#FF2B184E</color>
-    <color name="divider_subtle">#FF231142</color>
+    <color name="app_bg">#FF0F0F12</color>
+    <color name="card_surface">#FF19191E</color>
+    <color name="card_stroke">#FF26262D</color>
+    <color name="divider_subtle">#FF232329</color>
 
     <!-- Hero Status Card (Elevated Midnight Violet) -->
     <color name="status_card_bg">#FF1E0B42</color>
@@ -20,19 +20,28 @@
     <color name="status_card_text">#FFFFFFFF</color>
 
     <!-- Input Fields (Dark Mode) -->
-    <color name="input_bg">#FF0F0425</color>
-    <color name="input_bg_focused">#FF13062C</color>
-    <color name="input_stroke">#FF331F59</color>
+    <color name="input_bg">#FF141418</color>
+    <color name="input_bg_focused">#FF19191E</color>
+    <color name="input_stroke">#FF2E2E36</color>
 
     <!-- Typography (Dark Mode) -->
-    <color name="text_primary">#FFFFFFFF</color>
-    <color name="text_secondary">#FFC2BBD1</color>
-    <color name="text_muted">#FF847B99</color>
+    <color name="text_primary">#FFF4F4F6</color>
+    <color name="text_secondary">#FFB4B4BE</color>
+    <color name="text_muted">#FF7E7E89</color>
 
     <!-- Buttons (Dark Mode) -->
     <color name="btn_primary_text">#FFFFFFFF</color>
-    <color name="btn_secondary_bg">#FF1E0E3B</color>
-    <color name="btn_secondary_bg_pressed">#FF2C1752</color>
-    <color name="btn_secondary_stroke">#FF382261</color>
-    <color name="btn_secondary_text">#FFE6E1F0</color>
+    <color name="btn_secondary_bg">#FF222228</color>
+    <color name="btn_secondary_bg_pressed">#FF2C2C33</color>
+    <color name="btn_secondary_stroke">#FF2E2E36</color>
+    <color name="btn_secondary_text">#FFF4F4F6</color>
+
+    <!-- Minimal UI (tabs, tiles, status) -->
+    <color name="nav_inactive">#FF7E7E89</color>
+    <color name="elec_low">#FF3DD68C</color>
+    <color name="elec_mid">#FFFFB224</color>
+    <color name="elec_high">#FFFF6369</color>
+    <color name="gas_accent">#FFFF8F4A</color>
+    <color name="gas_banner_bg">#24FF8F4A</color>
+    <color name="warn_banner_bg">#24FF6369</color>
 </resources>

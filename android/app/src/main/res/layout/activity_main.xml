@@ -1,627 +1,892 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  Octopus Live: four tabs (Home, Usage, Alerts, Settings) with a bottom bar.
+  Each tab is a ScrollView in the FrameLayout; MainActivity shows one at a time.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/app_bg"
     android:fitsSystemWindows="true"
-    android:clipToPadding="true"
-    android:fillViewport="true"
-    android:scrollbars="none">
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ============================== HOME ============================== -->
+        <ScrollView
+            android:id="@+id/pageHome"
+            style="@style/Page">
+
+            <LinearLayout style="@style/PageContent">
+
+                <!-- Header: app name + live status -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="@string/app_name"
+                        android:textColor="@color/text_primary"
+                        android:textSize="20sp" />
+
+                    <LinearLayout
+                        android:id="@+id/homeStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_pill"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp">
+
+                        <View
+                            android:id="@+id/homeStatusDot"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:background="@drawable/bg_dot"
+                            android:backgroundTint="@color/elec_low" />
+
+                        <TextView
+                            android:id="@+id/homeStatusText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            tools:text="Live · 19:23" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Set-up / paused prompt (shown instead of the dashboard) -->
+                <LinearLayout
+                    android:id="@+id/homePrompt"
+                    style="@style/Card"
+                    android:layout_marginTop="24dp"
+                    android:padding="20dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/homePromptTitle"
+                        style="@style/RowTitle"
+                        android:fontFamily="sans-serif-medium"
+                        android:textSize="18sp"
+                        tools:text="Connect your Home Mini" />
+
+                    <TextView
+                        android:id="@+id/homePromptBody"
+                        style="@style/RowSubtitle"
+                        android:layout_marginTop="6dp"
+                        android:textSize="14sp"
+                        tools:text="Add your Octopus API key or a relay address to see your live usage." />
+
+                    <Button
+                        android:id="@+id/homePromptButton"
+                        style="@style/PrimaryButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="16dp"
+                        android:paddingStart="24dp"
+                        android:paddingEnd="24dp"
+                        tools:text="Set up" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/homeDashboard"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Hero: live watts -->
+                    <TextView
+                        style="@style/Label"
+                        android:layout_marginTop="28dp"
+                        android:text="@string/using_now" />
+
+                    <TextView
+                        android:id="@+id/homeNow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.02"
+                        android:textColor="@color/text_primary"
+                        android:textSize="56sp"
+                        tools:text="208 W" />
+
+                    <TextView
+                        android:id="@+id/homeNowSub"
+                        style="@style/Muted"
+                        android:layout_marginTop="4dp"
+                        android:textSize="14sp"
+                        tools:text="About 5p an hour" />
+
+                    <ProgressBar
+                        android:id="@+id/homeLevel"
+                        style="@android:style/Widget.Material.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="14dp"
+                        android:max="1000"
+                        android:progressDrawable="@drawable/bg_level"
+                        tools:progress="200" />
+
+                    <!-- Warning banners -->
+                    <LinearLayout
+                        android:id="@+id/homeGasBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:background="@drawable/bg_banner_gas"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="14dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_flame"
+                            android:tint="@color/gas_accent" />
+
+                        <TextView
+                            android:id="@+id/homeGasBannerText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            tools:text="Gas on for 1 h 30 min · since 18:00" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/homeHighBanner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@drawable/bg_banner_warn"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:padding="14dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_bolt"
+                            android:tint="@color/elec_high" />
+
+                        <TextView
+                            android:id="@+id/homeHighBannerText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:textColor="@color/text_primary"
+                            android:textSize="14sp"
+                            tools:text="Above 3 kW for 45 min" />
+                    </LinearLayout>
+
+                    <!-- Today: electricity and gas tiles -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            style="@style/Card"
+                            android:layout_width="0dp"
+                            android:layout_weight="1">
+
+                            <TextView
+                                style="@style/Label"
+                                android:text="@string/electricity_today" />
+
+                            <TextView
+                                android:id="@+id/homeElecKwh"
+                                style="@style/Value"
+                                tools:text="5.89 kWh" />
+
+                            <TextView
+                                android:id="@+id/homeElecSub"
+                                style="@style/Muted"
+                                tools:text="£2.12" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/homeGasTile"
+                            style="@style/Card"
+                            android:layout_width="0dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1">
+
+                            <TextView
+                                style="@style/Label"
+                                android:text="@string/gas_today" />
+
+                            <TextView
+                                android:id="@+id/homeGasKwh"
+                                style="@style/Value"
+                                tools:text="11.31 kWh" />
+
+                            <TextView
+                                android:id="@+id/homeGasSub"
+                                style="@style/Muted"
+                                tools:text="£1.12 · to 18:30" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Today chart -->
+                    <LinearLayout
+                        style="@style/Card"
+                        android:layout_marginTop="12dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/Label"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:text="@string/today" />
+
+                            <TextView
+                                android:id="@+id/homeTodayTotal"
+                                style="@style/Label"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/text_primary"
+                                tools:text="£3.24 so far" />
+                        </LinearLayout>
+
+                        <uk.octopuslive.BarChartView
+                            android:id="@+id/chartToday"
+                            android:layout_width="match_parent"
+                            android:layout_height="120dp"
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
+
+                    <!-- Price and always-on -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            style="@style/Card"
+                            android:layout_width="0dp"
+                            android:layout_weight="1">
+
+                            <TextView
+                                style="@style/Label"
+                                android:text="@string/price_now" />
+
+                            <TextView
+                                android:id="@+id/homePrice"
+                                style="@style/Value"
+                                tools:text="25.6p" />
+
+                            <TextView
+                                android:id="@+id/homePriceSub"
+                                style="@style/Muted"
+                                tools:text="per kWh" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            style="@style/Card"
+                            android:layout_width="0dp"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1">
+
+                            <TextView
+                                style="@style/Label"
+                                android:text="@string/always_on" />
+
+                            <TextView
+                                android:id="@+id/homeBase"
+                                style="@style/Value"
+                                tools:text="36 W" />
+
+                            <TextView
+                                style="@style/Muted"
+                                android:text="@string/always_on_sub" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/homeError"
+                        style="@style/FieldHelp"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        tools:text="Problem: Too many requests" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ============================== USAGE ============================== -->
+        <ScrollView
+            android:id="@+id/pageUsage"
+            style="@style/Page"
+            android:visibility="gone">
+
+            <LinearLayout style="@style/PageContent">
+
+                <TextView
+                    style="@style/PageTitle"
+                    android:text="@string/tab_usage" />
+
+                <TextView
+                    android:id="@+id/usageMessage"
+                    style="@style/RowSubtitle"
+                    android:layout_marginTop="12dp"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:text="Add your API key in Settings to see costs, prices and history." />
+
+                <LinearLayout
+                    android:id="@+id/usageContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <!-- Week summary + chart -->
+                    <LinearLayout
+                        style="@style/Card"
+                        android:layout_marginTop="20dp">
+
+                        <TextView
+                            style="@style/Label"
+                            android:text="@string/this_week" />
+
+                        <TextView
+                            android:id="@+id/usageWeekCost"
+                            style="@style/Value"
+                            android:textSize="28sp"
+                            tools:text="£2.68" />
+
+                        <TextView
+                            android:id="@+id/usageWeekSub"
+                            style="@style/Muted"
+                            tools:text="Electricity 4.9 kWh · Gas 6.8 kWh" />
+
+                        <uk.octopuslive.BarChartView
+                            android:id="@+id/chartWeek"
+                            android:layout_width="match_parent"
+                            android:layout_height="150dp"
+                            android:layout_marginTop="16dp" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <View
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:background="@drawable/bg_dot"
+                                android:backgroundTint="@color/brand_pink" />
+
+                            <TextView
+                                style="@style/Muted"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginTop="0dp"
+                                android:text="@string/legend_elec" />
+
+                            <View
+                                android:id="@+id/legendGasDot"
+                                android:layout_width="8dp"
+                                android:layout_height="8dp"
+                                android:layout_marginStart="16dp"
+                                android:background="@drawable/bg_dot"
+                                android:backgroundTint="@color/gas_accent" />
+
+                            <TextView
+                                android:id="@+id/legendGas"
+                                style="@style/Muted"
+                                android:layout_marginStart="6dp"
+                                android:layout_marginTop="0dp"
+                                android:text="@string/legend_gas" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Day by day -->
+                    <TextView
+                        style="@style/SectionTitle"
+                        android:text="@string/daily" />
+
+                    <LinearLayout
+                        android:id="@+id/usageDays"
+                        style="@style/ListCard" />
+
+                    <TextView
+                        android:id="@+id/usageNote"
+                        style="@style/FieldHelp"
+                        android:layout_marginTop="8dp"
+                        android:paddingStart="4dp"
+                        android:text="@string/history_building" />
+
+                    <!-- Tariff -->
+                    <TextView
+                        style="@style/SectionTitle"
+                        android:text="@string/tariff" />
+
+                    <LinearLayout style="@style/Card">
+
+                        <TextView
+                            android:id="@+id/usageTariff"
+                            style="@style/RowTitle"
+                            android:fontFamily="sans-serif-medium"
+                            tools:text="Flexible Octopus" />
+
+                        <TextView
+                            android:id="@+id/usageTariffCode"
+                            style="@style/Muted"
+                            tools:text="E-1R-VAR-22-11-01-M" />
+
+                        <TextView
+                            android:id="@+id/usageTariffDetail"
+                            style="@style/RowSubtitle"
+                            android:layout_marginTop="10dp"
+                            android:lineSpacingExtra="4dp"
+                            android:textSize="14sp"
+                            tools:text="25.6p/kWh now\nAlways on: 36 W, about 315 kWh a year" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ============================== ALERTS ============================== -->
+        <ScrollView
+            android:id="@+id/pageAlerts"
+            style="@style/Page"
+            android:visibility="gone">
+
+            <LinearLayout style="@style/PageContent">
+
+                <TextView
+                    style="@style/PageTitle"
+                    android:text="@string/tab_alerts" />
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_warnings" />
+
+                <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/gas_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/gas_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swGas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/high_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/high_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swHigh"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/highOptions"
+                        style="@style/OptionsRow">
+                        <EditText
+                            android:id="@+id/highKw"
+                            style="@style/SmallInput"
+                            android:inputType="numberDecimal" />
+                        <TextView style="@style/OptionText" android:text="@string/kw_for" />
+                        <EditText
+                            android:id="@+id/highMinutes"
+                            style="@style/SmallInput"
+                            android:inputType="number" />
+                        <TextView style="@style/OptionText" android:text="@string/minutes" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/offline_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/offline_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swOffline"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/sticky_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/sticky_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swSticky"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_updates" />
+
+                <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/cheap_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/cheap_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swCheap"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/cheapOptions"
+                        style="@style/OptionsRow">
+                        <TextView
+                            style="@style/OptionText"
+                            android:layout_marginStart="0dp"
+                            android:text="@string/at_or_below" />
+                        <EditText
+                            android:id="@+id/cheapPence"
+                            style="@style/SmallInput" />
+                        <TextView style="@style/OptionText" android:text="@string/pence_kwh" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/summary_alert" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/summary_alert_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swSummary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/summaryOptions"
+                        style="@style/OptionsRow">
+                        <TextView
+                            style="@style/OptionText"
+                            android:layout_marginStart="0dp"
+                            android:text="@string/at_hour" />
+                        <EditText
+                            android:id="@+id/summaryHour"
+                            style="@style/SmallInput"
+                            android:inputType="number" />
+                        <TextView
+                            style="@style/OptionText"
+                            android:layout_marginStart="2dp"
+                            android:text="@string/oclock" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/FieldHelp"
+                    android:layout_marginTop="12dp"
+                    android:paddingStart="4dp"
+                    android:text="@string/alerts_help" />
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- ============================== SETTINGS ============================== -->
+        <ScrollView
+            android:id="@+id/pageSettings"
+            style="@style/Page"
+            android:visibility="gone">
+
+            <LinearLayout style="@style/PageContent">
+
+                <TextView
+                    style="@style/PageTitle"
+                    android:text="@string/tab_settings" />
+
+                <!-- Live updates on/off -->
+                <LinearLayout
+                    style="@style/ListCard"
+                    android:layout_marginTop="20dp">
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/live_updates" />
+                            <TextView
+                                android:id="@+id/liveStatus"
+                                style="@style/RowSubtitle"
+                                tools:text="Running · via relay" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swLive"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_connection" />
+
+                <LinearLayout style="@style/Card">
+
+                    <TextView style="@style/FieldLabel" android:text="@string/api_key" />
+                    <EditText
+                        android:id="@+id/apiKey"
+                        style="@style/InputField"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="monospace"
+                        android:hint="sk_live_…"
+                        android:importantForAutofill="no"
+                        android:inputType="textNoSuggestions|textVisiblePassword"
+                        android:maxLines="1"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/getKey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp"
+                        android:text="@string/get_key"
+                        android:textColor="@color/brand_pink"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        style="@style/FieldLabel"
+                        android:layout_marginTop="14dp"
+                        android:text="@string/relay_label" />
+                    <EditText
+                        android:id="@+id/relayUrl"
+                        style="@style/InputField"
+                        android:layout_marginTop="6dp"
+                        android:hint="https://…"
+                        android:importantForAutofill="no"
+                        android:inputType="textUri"
+                        android:maxLines="1"
+                        android:textSize="14sp" />
+                    <TextView style="@style/FieldHelp" android:text="@string/relay_help" />
+
+                    <TextView
+                        style="@style/FieldLabel"
+                        android:layout_marginTop="14dp"
+                        android:text="@string/account" />
+                    <EditText
+                        android:id="@+id/account"
+                        style="@style/InputField"
+                        android:layout_marginTop="6dp"
+                        android:hint="A-1234ABCD"
+                        android:importantForAutofill="no"
+                        android:inputType="textCapCharacters|textNoSuggestions"
+                        android:maxLines="1" />
+
+                    <TextView
+                        style="@style/FieldLabel"
+                        android:layout_marginTop="14dp"
+                        android:text="@string/interval" />
+                    <EditText
+                        android:id="@+id/interval"
+                        style="@style/InputField"
+                        android:layout_marginTop="6dp"
+                        android:importantForAutofill="no"
+                        android:inputType="number"
+                        android:maxLines="1" />
+                    <TextView style="@style/FieldHelp" android:text="@string/interval_help" />
+
+                    <Button
+                        android:id="@+id/save"
+                        style="@style/PrimaryButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/save" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_background" />
+
+                <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout
+                        android:id="@+id/rowBattery"
+                        style="@style/Row"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/bg_battery" />
+                            <TextView
+                                android:id="@+id/batteryState"
+                                style="@style/RowSubtitle"
+                                tools:text="On" />
+                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/rowUnused"
+                        style="@style/Row"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/bg_unused" />
+                            <TextView
+                                android:id="@+id/unusedState"
+                                style="@style/RowSubtitle"
+                                tools:text="On" />
+                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_general" />
+
+                <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/start_on_boot" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swBoot"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
+
+                    <LinearLayout style="@style/Row">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/widget_opens_app" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/widget_opens_app_sub" />
+                        </LinearLayout>
+                        <Switch
+                            android:id="@+id/swWidgetApp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/SectionTitle"
+                    android:text="@string/section_about" />
+
+                <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout
+                        android:id="@+id/rowSource"
+                        style="@style/Row"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/source_code" />
+                            <TextView
+                                android:id="@+id/aboutVersion"
+                                style="@style/RowSubtitle"
+                                tools:text="Version 1.8.0 · GitHub" />
+                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    style="@style/FieldHelp"
+                    android:layout_marginTop="12dp"
+                    android:paddingStart="4dp"
+                    android:text="@string/disclaimer" />
+            </LinearLayout>
+        </ScrollView>
+    </FrameLayout>
+
+    <!-- ============================== BOTTOM BAR ============================== -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider_subtle" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="28dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="36dp">
+        android:layout_height="64dp"
+        android:background="@color/app_bg"
+        android:orientation="horizontal">
 
-        <!-- 1. Brand Header: App Title & Tagline -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <!-- Brand Accent Pill Indicator -->
-            <View
-                android:layout_width="6dp"
-                android:layout_height="36dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/bg_brand_pill" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif-black"
-                    android:includeFontPadding="false"
-                    android:letterSpacing="-0.02"
-                    android:text="@string/app_name"
-                    android:textColor="@color/text_primary"
-                    android:textSize="28sp"
-                    tools:text="Octopus Live" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="sans-serif"
-                    android:text="@string/tagline"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp"
-                    tools:text="Real-time Home Mini electricity monitor" />
-            </LinearLayout>
+        <LinearLayout android:id="@+id/navHome" style="@style/NavItem">
+            <ImageView android:id="@+id/navHomeIcon" style="@style/NavIcon" android:contentDescription="@null" android:src="@drawable/ic_nav_home" />
+            <TextView android:id="@+id/navHomeLabel" style="@style/NavLabel" android:text="@string/tab_home" />
         </LinearLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="22dp" />
-
-        <!-- 2. Hero Status Card (Latest Reading) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_status_card"
-            android:elevation="2dp"
-            android:orientation="vertical"
-            android:padding="18dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="@drawable/bg_live_dot" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="sans-serif"
-                android:textStyle="bold"
-                    android:includeFontPadding="false"
-                    android:letterSpacing="0.08"
-                    android:text="LATEST READING"
-                    android:textColor="@color/brand_pink"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/status"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:fontFamily="sans-serif-medium"
-                android:lineSpacingExtra="5dp"
-                android:textColor="@color/status_card_text"
-                android:textSize="16sp"
-                tools:text="1.24 kW\nToday: 5.23 kWh\nMeter reading at 18:05" />
+        <LinearLayout android:id="@+id/navUsage" style="@style/NavItem">
+            <ImageView android:id="@+id/navUsageIcon" style="@style/NavIcon" android:contentDescription="@null" android:src="@drawable/ic_nav_usage" />
+            <TextView android:id="@+id/navUsageLabel" style="@style/NavLabel" android:text="@string/tab_usage" />
         </LinearLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="18dp" />
-
-        <!-- Costs & history -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_card"
-            android:elevation="1dp"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                style="@style/FieldLabel"
-                android:text="@string/history_title"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/insightsText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:lineSpacingExtra="3dp"
-                android:text="@string/insights_waiting"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="@string/chart_today"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <uk.octopuslive.BarChartView
-                android:id="@+id/chartToday"
-                android:layout_width="match_parent"
-                android:layout_height="96dp"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="@string/chart_week"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <uk.octopuslive.BarChartView
-                android:id="@+id/chartWeek"
-                android:layout_width="match_parent"
-                android:layout_height="110dp"
-                android:layout_marginTop="4dp" />
-
-            <TextView
-                android:id="@+id/weekText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:lineSpacingExtra="3dp"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
+        <LinearLayout android:id="@+id/navAlerts" style="@style/NavItem">
+            <ImageView android:id="@+id/navAlertsIcon" style="@style/NavIcon" android:contentDescription="@null" android:src="@drawable/ic_nav_alerts" />
+            <TextView android:id="@+id/navAlertsLabel" style="@style/NavLabel" android:text="@string/tab_alerts" />
         </LinearLayout>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="18dp" />
-
-        <!-- 3. Main Configuration Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_card"
-            android:elevation="1dp"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <!-- API Key Field -->
-            <TextView
-                style="@style/FieldLabel"
-                android:labelFor="@+id/apiKey"
-                android:text="@string/api_key"
-                tools:text="Octopus API Key" />
-
-            <EditText
-                android:id="@+id/apiKey"
-                android:hint="sk_live_…"
-                style="@style/InputField"
-                android:layout_marginTop="6dp"
-                android:importantForAutofill="no"
-                android:inputType="textPassword"
-                android:maxLines="1"
-                tools:text="sk_live_1234567890abcdef" />
-
-            <!-- Link-style helper text -->
-            <TextView
-                android:id="@+id/getKey"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:background="?android:attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:fontFamily="sans-serif-medium"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
-                android:text="@string/get_key"
-                android:textColor="@color/brand_pink"
-                android:textSize="13sp"
-                tools:text="Where do I find my API key? →" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="14dp"
-                android:layout_marginBottom="16dp"
-                android:background="@color/divider_subtle" />
-
-            <!-- Account Number Field (Optional) -->
-            <TextView
-                style="@style/FieldLabel"
-                android:labelFor="@+id/account"
-                android:text="@string/account"
-                tools:text="Account Number (optional)" />
-
-            <EditText
-                android:id="@+id/account"
-                android:hint="A-1234ABCD"
-                style="@style/InputField"
-                android:layout_marginTop="6dp"
-                android:importantForAutofill="no"
-                android:inputType="textCapCharacters|textNoSuggestions"
-                android:maxLines="1"
-                tools:text="A-AAAA1111" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="16dp"
-                android:background="@color/divider_subtle" />
-
-            <!-- Home server (relay) address, optional -->
-            <TextView
-                style="@style/FieldLabel"
-                android:labelFor="@+id/relayUrl"
-                android:text="@string/relay_label" />
-
-            <EditText
-                android:id="@+id/relayUrl"
-                android:hint="http://192.168.1.50:8765"
-                style="@style/InputField"
-                android:layout_marginTop="6dp"
-                android:importantForAutofill="no"
-                android:inputType="textUri"
-                android:maxLines="1" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/relay_help"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="16dp"
-                android:background="@color/divider_subtle" />
-
-            <!-- Refresh Interval Field (Seconds) -->
-            <TextView
-                style="@style/FieldLabel"
-                android:labelFor="@+id/interval"
-                android:text="@string/interval"
-                tools:text="Refresh interval (seconds)" />
-
-            <EditText
-                android:id="@+id/interval"
-                style="@style/InputField"
-                android:layout_marginTop="6dp"
-                android:importantForAutofill="no"
-                android:inputType="number"
-                android:maxLines="1"
-                tools:text="30" />
-
-            <!-- Auto-Start Checkbox -->
-            <CheckBox
-                android:id="@+id/boot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:buttonTint="@color/brand_pink"
-                android:fontFamily="sans-serif"
-                android:minHeight="48dp"
-                android:paddingStart="6dp"
-                android:paddingEnd="4dp"
-                android:text="@string/start_on_boot"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                tools:text="Start automatically after the phone restarts" />
-
-            <!-- Widget tap -->
-            <CheckBox
-                android:id="@+id/widgetOpensApp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:buttonTint="@color/brand_pink"
-                android:fontFamily="sans-serif"
-                android:minHeight="48dp"
-                android:paddingStart="6dp"
-                android:paddingEnd="4dp"
-                android:text="@string/widget_opens_app"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <!-- Gas warning -->
-            <CheckBox
-                android:id="@+id/gasAlert"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:buttonTint="@color/brand_pink"
-                android:fontFamily="sans-serif"
-                android:minHeight="48dp"
-                android:paddingStart="6dp"
-                android:paddingEnd="4dp"
-                android:text="@string/gas_alert"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingStart="38dp"
-                android:text="@string/gas_alert_help"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
+        <LinearLayout android:id="@+id/navSettings" style="@style/NavItem">
+            <ImageView android:id="@+id/navSettingsIcon" style="@style/NavIcon" android:contentDescription="@null" android:src="@drawable/ic_nav_settings" />
+            <TextView android:id="@+id/navSettingsLabel" style="@style/NavLabel" android:text="@string/tab_settings" />
         </LinearLayout>
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="18dp" />
-
-        <!-- Alerts -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_card"
-            android:elevation="1dp"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                style="@style/FieldLabel"
-                android:text="@string/alerts_title"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <CheckBox
-                android:id="@+id/highAlert"
-                style="@style/AlertCheck"
-                android:text="@string/high_alert" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="38dp">
-
-                <EditText
-                    android:id="@+id/highKw"
-                    style="@style/InputField"
-                    android:layout_width="72dp"
-                    android:importantForAutofill="no"
-                    android:inputType="numberDecimal"
-                    android:maxLines="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:layout_marginEnd="10dp"
-                    android:text="@string/kw_for"
-                    android:textColor="@color/text_secondary" />
-
-                <EditText
-                    android:id="@+id/highMinutes"
-                    style="@style/InputField"
-                    android:layout_width="72dp"
-                    android:importantForAutofill="no"
-                    android:inputType="number"
-                    android:maxLines="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/minutes"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
-
-            <CheckBox
-                android:id="@+id/offlineAlert"
-                style="@style/AlertCheck"
-                android:layout_marginTop="8dp"
-                android:text="@string/offline_alert" />
-
-            <CheckBox
-                android:id="@+id/cheapAlert"
-                style="@style/AlertCheck"
-                android:layout_marginTop="8dp"
-                android:text="@string/cheap_alert" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="38dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="@string/at_or_below"
-                    android:textColor="@color/text_secondary" />
-
-                <EditText
-                    android:id="@+id/cheapPence"
-                    style="@style/InputField"
-                    android:layout_width="80dp"
-                    android:importantForAutofill="no"
-                    android:inputType="numberDecimal|numberSigned"
-                    android:maxLines="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/pence_kwh"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
-
-            <CheckBox
-                android:id="@+id/summaryAlert"
-                style="@style/AlertCheck"
-                android:layout_marginTop="8dp"
-                android:text="@string/summary_alert" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="38dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:text="@string/at_hour"
-                    android:textColor="@color/text_secondary" />
-
-                <EditText
-                    android:id="@+id/summaryHour"
-                    style="@style/InputField"
-                    android:layout_width="72dp"
-                    android:importantForAutofill="no"
-                    android:inputType="number"
-                    android:maxLines="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
-                    android:text="@string/oclock"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/alerts_help"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="18dp" />
-
-        <!-- Background running -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_settings_card"
-            android:elevation="1dp"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                style="@style/FieldLabel"
-                android:text="@string/bg_title"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="@string/bg_help"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/bgStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:lineSpacingExtra="4dp"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
-
-            <Button
-                android:id="@+id/bgBattery"
-                style="@style/SecondaryButton"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:text="@string/bg_battery" />
-
-            <Button
-                android:id="@+id/bgUnused"
-                style="@style/SecondaryButton"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="8dp"
-                android:text="@string/bg_unused" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/bg_samsung"
-                android:textColor="@color/text_muted"
-                android:textSize="12sp" />
-        </LinearLayout>
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="22dp" />
-
-        <!-- 4. Action Buttons Row (Side by Side) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/start"
-                style="@style/PrimaryButton"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1.3"
-                android:text="@string/save_start"
-                tools:text="Save &amp; start" />
-
-            <Space
-                android:layout_width="12dp"
-                android:layout_height="match_parent" />
-
-            <Button
-                android:id="@+id/stop"
-                style="@style/SecondaryButton"
-                android:layout_width="0dp"
-                android:layout_height="52dp"
-                android:layout_weight="1"
-                android:text="@string/stop"
-                tools:text="Stop" />
-
-        </LinearLayout>
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="24dp" />
-
-        <!-- 5. Privacy & Rate Limits Footnote -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif"
-            android:lineSpacingExtra="4dp"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:text="@string/footnote"
-            android:textAlignment="center"
-            android:textColor="@color/text_muted"
-            android:textSize="12sp"
-            tools:text="Your API key is stored locally on your device and communicates directly with Octopus Energy GraphQL servers. Keep your refresh interval reasonable to respect Home Mini rate limits." />
-
     </LinearLayout>
-</ScrollView>
+</LinearLayout>

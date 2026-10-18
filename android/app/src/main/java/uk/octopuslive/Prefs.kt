@@ -49,6 +49,17 @@ class Prefs(context: Context) {
     var cheapPence: Float
         get() = p.getFloat("cheapPence", 0f)
         set(v) = p.edit().putFloat("cheapPence", v).apply()
+    /** Gas-on and high-use warnings stay in the notifications until usage drops. */
+    var stickyWarnings: Boolean
+        get() = p.getBoolean("stickyWarnings", true)
+        set(v) = p.edit().putBoolean("stickyWarnings", v).apply()
+    /** The gas run / high-use spell the user muted ("Mute until off"). */
+    var mutedGasRun: String?
+        get() = p.getString("mutedGasRun", null)
+        set(v) = p.edit().putString("mutedGasRun", v).apply()
+    var mutedHighSince: Long
+        get() = p.getLong("mutedHighSince", 0L)
+        set(v) = p.edit().putLong("mutedHighSince", v).apply()
     var summaryAlert: Boolean
         get() = p.getBoolean("summaryAlert", true)
         set(v) = p.edit().putBoolean("summaryAlert", v).apply()

@@ -1,1 +1,4 @@
-• Gemini and other on-device assistants can ask for your live usage, gas status and cheapest electricity times (Android 16+, as Google opens this up)
+• New design: Home, Usage, Alerts and Settings tabs
+• Gas-on and high-use warnings stay on screen until usage drops, with "Mute until off" (can be turned off)
+• Cleaner notifications
+• Gemini and other on-device assistants can ask for your live usage (Android 16+, as Google opens this up)

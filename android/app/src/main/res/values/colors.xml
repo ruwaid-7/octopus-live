@@ -9,10 +9,10 @@
     <color name="brand_live_green">#FF00E676</color>
 
     <!-- Light Mode Screen & Card Surfaces -->
-    <color name="app_bg">#FFF4F5FA</color>
+    <color name="app_bg">#FFF6F6F8</color>
     <color name="card_surface">#FFFFFFFF</color>
-    <color name="card_stroke">#FFE2E5F0</color>
-    <color name="divider_subtle">#FFEEF0F7</color>
+    <color name="card_stroke">#FFE9E9EE</color>
+    <color name="divider_subtle">#FFEFEFF3</color>
 
     <!-- Hero Status Card (Signature Deep Navy in both modes for brand anchor) -->
     <color name="status_card_bg">#FF10002B</color>
@@ -20,21 +20,21 @@
     <color name="status_card_text">#FFFFFFFF</color>
 
     <!-- Input Fields (Light Mode) -->
-    <color name="input_bg">#FFF8F9FC</color>
+    <color name="input_bg">#FFF6F6F8</color>
     <color name="input_bg_focused">#FFFFFFFF</color>
-    <color name="input_stroke">#FFD5D9E8</color>
+    <color name="input_stroke">#FFE0E0E6</color>
 
     <!-- Typography (Light Mode) -->
-    <color name="text_primary">#FF120826</color>
-    <color name="text_secondary">#FF554E68</color>
-    <color name="text_muted">#FF847E96</color>
+    <color name="text_primary">#FF111114</color>
+    <color name="text_secondary">#FF5C5C66</color>
+    <color name="text_muted">#FF8E8E99</color>
 
     <!-- Buttons (Light Mode) -->
     <color name="btn_primary_text">#FFFFFFFF</color>
-    <color name="btn_secondary_bg">#FFEAEBF4</color>
-    <color name="btn_secondary_bg_pressed">#FFDADCEB</color>
-    <color name="btn_secondary_stroke">#FFD2D5E6</color>
-    <color name="btn_secondary_text">#FF281E3D</color>
+    <color name="btn_secondary_bg">#FFF0F0F3</color>
+    <color name="btn_secondary_bg_pressed">#FFE4E4E9</color>
+    <color name="btn_secondary_stroke">#FFE0E0E6</color>
+    <color name="btn_secondary_text">#FF111114</color>
 
     <!-- ========================================================== -->
     <!-- Widget Colors (Preserved from Home Screen Widget)          -->
@@ -53,4 +53,13 @@
     <color name="gas_orange">#FFFF8A3D</color>
     <!-- Launcher icon -->
     <color name="launcher_bg">#FFE8478B</color>
+
+    <!-- Minimal UI (tabs, tiles, status) -->
+    <color name="nav_inactive">#FF8E8E99</color>
+    <color name="elec_low">#FF1FA463</color>
+    <color name="elec_mid">#FFE69A00</color>
+    <color name="elec_high">#FFE5484D</color>
+    <color name="gas_accent">#FFF07A2A</color>
+    <color name="gas_banner_bg">#14F07A2A</color>
+    <color name="warn_banner_bg">#14E5484D</color>
 </resources>

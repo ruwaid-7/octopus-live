@@ -300,6 +300,7 @@ class LiveService : Service() {
             .setCategory(Notification.CATEGORY_REMINDER)
             .setContentIntent(openApp)
             .setOnlyAlertOnce(true)
+            .setGroup("$GROUP_PREFIX$id")
         if (sticky) {
             val mute = PendingIntent.getService(
                 this, 20 + id, Intent(this, LiveService::class.java).setAction(muteAction), PendingIntent.FLAG_IMMUTABLE,
@@ -325,6 +326,7 @@ class LiveService : Service() {
             .setColor(color)
             .setContentIntent(openApp)
             .setAutoCancel(true)
+            .setGroup("$GROUP_PREFIX$id")
             .build()
         getSystemService(NotificationManager::class.java).notify(id, n)
     }
@@ -463,6 +465,8 @@ class LiveService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
+            .setGroup(GROUP_LIVE)
+            .setSortKey("0")
             .setSubText(r?.let { "Meter ${it.readAt}" })
             .setCategory(Notification.CATEGORY_STATUS)
             .setContentIntent(openApp)
@@ -549,6 +553,9 @@ class LiveService : Service() {
         const val K_HIGH_SINCE = "alert_highSince"
         const val GAS_CHANNEL_ID = "gas_alerts"
         const val WARN_QUIET_CHANNEL_ID = "warnings_ongoing"
+        // Separate group per notification: stops Android bundling them (which hides the live-watts icon)
+        const val GROUP_LIVE = "uk.octopuslive.LIVE"
+        const val GROUP_PREFIX = "uk.octopuslive.N"
         const val GAS_NOTIF_ID = 2
         const val GAS_ALERT_MINUTES = 90
         const val BG_INTERVAL_MS = 5 * 60 * 1000L   // refresh every 5 min while the screen is off

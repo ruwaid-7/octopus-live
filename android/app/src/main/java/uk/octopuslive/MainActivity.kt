@@ -410,6 +410,15 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.getKey).setOnClickListener {
             tryStart(Intent(Intent.ACTION_VIEW, Uri.parse(API_KEY_URL)), null)
         }
+        findViewById<TextView>(R.id.showKey).setOnClickListener { v ->
+            // The key is hidden by default so it doesn't end up in screenshots
+            val hidden = apiKey.inputType and android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD != 0
+            apiKey.inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                if (hidden) android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD else android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
+            apiKey.typeface = Typeface.MONOSPACE
+            apiKey.setSelection(apiKey.text.length)
+            (v as TextView).setText(if (hidden) R.string.hide else R.string.show)
+        }
         swLive.setOnCheckedChangeListener { _, on ->
             if (loading) return@setOnCheckedChangeListener
             if (on) {

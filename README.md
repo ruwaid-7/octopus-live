@@ -72,10 +72,11 @@ The skin uses the PowerShell built into Windows — nothing else to install.
      shown: Play Store → your profile → **Play Protect → ⚙** → turn off *Scan apps with Play
      Protect*, install, then turn it back on. The full source code is in this repository and
      every APK is built from it by GitHub Actions.
-2. Open **Octopus Live**, paste your API key, tap **Save & start**, and allow notifications.
+2. Open **Octopus Live** → **Settings**, paste your API key, tap **Save**, and allow notifications.
+   The app has four tabs: **Home** (live dashboard), **Usage** (costs and history), **Alerts** and **Settings**.
 3. **Widget:** long-press your home screen → **Widgets** → **Octopus Live**, and drag it on.
    It updates every minute while the live notification is running (otherwise every 30 minutes).
-   Tap it to refresh, or tick *Tapping the widget opens the app* in settings to open the app instead.
+   Tap it to refresh, or turn on *Widget opens the app* in Settings to open the app instead.
 
 **Costs, prices and history** (needs your API key in the app): today's cost in £ including the
 standing charge, the current electricity price and when it next changes, a half-hourly chart for
@@ -97,7 +98,7 @@ and your tariff every 6 hours, so price-cap changes or switching tariff need no 
 **Quick Settings tile:** swipe down twice → ✏ edit → drag **Live electricity** into your tiles to
 see live watts and today's cost in the pull-down panel. Tap it to refresh.
 
-**Gas warning:** with *Warn me if the gas has been on for 1½ hours or more* ticked (on by
+**Gas warning:** with *Gas left on* switched on in **Alerts** (on by
 default), you get a notification when the meter shows three half-hours in a row with gas in use.
 Gas readings reach Octopus about an hour late, so the warning arrives roughly an hour after the
 1½-hour mark — good for catching a boiler or hob left on, not an instant alarm.
@@ -112,13 +113,18 @@ Older Android versions are unaffected. Developers can test with
 [adb](#testing-the-gemini-functions).
 
 **Background running:** while the screen is off the app keeps updating every 5 minutes (so the
-widget and gas warning work with the phone locked). In the app's **Background running** section,
-tap **Allow unrestricted battery use** and **Don't pause app when unused** until both show ✓.
+widget and gas warning work with the phone locked). In **Settings → Background**, tap
+**Unrestricted battery** and **Keep running when unused** until both say *On*.
+
+**Warnings that stay on screen:** with *Keep warnings on screen* on (Alerts tab, on by default),
+the gas-left-on and high-electricity warnings stay in your notifications until usage drops, and
+come back if swiped away. Tap **Mute until off** to silence one until the gas goes off or usage
+drops. Turn the setting off for one-off warnings you can dismiss.
 
 **Tips**
 - Samsung / Xiaomi / OnePlus phones can stop background apps. If the notification disappears, set
   *Settings → Apps → Octopus Live → Battery* to **Unrestricted**.
-- On Android 14+ you can swipe the notification away; tap the widget or **Save & start** to bring it back.
+- On Android 14+ you can swipe the notification away; tap the widget or turn on **Live updates** in Settings to bring it back.
 
 ---
 
@@ -224,7 +230,7 @@ Works the same for the Cloudflare Worker and the home server — use the full ad
 `?token=…`:
 - **Rainmeter:** in `Settings.inc` set `RelayUrl=https://…/?token=YOUR-TOKEN`, `Interval=15`, and
   you can clear `ApiKey`.
-- **Android:** enter the address in **Relay address**, set the interval to 15, Save & start. You
+- **Android:** enter the address in **Relay address**, set the interval to 15, and tap Save. You
   can clear the API key.
 
 If you also keep your API key on a device, it falls back to calling Octopus directly (at most once a

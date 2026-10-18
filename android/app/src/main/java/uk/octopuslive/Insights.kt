@@ -332,7 +332,14 @@ class Insights(context: Context) {
             c + (liveKwh - slotKwh).coerceAtLeast(0.0) * (priceNow ?: 0.0) / 100.0
         }
         val hasGas = prefs.str(K_GAS_TARIFF) != null && prefs.gasDeviceId != OctopusApi.NO_GAS
-        val gasCost = if (hasGas) cost(gasSlots, rates(K_GAS_RATES), rates(K_GAS_STANDING), dayStart) else null
+        // Gas: half-hours we have, plus anything newer that the live reading (e.g. the relay) already
+        // includes, at the current gas price, so the £ always matches the kWh shown next to it
+        val gasRates = rates(K_GAS_RATES)
+        val gasSlotKwh = gasSlots.sumOf { it.second } / 1000.0
+        val gasCost = if (hasGas) cost(gasSlots, gasRates, rates(K_GAS_STANDING), dayStart)?.let { c ->
+            val liveGasKwh = reading?.gasTodayKwh ?: gasSlotKwh
+            c + (liveGasKwh - gasSlotKwh).coerceAtLeast(0.0) * (rateAt(gasRates, now) ?: 0.0) / 100.0
+        } else null
 
         val next = elecRates.firstOrNull { it.from > now && priceNow != null && Math.abs(it.p - priceNow) > 0.005 }
 

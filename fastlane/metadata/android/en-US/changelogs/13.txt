@@ -1,0 +1,1 @@
+• Gemini and other on-device assistants can ask for your live usage, gas status and cheapest electricity times (Android 16+, as Google opens this up)

@@ -80,8 +80,12 @@ class BarChartView(context: Context, attrs: AttributeSet? = null) : View(context
             }
             val label = labels.getOrNull(i)
             if (!label.isNullOrBlank()) {
+                // Centred under its bar, but kept inside the view so edge labels aren't cut off
                 text.textAlign = Paint.Align.CENTER
-                canvas.drawText(label, i * groupW + groupW / 2, height - 2 * density, text)
+                val half = text.measureText(label) / 2
+                val mid = i * groupW + groupW / 2
+                val x = if (width > 2 * half) mid.coerceIn(half, width - half) else mid
+                canvas.drawText(label, x, height - 2 * density, text)
             }
         }
     }

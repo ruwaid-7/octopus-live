@@ -126,7 +126,7 @@ class MainActivity : Activity() {
                 lines += line
             }
             d.baseW?.let { lines += "Always-on today: $it W (your lowest half-hour)" }
-            d.tariff?.let { lines += "Tariff: $it" }
+            d.tariff?.let { lines += "Tariff: " + (tariffName(it)?.let { n -> "$n ($it)" } ?: it) }
             if (d.elecCostToday == null && d.tariff != null) lines += "Costs aren't available for this tariff yet (e.g. Economy 7)."
             d.error?.let { lines += "Last update problem: $it" }
             insightsText.text = if (lines.isEmpty()) getString(R.string.insights_waiting) else lines.joinToString("\n")
@@ -158,12 +158,28 @@ class MainActivity : Activity() {
             val cost = known.sumOf { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
             val base = known.mapNotNull { it.baseW }.minOrNull()
             buildString {
-                append(String.format(Locale.UK, "%d days: electricity %.1f kWh", known.size, elecTotal))
+                append(String.format(Locale.UK, "Last %s: electricity %.1f kWh", if (known.size == 1) "day" else "${known.size} days", elecTotal))
                 if (hasGas) append(String.format(Locale.UK, ", gas %.1f kWh", gasTotal))
                 if (cost > 0) append(String.format(Locale.UK, ", £%.2f", cost))
                 base?.let { append(".\nLowest always-on: $it W — leave it running all year and that's about ").append(
                     String.format(Locale.UK, "%.0f kWh", it * 24 * 365 / 1000.0)).append(" a year.") }
             }
+        }
+    }
+
+    /** A friendly name for common Octopus tariff codes, e.g. E-1R-VAR-22-11-01-M -> Flexible Octopus. */
+    private fun tariffName(code: String): String? {
+        val c = code.uppercase(Locale.UK)
+        return when {
+            "INTELLI" in c -> "Intelligent Octopus Go"
+            "AGILE" in c -> "Agile Octopus"
+            "-GO-" in c -> "Octopus Go"
+            "SILVER" in c || "TRACKER" in c -> "Octopus Tracker"
+            "COSY" in c -> "Cosy Octopus"
+            "FLUX" in c -> "Octopus Flux"
+            "FIX" in c -> "Octopus Fixed"
+            "VAR" in c -> "Flexible Octopus"
+            else -> null
         }
     }
 

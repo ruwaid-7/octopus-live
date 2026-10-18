@@ -132,9 +132,35 @@ footer a{color:var(--muted)}
         <input id="loginPw" type="password" autocomplete="current-password" required>
         <div class="err" id="loginErr"></div>
         <button class="btn" id="loginBtn" style="margin-top:16px">Sign in</button>
+        <div style="text-align:center;margin-top:14px"><a class="link" href="#" id="forgotLink">Forgot username or password?</a></div>
       </form>
     </div>
-    <p class="small" style="margin:14px 4px 0">Forgot your details? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
+  </section>
+
+  <!-- Forgot: reset the sign-in with the Octopus API key -->
+  <section id="vForgot" class="hidden">
+    <h1>Reset your sign-in</h1>
+    <p>Prove it's you with your Octopus API key, then choose a new username and password.</p>
+    <div class="card">
+      <form id="forgotForm" autocomplete="off">
+        <label for="forgotKey" style="margin-top:0">Octopus API key</label>
+        <input id="forgotKey" type="password" placeholder="sk_live_…" spellcheck="false" autocapitalize="off" required>
+        <div style="margin-top:8px"><a class="link" href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" target="_blank" rel="noopener">Find your API key ↗</a></div>
+        <p class="small" style="margin-top:8px">Made a new key on Octopus since? Use the new one. It replaces the old key here.</p>
+        <label for="forgotUser">New username</label>
+        <input id="forgotUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" required>
+        <label for="forgotPw1">New password</label>
+        <input id="forgotPw1" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
+        <label for="forgotPw2">Confirm new password</label>
+        <input id="forgotPw2" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="err" id="forgotErr"></div>
+        <div class="row" style="margin-top:16px">
+          <button class="btn" id="forgotBtn" type="submit" style="flex:1">Reset</button>
+          <button class="btn ghost" id="forgotBack" type="button" style="flex:1">Back</button>
+        </div>
+      </form>
+    </div>
+    <p class="small" style="margin:14px 4px 0">This signs out every other browser. Your phone and PC keep working.</p>
   </section>
 
   <!-- Older relay or after a reset: create a password (needs the device link) -->
@@ -283,7 +309,7 @@ footer a{color:var(--muted)}
   var hashToken = new URLSearchParams(location.hash.slice(1)).get("connect") || "";   // from the QR code
   var token = "";                                       // device token, given to signed-in browsers
   var state = null, liveTimer = null;
-  var VIEWS = ["vLoading", "vSetup", "vLogin", "vNewPw", "vConnect", "vLocked", "vMain"];
+  var VIEWS = ["vLoading", "vSetup", "vLogin", "vNewPw", "vForgot", "vConnect", "vLocked", "vMain"];
 
   function show(view) { VIEWS.forEach(function (v) { $(v).classList.toggle("hidden", v !== view); }); }
   function toast(msg) {
@@ -333,6 +359,24 @@ footer a{color:var(--muted)}
     catch (err) { $("loginErr").textContent = err.message; }
     finally { done(); }
   });
+  $("forgotLink").addEventListener("click", function (e) {
+    e.preventDefault(); $("forgotErr").textContent = ""; $("forgotUser").value = $("loginUser").value.trim();
+    show("vForgot"); chip(css("--muted"), "Reset"); $("forgotKey").focus();
+  });
+  $("forgotBack").addEventListener("click", function () { load(); });
+  $("forgotForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("forgotErr").textContent = "";
+    if ($("forgotPw1").value !== $("forgotPw2").value) { $("forgotErr").textContent = "The passwords don't match"; return; }
+    var done = busy($("forgotBtn"), "Checking with Octopus…");
+    try {
+      await api("/api/reset", { apiKey: $("forgotKey").value.trim(), username: $("forgotUser").value.trim(), password: $("forgotPw1").value });
+      $("forgotKey").value = $("forgotPw1").value = $("forgotPw2").value = "";
+      await load("Your sign-in has been reset.");
+    } catch (err) { $("forgotErr").textContent = err.message; }
+    finally { done(); }
+  });
+
   $("newPwForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     $("newPwErr").textContent = "";

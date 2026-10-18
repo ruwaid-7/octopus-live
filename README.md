@@ -217,6 +217,13 @@ sudo docker run -d --name octopus-relay --restart unless-stopped -p 8765:8765 --
 
 ### Forgot your password?
 
+On the sign-in page, tap **Forgot username or password?**, enter your Octopus API key
+([find it here](https://octopus.energy/dashboard/new/accounts/personal-details/api-access)) and
+choose a new username and password. If you've made a new key on Octopus since, use the new one: it
+works as long as it's for the same Octopus account, and it replaces the old key on the relay.
+
+If that doesn't work (for example, the relay has never connected to Octopus):
+
 - **Home server:** clear the password, then open your device link (`https://your-address/?token=…`)
   and the page asks you to create a new password (you can keep or change your username):
   ```bash

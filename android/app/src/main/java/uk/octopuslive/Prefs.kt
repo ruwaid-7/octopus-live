@@ -64,6 +64,11 @@ class Prefs(context: Context) {
         get() = p.getInt("interval", 60)
         set(v) = p.edit().putInt("interval", v).apply()
 
+    /** Tapping the home-screen widget opens the app instead of refreshing it. */
+    var widgetOpensApp: Boolean
+        get() = p.getBoolean("widgetOpensApp", false)
+        set(v) = p.edit().putBoolean("widgetOpensApp", v).apply()
+
     var startOnBoot: Boolean
         get() = p.getBoolean("boot", true)
         set(v) = p.edit().putBoolean("boot", v).apply()

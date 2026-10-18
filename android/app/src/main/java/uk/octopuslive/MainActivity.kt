@@ -453,7 +453,8 @@ class MainActivity : Activity() {
         }
         findViewById<TextView>(R.id.showKey).setOnClickListener { v ->
             // The key is hidden by default so it doesn't end up in screenshots
-            val hidden = apiKey.inputType and android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD != 0
+            // Compare the whole variation: VISIBLE_PASSWORD shares bits with PASSWORD
+            val hidden = (apiKey.inputType and android.text.InputType.TYPE_MASK_VARIATION) == android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             apiKey.inputType = android.text.InputType.TYPE_CLASS_TEXT or
                 if (hidden) android.text.InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD else android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             apiKey.typeface = Typeface.MONOSPACE
@@ -482,12 +483,10 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
         findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
-        findViewById<View>(R.id.rowSetupAgain).setOnClickListener { openSetup(SetupActivity.WELCOME) }
-        findViewById<View>(R.id.rowSource).setOnClickListener {
-            tryStart(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE_URL)), null)
-        }
+        findViewById<View>(R.id.rowAbout).setOnClickListener { AboutActivity.start(this) }
+        findViewById<View>(R.id.rowPrivacy).setOnClickListener { AboutActivity.start(this, AboutActivity.DOC_PRIVACY) }
         val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { null }
-        findViewById<TextView>(R.id.aboutVersion).text = listOfNotNull(version?.let { "Version $it" }, "GitHub").joinToString(" · ")
+        findViewById<TextView>(R.id.aboutVersion).text = version?.let { getString(R.string.about_version, it) } ?: ""
     }
 
     /** Puts the saved settings into the switches and fields (without triggering their listeners). */

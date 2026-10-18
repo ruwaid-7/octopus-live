@@ -83,7 +83,6 @@
     <string name="widget_opens_app">Widget opens the app</string>
     <string name="widget_opens_app_sub">Instead of refreshing when tapped</string>
     <string name="source_code">Source code</string>
-    <string name="disclaimer">Unofficial. Not affiliated with Octopus Energy. Built with help from Claude.</string>
 
     <!-- Status and messages -->
     <string name="not_started">Not running</string>
@@ -109,15 +108,7 @@
     <string name="mute_until_off">Mute until off</string>
 
     <!-- First-run setup -->
-    <string name="ob_tagline">Your home\'s electricity and gas, live.</string>
-    <string name="ob_benefit_live">Live watts in your status bar</string>
-    <string name="ob_benefit_live_sub">From your Octopus Home Mini, without opening an app</string>
-    <string name="ob_benefit_widget">A home-screen widget</string>
-    <string name="ob_benefit_widget_sub">Today\'s electricity, gas and cost at a glance</string>
-    <string name="ob_benefit_alerts">Useful alerts</string>
-    <string name="ob_benefit_alerts_sub">Gas left on, high use and cheap prices</string>
     <string name="ob_get_started">Get started</string>
-    <string name="ob_unofficial">Unofficial app. Not affiliated with Octopus Energy.</string>
     <string name="ob_back">Back</string>
     <string name="ob_continue">Continue</string>
     <string name="ob_recommended">Recommended</string>
@@ -164,6 +155,35 @@
     <string name="ob_start">Start</string>
     <string name="ob_cant_open">Couldn\'t open that. Try again from Settings.</string>
     <string name="make_relay_link">Make a free relay ↗</string>
-    <string name="setup_again">Run setup again</string>
-    <string name="setup_again_sub">The welcome steps from the first install</string>
+    <string name="ob_intro1_title">Your power, live</string>
+    <string name="ob_intro1_body">See how many watts your home is using right now, in the status bar, without opening an app.</string>
+    <string name="ob_intro2_title">At a glance</string>
+    <string name="ob_intro2_body">A home-screen widget shows today\'s electricity, gas and cost, and the price right now.</string>
+    <string name="ob_intro3_title">Know when it matters</string>
+    <string name="ob_intro3_body">Get a nudge when the gas is left on, usage stays high or electricity is cheap.</string>
+    <string name="ob_next">Next</string>
+    <string name="ob_skip">Skip</string>
+    <string name="ob_agree">By continuing you agree to the %1$s and %2$s.</string>
+
+    <!-- About -->
+    <string name="about_row">About Octopus Live</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_summary">Live electricity and gas from your Octopus Home Mini, on your phone, widget and PC. Free and open source.</string>
+    <string name="about_section_app">App</string>
+    <string name="about_section_legal">Legal</string>
+    <string name="about_whats_new">What\'s new</string>
+    <string name="about_whats_new_sub">Release notes on GitHub</string>
+    <string name="about_source">Source code</string>
+    <string name="about_source_sub">github.com/ruwaid-7/octopus-live</string>
+    <string name="about_report">Report a problem or suggest an idea</string>
+    <string name="about_report_sub">Opens a new issue on GitHub</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_privacy_sub">No accounts, ads or tracking. Your data stays on your devices.</string>
+    <string name="about_terms">Terms of use</string>
+    <string name="about_terms_sub">Using the app and your Octopus API key</string>
+    <string name="about_licences">Open-source licences</string>
+    <string name="about_licences_sub">The projects this app is built on</string>
+    <string name="about_disclaimer">Disclaimer</string>
+    <string name="about_disclaimer_body">Octopus Live is an independent project. It isn\'t made, endorsed or supported by Octopus Energy. Octopus Energy and Octopus Home Mini are trademarks of Octopus Energy Group, used only to say what the app works with.\n\nReadings and costs are estimates from Octopus and can differ from your bill. The gas warning isn\'t a safety device: if you smell gas in the UK, call 0800 111 999.\n\nBuilt with help from Claude, an AI assistant, and reviewed and tested by the developer.</string>
+    <string name="about_footer">Made by ruwaid-7 · MIT licence</string>
 </resources>

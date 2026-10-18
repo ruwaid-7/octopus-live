@@ -35,6 +35,11 @@ jobs:
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
+      - name: Check privacy policy and terms match the app
+        run: |
+          cmp PRIVACY.md android/app/src/main/res/raw/privacy.md || { echo "::error::PRIVACY.md differs from the in-app copy (android/app/src/main/res/raw/privacy.md)"; exit 1; }
+          cmp TERMS.md android/app/src/main/res/raw/terms.md || { echo "::error::TERMS.md differs from the in-app copy (android/app/src/main/res/raw/terms.md)"; exit 1; }
+
       - name: Build APK
         working-directory: android
         env:

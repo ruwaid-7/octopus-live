@@ -304,6 +304,9 @@ Octopus makes them available through its GraphQL API:
 Your API key is stored only on your own PC (`Settings.inc`) and phone (private app storage) and is
 sent only to `api.octopus.energy`. There's no server, analytics or tracking.
 
+The full [privacy policy](PRIVACY.md) and [terms of use](TERMS.md) are also in the app under
+**Settings → About Octopus Live**.
+
 If you fork this repo, **don't commit `Settings.inc` with your key in it.**
 
 ## Building it yourself

@@ -13,6 +13,13 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import android.text.InputType
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -28,9 +35,10 @@ import java.util.Locale
 
 /**
  * First-run setup, shown once on a new install:
- *   Welcome -> How do you want to connect? (this phone / I have a relay / make a free relay)
+ *   Three intro cards (swipe or Next; Skip jumps to setup) -> How do you want to connect? (this phone / I have a relay / make a free relay)
  *   -> API key or relay address -> choose alerts -> notifications and background running -> Home.
  * Permissions are asked on the last step, next to the reason for them, rather than at launch.
+ * Every setup step has a small Skip: the app opens and can be set up later in Settings.
  */
 class SetupActivity : Activity() {
 
@@ -46,6 +54,25 @@ class SetupActivity : Activity() {
         step = savedInstanceState?.getInt(K_STEP) ?: intent.getIntExtra(EXTRA_STEP, WELCOME)
         savedInstanceState?.getIntArray(K_HISTORY)?.forEach { history.addLast(it) }
         show(step, remember = false)
+    }
+
+    private val swipe by lazy {
+        GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+                val i = INTRO.indexOf(step)
+                if (i < 0 || e1 == null) return false
+                val dx = e2.x - e1.x
+                if (Math.abs(dx) < 80 * dp || Math.abs(dx) < Math.abs(e2.y - e1.y)) return false
+                if (dx < 0) show(if (i < INTRO.size - 1) INTRO[i + 1] else CHOOSE)
+                else if (history.isNotEmpty()) @Suppress("DEPRECATION") onBackPressed()
+                return true
+            }
+        })
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (step in INTRO && swipe.onTouchEvent(ev)) return true
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -75,7 +102,7 @@ class SetupActivity : Activity() {
         hideKeyboard()
         val content = page()
         when (next) {
-            WELCOME -> welcome(content)
+            WELCOME, INTRO_WIDGET, INTRO_ALERTS -> intro(content, INTRO.indexOf(next))
             CHOOSE -> choose(content)
             KEY -> key(content)
             RELAY -> relay(content)
@@ -87,21 +114,61 @@ class SetupActivity : Activity() {
 
     // ================================================================= steps
 
-    private fun welcome(c: LinearLayout) {
+    /** One intro card per screen, with page dots. */
+    private fun intro(c: LinearLayout, index: Int) {
+        val (icon, title, body) = listOf(
+            Triple(R.drawable.ic_bolt, R.string.ob_intro1_title, R.string.ob_intro1_body),
+            Triple(R.drawable.ic_widgets, R.string.ob_intro2_title, R.string.ob_intro2_body),
+            Triple(R.drawable.ic_nav_alerts, R.string.ob_intro3_title, R.string.ob_intro3_body),
+        )[index]
         c.gravity = Gravity.CENTER_HORIZONTAL
-        c.addView(logo(), LinearLayout.LayoutParams(px(64), px(64)).apply { topMargin = px(48) })
-        c.addView(text(getString(R.string.app_name), 28f, R.color.text_primary, bold = true).apply { gravity = Gravity.CENTER }, wrap(top = 20))
-        c.addView(text(getString(R.string.ob_tagline), 16f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, wrap(top = 6))
-        val card = card(top = 32)
-        benefit(card, R.drawable.ic_bolt, R.string.ob_benefit_live, R.string.ob_benefit_live_sub)
-        card.addView(divider())
-        benefit(card, R.drawable.ic_widgets, R.string.ob_benefit_widget, R.string.ob_benefit_widget_sub)
-        card.addView(divider())
-        benefit(card, R.drawable.ic_nav_alerts, R.string.ob_benefit_alerts, R.string.ob_benefit_alerts_sub)
-        c.addView(card)
         c.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
-        c.addView(primary(getString(R.string.ob_get_started)) { show(CHOOSE) }, full(top = 28))
-        c.addView(text(getString(R.string.ob_unofficial), 12f, R.color.text_muted).apply { gravity = Gravity.CENTER }, full(top = 14))
+        val card = card(top = 0).apply { gravity = Gravity.CENTER_HORIZONTAL; setPadding(px(24), px(36), px(24), px(32)) }
+        card.addView(if (index == 0) logo() else iconBadge(icon, size = 88), LinearLayout.LayoutParams(px(88), px(88)))
+        card.addView(TextView(this, null, 0, R.style.PageTitle).apply { setText(title); gravity = Gravity.CENTER; textSize = 24f }, full(top = 24))
+        card.addView(text(getString(body), 15f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, full(top = 10))
+        c.addView(card)
+        // Page dots
+        val dots = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER }
+        INTRO.indices.forEach { i ->
+            dots.addView(View(this).apply {
+                background = GradientDrawable().apply {
+                    cornerRadius = 4 * dp
+                    setColor(getColor(if (i == index) R.color.brand_pink else R.color.card_stroke))
+                }
+            }, LinearLayout.LayoutParams(px(if (i == index) 20 else 8), px(8)).apply { marginStart = px(3); marginEnd = px(3) })
+        }
+        c.addView(dots, full(top = 24))
+        c.addView(View(this), LinearLayout.LayoutParams(1, 0, 1f))
+        val last = index == INTRO.size - 1
+        c.addView(primary(getString(if (last) R.string.ob_get_started else R.string.ob_next)) {
+            show(if (last) CHOOSE else INTRO[index + 1])
+        }, full(top = 28))
+        c.addView(agreement(), full(top = 14))
+    }
+
+    /** "By continuing you agree to the Terms of use and Privacy policy", both tappable. */
+    private fun agreement(): TextView {
+        val terms = getString(R.string.about_terms)
+        val privacy = getString(R.string.about_privacy)
+        val full = getString(R.string.ob_agree, terms, privacy)
+        val span = SpannableString(full)
+        fun link(word: String, doc: String) {
+            val at = full.indexOf(word)
+            if (at < 0) return
+            span.setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View) = AboutActivity.start(this@SetupActivity, doc)
+                override fun updateDrawState(ds: TextPaint) { ds.color = getColor(R.color.text_secondary); ds.isUnderlineText = true }
+            }, at, at + word.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        link(terms, AboutActivity.DOC_TERMS)
+        link(privacy, AboutActivity.DOC_PRIVACY)
+        return text("", 12f, R.color.text_muted).apply {
+            text = span
+            gravity = Gravity.CENTER
+            movementMethod = LinkMovementMethod.getInstance()
+            highlightColor = 0
+        }
     }
 
     private fun choose(c: LinearLayout) {
@@ -245,8 +312,9 @@ class SetupActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             setPadding(px(20), px(20), px(20), px(28))
         }
+        val bar = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         if (history.isNotEmpty()) {
-            column.addView(ImageView(this).apply {
+            bar.addView(ImageView(this).apply {
                 setImageResource(R.drawable.ic_back)
                 imageTintList = ColorStateList.valueOf(getColor(R.color.text_primary))
                 contentDescription = getString(R.string.ob_back)
@@ -255,6 +323,20 @@ class SetupActivity : Activity() {
                 setOnClickListener { @Suppress("DEPRECATION") onBackPressed() }
             }, LinearLayout.LayoutParams(px(44), px(44)).apply { marginStart = -px(10) })
         }
+        bar.addView(View(this), LinearLayout.LayoutParams(0, px(44), 1f))
+        if (step != FINISH) {
+            // Intro cards: skip to setup. Setup steps: skip setup, open the app (Settings has it all).
+            bar.addView(TextView(this).apply {
+                setText(R.string.ob_skip)
+                textSize = 14f
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setTextColor(getColor(R.color.text_secondary))
+                setPadding(px(12), px(10), px(12), px(10))
+                background = getDrawable(R.drawable.bg_row)
+                setOnClickListener { if (step in INTRO) show(CHOOSE) else complete() }
+            }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { marginEnd = -px(12) })
+        }
+        column.addView(bar)
         val scroll = ScrollView(this).apply {
             isFillViewport = true
             setBackgroundColor(getColor(R.color.app_bg))
@@ -272,8 +354,8 @@ class SetupActivity : Activity() {
 
     private fun logo() = ImageView(this).apply {
         setImageResource(R.drawable.ic_bolt)
-        setPadding(px(16), px(16), px(16), px(16))
-        background = GradientDrawable().apply { cornerRadius = 18 * dp; setColor(getColor(R.color.brand_pink)) }
+        setPadding(px(22), px(22), px(22), px(22))
+        background = GradientDrawable().apply { cornerRadius = 24 * dp; setColor(getColor(R.color.brand_pink)) }
     }
 
     private fun card(top: Int = 0, padded: Boolean = true) =
@@ -282,24 +364,11 @@ class SetupActivity : Activity() {
             layoutParams = full(top = top)
         }
 
-    private fun benefit(card: LinearLayout, icon: Int, title: Int, sub: Int) {
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, px(10), 0, px(10))
-        }
-        row.addView(iconBadge(icon), LinearLayout.LayoutParams(px(40), px(40)))
-        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        texts.addView(TextView(this, null, 0, R.style.RowTitle).apply { setText(title); textSize = 15f })
-        texts.addView(TextView(this, null, 0, R.style.RowSubtitle).apply { setText(sub) })
-        row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = px(14) })
-        card.addView(row)
-    }
-
-    private fun iconBadge(icon: Int, done: Boolean = false) = ImageView(this).apply {
+    private fun iconBadge(icon: Int, done: Boolean = false, size: Int = 40) = ImageView(this).apply {
         setImageResource(if (done) R.drawable.ic_check else icon)
         imageTintList = ColorStateList.valueOf(getColor(if (done) R.color.elec_low else R.color.brand_pink))
-        setPadding(px(9), px(9), px(9), px(9))
+        val pad = px(size * 9 / 40)
+        setPadding(pad, pad, pad, pad)
         background = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor(getColor(if (done) R.color.elec_low else R.color.brand_pink) and 0x00FFFFFF or 0x1F000000)
@@ -440,6 +509,9 @@ class SetupActivity : Activity() {
         const val MAKE_RELAY = 4
         const val ALERTS = 5
         const val FINISH = 6
+        const val INTRO_WIDGET = 7
+        const val INTRO_ALERTS = 8
+        private val INTRO = listOf(WELCOME, INTRO_WIDGET, INTRO_ALERTS)
         const val DEPLOY_URL = "https://deploy.workers.cloudflare.com/?url=https://github.com/ruwaid-7/octopus-live/tree/main/worker"
 
         /** True when this install still needs the first-run setup. */

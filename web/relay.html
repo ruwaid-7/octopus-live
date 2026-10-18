@@ -102,6 +102,10 @@ footer a{color:var(--muted)}
         <label for="setupKey" style="margin-top:0">Octopus API key</label>
         <input id="setupKey" type="password" placeholder="sk_live_…" spellcheck="false" autocapitalize="off" required>
         <div style="margin-top:8px"><a class="link" href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" target="_blank" rel="noopener">Find your API key ↗</a></div>
+        <label for="setupPw">Choose a password for this page</label>
+        <input id="setupPw" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
+        <label for="setupPw2">Confirm password</label>
+        <input id="setupPw2" type="password" autocomplete="new-password" minlength="8" required>
         <details><summary>More options</summary>
           <label for="setupAccount">Account number (only if you have more than one)</label>
           <input id="setupAccount" placeholder="A-1234ABCD" spellcheck="false" autocapitalize="characters">
@@ -110,7 +114,50 @@ footer a{color:var(--muted)}
         <button class="btn" id="setupBtn" style="margin-top:16px">Connect</button>
       </form>
     </div>
-    <p class="small" style="margin:14px 4px 0">You'll get a private link to use in the app. Anyone with that link can see your usage, so keep it to yourself.</p>
+    <p class="small" style="margin:14px 4px 0">You'll sign in to this page with your password. Your phone and PC get their own device link, which can only read your usage.</p>
+  </section>
+
+  <!-- Sign in -->
+  <section id="vLogin" class="hidden">
+    <h1>Sign in</h1>
+    <p>Enter the password for this relay.</p>
+    <div class="card">
+      <form id="loginForm">
+        <input type="text" autocomplete="username" value="octopus-live" hidden>
+        <label for="loginPw" style="margin-top:0">Password</label>
+        <input id="loginPw" type="password" autocomplete="current-password" required>
+        <div class="err" id="loginErr"></div>
+        <button class="btn" id="loginBtn" style="margin-top:16px">Sign in</button>
+      </form>
+    </div>
+    <p class="small" style="margin:14px 4px 0">Forgot it? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
+  </section>
+
+  <!-- Older relay or after a reset: create a password (needs the device link) -->
+  <section id="vNewPw" class="hidden">
+    <h1>Create a password</h1>
+    <p>From now on you'll sign in to this page with a password. Your devices keep working as they are.</p>
+    <div class="card">
+      <form id="newPwForm">
+        <input type="text" autocomplete="username" value="octopus-live" hidden>
+        <label for="newPw1" style="margin-top:0">Password</label>
+        <input id="newPw1" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
+        <label for="newPw2">Confirm password</label>
+        <input id="newPw2" type="password" autocomplete="new-password" minlength="8" required>
+        <div class="err" id="newPwErr"></div>
+        <button class="btn" id="newPwBtn" style="margin-top:16px">Save password</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Opened from the QR code on a phone -->
+  <section id="vConnect" class="hidden">
+    <h1>Connect this phone</h1>
+    <p>Tap the button to add this relay to the Octopus Live app.</p>
+    <div class="card">
+      <a class="btn" id="connectBtn" href="#">Open in Octopus Live</a>
+      <p class="small" style="margin-top:14px">Don't have the app yet? Get it from <a class="link" href="https://github.com/ruwaid-7/octopus-live/releases/latest" target="_blank" rel="noopener">GitHub</a>, then come back to this page.</p>
+    </div>
   </section>
 
   <!-- Set up, but no (valid) link -->
@@ -118,8 +165,8 @@ footer a{color:var(--muted)}
     <div class="card center" style="padding:32px 24px">
       <div class="lock"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0z"/></svg></div>
       <h2>This relay is private</h2>
-      <p style="margin-top:6px">Open the personal link you got when you set it up.</p>
-      <p class="small" style="margin-top:14px">Lost it? See “Lost your link” in the <a href="https://github.com/ruwaid-7/octopus-live#lost-your-link" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
+      <p style="margin-top:6px">Open your device link to create a password for this page.</p>
+      <p class="small" style="margin-top:14px">Lost it? See “Lost your link” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
     </div>
   </section>
 
@@ -147,15 +194,15 @@ footer a{color:var(--muted)}
     <div class="section">Connect your devices</div>
     <div class="card">
       <h2>Phone</h2>
-      <p>On your Android phone, open this page and tap the button. The app fills everything in for you.</p>
+      <p>On your Android phone, tap the button. On a computer, scan the code with your phone. The app fills everything in for you.</p>
       <a class="btn" id="openApp" style="margin-top:14px" href="#">Open in Octopus Live</a>
       <div class="qr" id="qrRow">
         <div class="code" id="qr"></div>
-        <p class="small">On a computer? Scan this with your phone's camera to open this page on your phone, then tap <b>Open in Octopus Live</b>.</p>
+        <p class="small">Scan with your phone's camera, then tap <b>Open in Octopus Live</b>. No sign-in needed on the phone.</p>
       </div>
       <div class="divider"></div>
-      <h2>Private link</h2>
-      <p>For the app's Relay address, Home Assistant, or anything else.</p>
+      <h2>Device link</h2>
+      <p>For the app's Relay address, Home Assistant or anything else. It can only read your usage.</p>
       <div class="row" style="margin-top:12px">
         <div class="code-line" id="link" style="flex:1"></div>
         <button class="btn ghost small" data-copy="link">Copy</button>
@@ -186,10 +233,30 @@ footer a{color:var(--muted)}
         </div>
       </form>
       <div class="divider"></div>
-      <h2>Private link</h2>
-      <p>If your link was shared by mistake, make a new one. Devices using the old link stop working until you give them the new one.</p>
-      <button class="btn danger small" id="rotateBtn" style="margin-top:12px">Make a new link</button>
+      <h2>Password</h2>
+      <p>Used to sign in to this page. Changing it signs out every browser.</p>
+      <button class="btn ghost small" id="changePwBtn" style="margin-top:12px">Change password</button>
+      <form id="pwForm" class="hidden" autocomplete="off" style="margin-top:4px">
+        <input type="text" autocomplete="username" value="octopus-live" hidden>
+        <label for="pw1">New password</label>
+        <input id="pw1" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
+        <label for="pw2">Confirm new password</label>
+        <input id="pw2" type="password" autocomplete="new-password" minlength="8">
+        <div class="err" id="pwErr"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" id="savePwBtn" type="submit" style="flex:1">Save</button>
+          <button class="btn ghost" id="cancelPwBtn" type="button" style="flex:1">Cancel</button>
+        </div>
+      </form>
+      <div class="divider"></div>
+      <h2>Device link</h2>
+      <p>If your device link was shared by mistake, make a new one. Devices using the old link stop working until you give them the new one.</p>
+      <button class="btn danger small" id="rotateBtn" style="margin-top:12px">Make a new device link</button>
       <div class="err" id="rotateErr"></div>
+    </div>
+    <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <p>Signed in on this browser</p>
+      <button class="btn ghost small" id="logoutBtn">Sign out</button>
     </div>
     <p class="small hidden" id="persistWarn" style="margin:12px 4px 0"></p>
   </section>
@@ -206,12 +273,13 @@ footer a{color:var(--muted)}
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var params = new URLSearchParams(location.search);
-  var token = params.get("token") || "";
+  var urlToken = params.get("token") || "";           // device link opened in a browser (older relays)
+  var hashToken = new URLSearchParams(location.hash.slice(1)).get("connect") || "";   // from the QR code
+  var token = "";                                       // device token, given to signed-in browsers
   var state = null, liveTimer = null;
+  var VIEWS = ["vLoading", "vSetup", "vLogin", "vNewPw", "vConnect", "vLocked", "vMain"];
 
-  function show(view) {
-    ["vLoading", "vSetup", "vLocked", "vMain"].forEach(function (v) { $(v).classList.toggle("hidden", v !== view); });
-  }
+  function show(view) { VIEWS.forEach(function (v) { $(v).classList.toggle("hidden", v !== view); }); }
   function toast(msg) {
     var t = $("toast"); t.textContent = msg; t.classList.add("show");
     clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove("show"); }, 2200);
@@ -220,47 +288,67 @@ footer a{color:var(--muted)}
   function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
   function hm(iso) { return iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : "--:--"; }
   function dur(min) { return min < 60 ? min + " min" : (min % 60 ? Math.floor(min / 60) + " h " + (min % 60) + " min" : (min / 60) + " h"); }
+  function cleanUrl() { history.replaceState(null, "", "/"); }
 
   async function api(path, body) {
-    var opts = { headers: { "Content-Type": "application/json" }, cache: "no-store" };
-    if (token) opts.headers["X-Relay-Token"] = token;
+    var opts = { headers: { "Content-Type": "application/json" }, cache: "no-store", credentials: "same-origin" };
+    if (urlToken) opts.headers["X-Relay-Token"] = urlToken;
     if (body) { opts.method = "POST"; opts.body = JSON.stringify(body); }
     var r = await fetch(path, opts);
     var j = {};
     try { j = await r.json(); } catch (e) {}
-    if (!r.ok) throw new Error(j.status || j.error || ("Error " + r.status));
+    if (!r.ok) { var err = new Error(j.status || j.error || ("Error " + r.status)); err.code = r.status; throw err; }
     return j;
   }
-
-  function personalLink() { return location.origin + "/?token=" + encodeURIComponent(token); }
+  function busy(btn, text) { var old = btn.textContent; btn.disabled = true; btn.textContent = text; return function () { btn.disabled = false; btn.textContent = old; }; }
+  function deviceLink(t) { return location.origin + "/?token=" + encodeURIComponent(t); }
+  function appLink(t) { return "octopuslive://connect?relay=" + encodeURIComponent(deviceLink(t)); }
 
   // ---------- first-time setup
   $("setupForm").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var btn = $("setupBtn"); btn.disabled = true; btn.textContent = "Checking your key…"; $("setupErr").textContent = "";
+    $("setupErr").textContent = "";
+    if ($("setupPw").value !== $("setupPw2").value) { $("setupErr").textContent = "The passwords don't match"; return; }
+    var done = busy($("setupBtn"), "Checking your key…");
     try {
-      var j = await api("/api/setup", { apiKey: $("setupKey").value.trim(), account: $("setupAccount").value.trim() });
-      token = j.token;
-      history.replaceState(null, "", "/?token=" + encodeURIComponent(token));
+      var j = await api("/api/setup", { apiKey: $("setupKey").value.trim(), account: $("setupAccount").value.trim(), password: $("setupPw").value });
+      cleanUrl();
       await load("You're connected" + (j.account ? " to " + j.account : "") + ". Now add your devices below.");
-    } catch (err) {
-      $("setupErr").textContent = err.message;
-    } finally { btn.disabled = false; btn.textContent = "Connect"; }
+    } catch (err) { $("setupErr").textContent = err.message; }
+    finally { done(); }
+  });
+
+  // ---------- sign in / create password
+  $("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("loginErr").textContent = "";
+    var done = busy($("loginBtn"), "Signing in…");
+    try { await api("/api/login", { password: $("loginPw").value }); $("loginPw").value = ""; cleanUrl(); urlToken = ""; await load(); }
+    catch (err) { $("loginErr").textContent = err.message; }
+    finally { done(); }
+  });
+  $("newPwForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("newPwErr").textContent = "";
+    if ($("newPw1").value !== $("newPw2").value) { $("newPwErr").textContent = "The passwords don't match"; return; }
+    var done = busy($("newPwBtn"), "Saving…");
+    try { await api("/api/password", { password: $("newPw1").value }); cleanUrl(); urlToken = ""; await load("Password saved. Next time, sign in with it."); }
+    catch (err) { $("newPwErr").textContent = err.message; }
+    finally { done(); }
   });
 
   // ---------- dashboard
   function fillConnect() {
-    var link = personalLink();
-    $("link").textContent = link;
-    $("rainmeter").textContent = "RelayUrl=" + link;
-    $("openApp").href = "octopuslive://connect?relay=" + encodeURIComponent(link);
-    var qrBox = $("qr");
+    $("link").textContent = deviceLink(token);
+    $("rainmeter").textContent = "RelayUrl=" + deviceLink(token);
+    $("openApp").href = appLink(token);
     try {
-      var q = qrcode(0, "M"); q.addData(location.origin + "/?token=" + token); q.make();
-      qrBox.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+      // The code opens a small page on the phone with just the "Open in Octopus Live" button.
+      // The token is after "#", so it never reaches the server's logs.
+      var q = qrcode(0, "M"); q.addData(location.origin + "/#connect=" + token); q.make();
+      $("qr").innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
       $("qrRow").classList.remove("hidden");
     } catch (e) { $("qrRow").classList.add("hidden"); }
-    // On a phone the QR code isn't needed
     if (/Android|iPhone|iPad/i.test(navigator.userAgent)) $("qrRow").classList.add("hidden");
   }
 
@@ -282,20 +370,18 @@ footer a{color:var(--muted)}
     $("gasBanner").classList.toggle("hidden", !gasOn);
     if (gasOn) $("gasText").textContent = "Gas on for " + dur(d.gasRunMinutes) + (d.gasRunSince ? " · since " + hm(d.gasRunSince) : "");
     if (d.ok) chip(css("--green"), "Live · " + hm(d.readAt));
-    else if (state && state.configured) chip(css("--red"), "Problem");
+    else chip(css("--red"), "Problem");
   }
 
   async function refreshLive() {
     try { renderLive(await api("/api/live")); }
-    catch (e) { chip(css("--red"), "Not reachable"); }
+    catch (e) { if (e.code === 401) load(); else chip(css("--red"), "Not reachable"); }
   }
 
   function renderSettings() {
-    $("keyStatus").innerHTML = "";
     var s = state;
-    var text = s.keyOk === false ? "Not working: " + (s.lastError || "check your key") :
+    $("keyStatus").textContent = s.keyOk === false ? "Not working: " + (s.lastError || "check your key") :
       "Connected" + (s.account ? " · account " + s.account : "");
-    $("keyStatus").textContent = text;
     $("keyStatus").className = s.keyOk === false ? "err" : "";
     var warn = $("persistWarn");
     if (s.persistent === false) {
@@ -304,36 +390,54 @@ footer a{color:var(--muted)}
     } else warn.classList.add("hidden");
   }
 
-  $("changeKeyBtn").addEventListener("click", function () {
-    $("keyForm").classList.remove("hidden"); $("changeKeyBtn").classList.add("hidden"); $("newKey").focus();
-  });
-  $("cancelKeyBtn").addEventListener("click", function () {
-    $("keyForm").classList.add("hidden"); $("changeKeyBtn").classList.remove("hidden"); $("keyErr").textContent = "";
-  });
+  function toggleForm(form, button, open) {
+    $(form).classList.toggle("hidden", !open); $(button).classList.toggle("hidden", open);
+  }
+  $("changeKeyBtn").addEventListener("click", function () { toggleForm("keyForm", "changeKeyBtn", true); $("newKey").focus(); });
+  $("cancelKeyBtn").addEventListener("click", function () { toggleForm("keyForm", "changeKeyBtn", false); $("keyErr").textContent = ""; });
   $("keyForm").addEventListener("submit", async function (e) {
     e.preventDefault();
     var key = $("newKey").value.trim();
     if (!key) { $("keyErr").textContent = "Paste your new API key"; return; }
-    var btn = $("saveKeyBtn"); btn.disabled = true; btn.textContent = "Checking…"; $("keyErr").textContent = "";
+    $("keyErr").textContent = "";
+    var done = busy($("saveKeyBtn"), "Checking…");
     try {
       var j = await api("/api/settings", { apiKey: key, account: $("newAccount").value.trim() });
-      $("newKey").value = ""; $("keyForm").classList.add("hidden"); $("changeKeyBtn").classList.remove("hidden");
+      $("newKey").value = ""; toggleForm("keyForm", "changeKeyBtn", false);
       toast("API key saved");
       await load(j.account ? "New API key saved for " + j.account + "." : "New API key saved.");
     } catch (err) { $("keyErr").textContent = err.message; }
-    finally { btn.disabled = false; btn.textContent = "Save"; }
+    finally { done(); }
+  });
+
+  $("changePwBtn").addEventListener("click", function () { toggleForm("pwForm", "changePwBtn", true); $("pw1").focus(); });
+  $("cancelPwBtn").addEventListener("click", function () { toggleForm("pwForm", "changePwBtn", false); $("pwErr").textContent = ""; });
+  $("pwForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    $("pwErr").textContent = "";
+    if ($("pw1").value !== $("pw2").value) { $("pwErr").textContent = "The passwords don't match"; return; }
+    var done = busy($("savePwBtn"), "Saving…");
+    try {
+      await api("/api/password", { password: $("pw1").value });
+      $("pw1").value = $("pw2").value = ""; toggleForm("pwForm", "changePwBtn", false);
+      toast("Password changed");
+    } catch (err) { $("pwErr").textContent = err.message; }
+    finally { done(); }
   });
 
   $("rotateBtn").addEventListener("click", async function () {
-    if (!confirm("Make a new private link? The old link stops working straight away, so you'll need to update your phone, PC and anything else that uses it.")) return;
+    if (!confirm("Make a new device link? The old one stops working straight away, so you'll need to update your phone, PC and anything else that uses it.")) return;
     $("rotateErr").textContent = "";
     try {
-      var j = await api("/api/settings", { rotateToken: true });
-      token = j.token;
-      history.replaceState(null, "", "/?token=" + encodeURIComponent(token));
-      await load("New link created. Update your devices with the link below.");
+      await api("/api/settings", { rotateToken: true });
+      await load("New device link created. Update your devices with the link below.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) { $("rotateErr").textContent = err.message; }
+  });
+
+  $("logoutBtn").addEventListener("click", async function () {
+    try { await api("/api/logout", {}); } catch (e) {}
+    token = ""; await load();
   });
 
   document.addEventListener("click", function (e) {
@@ -350,24 +454,30 @@ footer a{color:var(--muted)}
 
   // ---------- start
   async function load(notice) {
+    clearInterval(liveTimer);
+    if (hashToken) {   // opened from the QR code: only the connect button, no sign-in needed
+      show("vConnect"); chip(css("--muted"), "Connect"); $("ver").textContent = "Octopus Live";
+      $("connectBtn").href = appLink(hashToken);
+      return;
+    }
     try { state = await api("/api/setup/state"); }
     catch (e) { show("vLocked"); chip(css("--red"), "Not reachable"); return; }
     $("ver").textContent = (state.kind === "cloud" ? "Cloudflare relay " : "Home relay ") + (state.version || "");
     document.querySelectorAll(".kind").forEach(function (el) {
       el.textContent = state.kind === "cloud" ? "Cloudflare Worker (your account)" : "home server";
     });
-    if (!state.configured) {
-      show("vSetup"); chip(css("--muted"), "Not set up"); clearInterval(liveTimer); return;
+    if (!state.configured) { show("vSetup"); chip(css("--muted"), "Not set up"); return; }
+    if (!state.signedIn) {
+      if (state.canReset) { show("vNewPw"); chip(css("--muted"), "New password"); return; }
+      if (state.hasPassword) { show("vLogin"); chip(css("--muted"), "Signed out"); setTimeout(function () { $("loginPw").focus(); }, 50); return; }
+      show("vLocked"); chip(css("--muted"), "Private"); return;
     }
-    if (!state.authorized) {
-      show("vLocked"); chip(css("--muted"), "Private"); clearInterval(liveTimer); return;
-    }
+    token = state.token;
     show("vMain");
     var n = $("notice");
     if (notice) { n.textContent = notice; n.classList.remove("hidden"); } else n.classList.add("hidden");
     fillConnect();
     renderSettings();
-    clearInterval(liveTimer);
     refreshLive();
     liveTimer = setInterval(refreshLive, 15000);
   }

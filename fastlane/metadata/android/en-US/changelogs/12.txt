@@ -1,3 +1,4 @@
 • First release on F-Droid
+• Option to open the app when you tap the widget
 • Shows your tariff by name (e.g. Flexible Octopus)
 • Fixed the first chart label being cut off and "1 days" wording

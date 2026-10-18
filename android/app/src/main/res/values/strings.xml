@@ -6,6 +6,7 @@
     <string name="get_key">Where do I find my API key? →</string>
     <string name="account">Account number (optional — found automatically)</string>
     <string name="interval">Refresh every (seconds — 60 direct, 10–15 with a relay)</string>
+    <string name="widget_opens_app">Tapping the widget opens the app (instead of refreshing)</string>
     <string name="start_on_boot">Start automatically after the phone restarts</string>
     <string name="save_start">Save &amp; start</string>
     <string name="stop">Stop</string>

@@ -26,6 +26,7 @@ class MainActivity : Activity() {
     private lateinit var relayUrl: EditText
     private lateinit var interval: EditText
     private lateinit var boot: CheckBox
+    private lateinit var widgetOpensApp: CheckBox
     private lateinit var gasAlert: CheckBox
     private lateinit var bgStatus: TextView
     private lateinit var insightsText: TextView
@@ -52,6 +53,7 @@ class MainActivity : Activity() {
         relayUrl = findViewById(R.id.relayUrl)
         interval = findViewById(R.id.interval)
         boot = findViewById(R.id.boot)
+        widgetOpensApp = findViewById(R.id.widgetOpensApp)
         gasAlert = findViewById(R.id.gasAlert)
         bgStatus = findViewById(R.id.bgStatus)
         insightsText = findViewById(R.id.insightsText)
@@ -72,6 +74,7 @@ class MainActivity : Activity() {
         relayUrl.setText(prefs.relayUrl.orEmpty())
         interval.setText(prefs.intervalSeconds.toString())
         boot.isChecked = prefs.startOnBoot
+        widgetOpensApp.isChecked = prefs.widgetOpensApp
         gasAlert.isChecked = prefs.gasAlert
         highAlert.isChecked = prefs.highAlert
         highKw.setText(trim(prefs.highKw.toDouble()))
@@ -248,6 +251,7 @@ class MainActivity : Activity() {
         prefs.accountNumber = acct
         prefs.intervalSeconds = secs
         prefs.startOnBoot = boot.isChecked
+        prefs.widgetOpensApp = widgetOpensApp.isChecked
         prefs.gasAlert = gasAlert.isChecked
         prefs.highAlert = highAlert.isChecked
         prefs.highKw = highKw.text.toString().toFloatOrNull()?.coerceIn(0.5f, 20f) ?: 3f
@@ -257,6 +261,7 @@ class MainActivity : Activity() {
         prefs.cheapPence = cheapPence.text.toString().toFloatOrNull()?.coerceIn(-50f, 100f) ?: 0f
         prefs.summaryAlert = summaryAlert.isChecked
         prefs.summaryHour = summaryHour.text.toString().toIntOrNull()?.coerceIn(0, 23) ?: 8
+        OctopusWidget.updateAll(this)   // apply the widget tap setting straight away
         highKw.setText(trim(prefs.highKw.toDouble()))
         highMinutes.setText(prefs.highMinutes.toString())
         cheapPence.setText(trim(prefs.cheapPence.toDouble()))

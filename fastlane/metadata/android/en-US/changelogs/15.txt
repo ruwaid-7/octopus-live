@@ -2,3 +2,4 @@
 • Gas-on and high-use warnings stay on screen until usage drops, with "Mute until off" (can be turned off)
 • Cleaner notifications
 • Gemini and other on-device assistants can ask for your live usage (Android 16+, as Google opens this up)
+• "Open in Octopus Live" button on your relay's web page fills in the app for you

@@ -1,2 +1,3 @@
-OCTOPUS_API_KEY=sk_live_your_key_here
-RELAY_TOKEN=choose-a-long-random-password
+# Not needed any more: open the Worker's address and set it up on the page.
+# Optional: a recovery token that always works on the page if you lose your link.
+# ADMIN_TOKEN=some-long-random-string

@@ -48,6 +48,38 @@ class MainActivity : Activity() {
         setUpSettings()
         tab = savedInstanceState?.getInt(K_TAB) ?: intent.getIntExtra(EXTRA_TAB, TAB_HOME)
         showTab(tab)
+        if (savedInstanceState == null) handleConnectLink(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleConnectLink(intent)
+    }
+
+    /** octopuslive://connect?relay=<address> from the relay's web page: asks, then saves and starts. */
+    private fun handleConnectLink(intent: Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != "octopuslive" || data.host != "connect") return
+        val relay = data.getQueryParameter("relay")?.trim().orEmpty()
+        val parsed = Uri.parse(relay)
+        if (parsed.scheme !in listOf("http", "https") || parsed.host.isNullOrBlank()) {
+            Toast.makeText(this, "That link doesn't contain a relay address", Toast.LENGTH_LONG).show()
+            return
+        }
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Connect to this relay?")
+            .setMessage("Octopus Live will read your live usage from ${parsed.host}.")
+            .setPositiveButton("Connect") { _, _ ->
+                if (relay != prefs.relayUrl.orEmpty()) prefs.clearCachedApiState()
+                prefs.relayUrl = relay
+                if (prefs.intervalSeconds > 15) prefs.intervalSeconds = 15
+                loadControls()
+                showTab(TAB_HOME)
+                startWithPermission()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

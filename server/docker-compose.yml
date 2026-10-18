@@ -1,9 +1,9 @@
 # Run the Octopus Live relay in Docker.
 #
-#   1. Create the settings file once:  sudo cp octopus-relay.env.example /etc/octopus-relay.env
-#      then edit it (OCTOPUS_API_KEY, RELAY_TOKEN).   sudo chmod 600 /etc/octopus-relay.env
-#   2. sudo docker compose up -d
+#   sudo docker compose up -d
+#   then open http://SERVER-IP:8765/ and paste your Octopus API key.
 #
+# Settings saved on that page are kept in ./data (next to this file).
 # If you publish it with a Cloudflare tunnel running in Docker, put both on the same network
 # and point the tunnel route at  http://octopus-relay:8765
 services:
@@ -12,9 +12,13 @@ services:
     container_name: octopus-relay
     restart: unless-stopped
     command: ["python", "-u", "/app/relay.py"]
-    env_file: /etc/octopus-relay.env
+    environment:
+      DATA_DIR: /data
+      TZ: Europe/London
+      POLL_SECONDS: "60"
     volumes:
       - ./octopus_relay.py:/app/relay.py:ro
+      - ./data:/data
       - /usr/share/zoneinfo:/usr/share/zoneinfo:ro   # so "today" starts at local midnight
     ports:
       - "8765:8765"                                 # home-network access (optional)

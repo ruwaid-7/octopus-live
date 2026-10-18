@@ -141,100 +141,98 @@ limited", raise the interval. Please don't set it lower than 60.
 
 ## Choose your setup
 
+**Most people don't need anything else:** the Android app (or the Rainmeter skin) talks to
+Octopus directly with just your API key. Add a relay only if you want several devices, 10-second
+updates, or Home Assistant.
+
 | Setup | Best for | What talks to Octopus |
 |---|---|---|
-| **Just the apps** (above) | One device, or PC + phone at 90 s | Each device directly |
+| **Just the app** (above) | One phone, or phone + PC | Each device directly, once a minute |
 | **Free Cloudflare Worker** | Several devices, no server, works anywhere | The Worker, once a minute |
 | **Home server relay** | You already run a Linux box / Docker | Your server, once a minute |
 
-With either relay, your devices read from the relay instead of Octopus, can refresh every 10–15 s,
-and don't need your API key at all.
+Both relays are set up **in your browser**: open the relay's address, paste your API key, and it
+gives you a private link plus an **Open in Octopus Live** button that fills in the app for you
+(and a QR code to get the link from your PC to your phone). The same page lets you change your API
+key or make a new link later — no terminal needed.
 
 ## Optional: free Cloudflare Worker (no server needed)
 
-The [`worker`](worker) folder is the same relay running on Cloudflare's free plan — nothing to
-install or keep running, and you get an `https://` address that works at home and away.
+The [`worker`](worker) folder is the relay running on Cloudflare's free plan — nothing to install or
+keep running, and you get an `https://` address that works at home and away.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/ruwaid-7/octopus-live/tree/main/worker)
 
-1. Click **Deploy to Cloudflare** and sign in (a free account is fine). It copies this folder
-   into your own GitHub account and deploys it.
-2. When asked, fill in **OCTOPUS_API_KEY** (your `sk_live_…` key) and **RELAY_TOKEN**.
-   **You make the relay token up yourself** — it's just a password that stops strangers reading
-   your usage, and you'll add it to your address as `?token=…`. Use letters and numbers only,
-   about 30 characters. To generate one on Windows, run this in PowerShell:
-   `-join ((48..57)+(65..90)+(97..122) | Get-Random -Count 32 | % {[char]$_})`
-   Type the values in yourself — don't let the browser autofill a saved password here.
-   If you weren't asked: open the Worker in the Cloudflare dashboard →
-   **Settings → Variables and Secrets → Add**, type **Secret**, and add both.
-3. Your address is shown after deploying, e.g. `https://octopus-live-worker.yourname.workers.dev`.
-   Open `https://octopus-live-worker.yourname.workers.dev/?token=YOUR-TOKEN` to check it.
-   If it doesn't load, open the Worker → **Domains** and make sure the switch next to the
-   **Production** `workers.dev` address is **on**.
-4. Put that full address (with `?token=…`) into the apps — see *Point your devices at a relay* below.
+1. Click **Deploy to Cloudflare** and sign in (a free account is fine). It copies this folder into
+   your own GitHub account and deploys it. There's nothing to fill in.
+2. Open the address it shows, e.g. `https://octopus-live-worker.yourname.workers.dev`, **straight
+   away** (until you do, anyone who guesses the address could set it up), paste your API key and
+   tap **Connect**.
+3. On your phone, open your private link and tap **Open in Octopus Live**. On the PC, copy the
+   Rainmeter line it shows into `Settings.inc`.
 
-It only calls Octopus when one of your devices asks, at most once a minute, so it stays well
-inside both Octopus's limit and Cloudflare's free allowance (100,000 requests a day).
+If the address doesn't load, open the Worker in the Cloudflare dashboard → **Domains** and make sure
+the switch next to the **Production** `workers.dev` address is **on**. It only calls Octopus when a
+device asks, at most once a minute — well inside Cloudflare's free allowance.
 
 **Connected the repository yourself instead of using the button?** In the Worker's **Settings →
-Build**, set **Root directory** to `/worker` and **Deploy command** to `npx wrangler deploy`,
-then redeploy. You'll know it worked when **Settings → Bindings** lists a Durable Object called
-`RELAY`. Add the two secrets under **Settings → Variables and Secrets**.
-
-Prefer the command line? `cd worker && npm install && npx wrangler deploy`, then
-`npx wrangler secret put OCTOPUS_API_KEY` and `npx wrangler secret put RELAY_TOKEN`.
+Build**, set **Root directory** to `/worker` and **Deploy command** to `npx wrangler deploy`, then
+redeploy. **Settings → Bindings** should list a Durable Object called `RELAY`.
 
 ## Optional: one home server for all your devices
 
 If you have an always-on Linux box (Ubuntu server, Raspberry Pi…), run the small **relay** in the
-[`server`](server) folder. It calls Octopus once for everyone and your PC and phone read from it:
+[`server`](server) folder. It calls Octopus once for everyone and your devices read from it.
 
-```
-Octopus API  <-- one request a minute --  your server (relay)  -->  PC skin, phone app, widget
-```
-
-- No rate-limit juggling: refresh the PC and phone every 10–15 s from your server.
-- Your API key lives only on the server.
-- A status page at `http://SERVER-IP:8765` you can open in any browser.
-
-**Install (Ubuntu/Debian, needs Python 3.8+ — already installed on Ubuntu):**
+**Install (Ubuntu/Debian, Python 3.8+):**
 ```bash
 git clone https://github.com/ruwaid-7/octopus-live.git
 cd octopus-live/server
-sudo ./install.sh          # asks for your API key, starts the service
+sudo ./install.sh
 ```
-It prints the address to use, e.g. `http://192.168.1.50:8765`. Settings live in
-`/etc/octopus-relay.env`; logs: `journalctl -u octopus-relay -f`. To update later:
-`git pull && sudo ./install.sh`.
+Then open the address it prints (e.g. `http://192.168.1.50:8765/`) and paste your API key. Logs:
+`journalctl -u octopus-relay -f`. To update later: `git pull && sudo ./install.sh`.
 
-**Or run it in Docker** (handy if your other services are containers): see
-[`server/docker-compose.yml`](server/docker-compose.yml).
+**Or with Docker:** `cd octopus-live/server && sudo docker compose up -d`, then open
+`http://SERVER-IP:8765/`. Settings are kept in `server/data`.
 
-**Use it from anywhere with a Cloudflare tunnel** (no VPN needed on your phone):
-1. Make sure `RELAY_TOKEN` is set in `/etc/octopus-relay.env` (the installer generates one).
-2. In Cloudflare **Zero Trust → Networks → Tunnels → your tunnel → Routes → Add route →
-   Published application**: subdomain e.g. `energy`, your domain, service URL
-   `http://octopus-relay:8765` if cloudflared runs in Docker on the same network as the relay
-   container, or `http://SERVER-LAN-IP:8765` otherwise.
-3. Check DNS has a Tunnel/CNAME record for that name (Cloudflare usually adds it). Don't delete
-   the route or record afterwards — removing one can remove the other.
-4. Test from outside: `https://energy.yourdomain/?token=YOURTOKEN` should show the status page,
-   and without the token it should say "Relay token required".
+**Use it from anywhere with a Cloudflare tunnel** (no VPN needed on your phone): in Cloudflare
+**Zero Trust → Networks → Tunnels → your tunnel → Routes → Add route → Published application**,
+pick a subdomain (e.g. `energy`) and set the service URL to `http://octopus-relay:8765` if
+cloudflared runs in Docker on the same network as the relay, or `http://SERVER-LAN-IP:8765`
+otherwise. Set the relay up **before** adding the route. Then open `https://energy.yourdomain/`.
 
-If a new hostname shows "can't be reached" at home but works on mobile data, your router is
-still caching the earlier "not found" answer — it clears within about 30 minutes.
+**Upgrading from 1.6 or earlier?** Your existing key and token are kept. With Docker, recreate the
+container with a data folder so changes made on the page are saved:
+```bash
+sudo mkdir -p /opt/octopus-relay/data
+sudo curl -fsSL -o /opt/octopus-relay/octopus_relay.py https://raw.githubusercontent.com/ruwaid-7/octopus-live/main/server/octopus_relay.py
+sudo docker rm -f octopus-relay
+sudo docker run -d --name octopus-relay --restart unless-stopped -p 8765:8765 --env-file /etc/octopus-relay.env -e DATA_DIR=/data -v /opt/octopus-relay/data:/data -v /opt/octopus-relay/octopus_relay.py:/app/relay.py:ro -v /usr/share/zoneinfo:/usr/share/zoneinfo:ro python:3.12-slim python -u /app/relay.py
+```
+(Add `--network YOUR_NETWORK` if cloudflared reaches it over a Docker network.)
+
+### Lost your link?
+
+- **Home server:** `sudo cat /var/lib/octopus-relay/settings.json` (installer) or
+  `sudo cat /opt/octopus-relay/data/settings.json` (Docker) shows your token. Your link is
+  `https://your-address/?token=THAT_TOKEN`.
+- **Cloudflare Worker:** in the dashboard, open the Worker → **Settings → Variables and Secrets →
+  Add**, type **Secret**, name `ADMIN_TOKEN`, any long password as the value. Open
+  `https://your-worker-address/?token=THAT_PASSWORD`, tap **Make a new link**, then delete the
+  `ADMIN_TOKEN` secret again.
 
 ## Point your devices at a relay
 
-Works the same for the Cloudflare Worker and the home server — use the full address including
-`?token=…`:
+Easiest: open your private link on the phone and tap **Open in Octopus Live**. Or by hand, with
+the full address including `?token=…`:
 - **Rainmeter:** in `Settings.inc` set `RelayUrl=https://…/?token=YOUR-TOKEN`, `Interval=15`, and
   you can clear `ApiKey`.
-- **Android:** enter the address in **Relay address**, set the interval to 15, and tap Save. You
-  can clear the API key.
+- **Android:** Settings → **Relay address**, set the refresh to 15 seconds, and tap Save.
 
 If you also keep your API key on a device, it falls back to calling Octopus directly (at most once a
-minute) when the relay can't be reached — e.g. a home-only server while you're out.
+minute) when the relay can't be reached — e.g. a home-only server while you're out. The app's
+costs, prices and history also use the API key.
 
 ## Home Assistant
 

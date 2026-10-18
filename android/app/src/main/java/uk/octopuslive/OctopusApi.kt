@@ -23,6 +23,7 @@ data class Reading(
     val gasKw: Double? = null,         // average gas power over the latest half-hour
     val gasRunMinutes: Int = 0,        // how long the gas has been on (consecutive half-hours)
     val gasRunSince: String? = null,   // local HH:mm when that run started
+    val readAtMs: Long? = null,        // meter reading time (epoch ms), for the "Home Mini offline" warning
 )
 
 class ApiException(message: String, val code: String? = null) : Exception(message)
@@ -86,6 +87,7 @@ class OctopusApi(context: Context) {
                 gasKw = if (hasGas) j.optDouble("gasKw", 0.0).let { if (it.isNaN()) 0.0 else it } else null,
                 gasRunMinutes = if (hasGas) j.optInt("gasRunMinutes", 0) else 0,
                 gasRunSince = if (hasGas) hhmm(j.optString("gasRunSince", null)) else null,
+                readAtMs = epoch(j.optString("readAt", null)),
             )
         } finally {
             conn.disconnect()
@@ -170,6 +172,7 @@ class OctopusApi(context: Context) {
             demand, todayWh / 1000.0, readAt, System.currentTimeMillis(),
             gasTodayKwh = prefs.gasKwh, gasReadAt = prefs.gasAt, gasKw = prefs.gasKw,
             gasRunMinutes = prefs.gasRunMinutes, gasRunSince = prefs.gasRunSince,
+            readAtMs = epoch(live.optString("readAt", null)),
         )
     }
 
@@ -227,7 +230,7 @@ class OctopusApi(context: Context) {
         }
     }
 
-    private fun token(): String {
+    internal fun token(): String {
         val cached = prefs.token
         if (cached != null && prefs.tokenExpires > System.currentTimeMillis()) return cached
 
@@ -239,7 +242,7 @@ class OctopusApi(context: Context) {
         return token
     }
 
-    private fun deviceId(token: String): String {
+    internal fun deviceId(token: String): String {
         val cachedId = prefs.deviceId
         if (cachedId != null && prefs.gasDeviceId != null) return cachedId
 
@@ -249,6 +252,7 @@ class OctopusApi(context: Context) {
                 ?.takeIf { it.isNotBlank() }
                 ?: throw ApiException("No account found - enter your account number")
         }
+        prefs.foundAccount = account
 
         val d = graphql(
             """query { account(accountNumber: "${clean(account)}") { electricityAgreements(active: true) {
@@ -276,7 +280,7 @@ class OctopusApi(context: Context) {
         throw ApiException("No smart electricity meter found on this account")
     }
 
-    private fun graphql(query: String, token: String?): JSONObject {
+    internal fun graphql(query: String, token: String?): JSONObject {
         val conn = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = 15_000
@@ -312,12 +316,54 @@ class OctopusApi(context: Context) {
         }
     }
 
-    private fun clean(s: String) = s.replace(Regex("[\"\\\\\\s]"), "")
+    internal fun clean(s: String) = s.replace(Regex("[\"\\\\\\s]"), "")
 
-    private fun JSONArray?.objects(): List<JSONObject> =
-        if (this == null) emptyList() else (0 until length()).mapNotNull { optJSONObject(it) }
+    /** Half-hourly usage (start epoch ms -> Wh) between two times, for one meter. */
+    internal fun halfHourly(token: String, deviceId: String, from: ZonedDateTime, to: ZonedDateTime): List<Pair<Long, Double>> {
+        val fmt = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+        val d = graphql(
+            """query { s: smartMeterTelemetry(deviceId: "${clean(deviceId)}", grouping: HALF_HOURLY,
+                 start: "${from.withNano(0).format(fmt)}", end: "${to.withNano(0).format(fmt)}") { readAt consumptionDelta } }""",
+            token,
+        )
+        return d.optJSONArray("s").objects().mapNotNull { row ->
+            if (row.isNull("consumptionDelta")) return@mapNotNull null
+            val v = row.optDouble("consumptionDelta", Double.NaN)
+            val t = epoch(row.optString("readAt", null))
+            if (v.isNaN() || t == null) null else t to v
+        }.sortedBy { it.first }
+    }
+
+    /** GET a public Octopus REST URL (tariff rates). Sends the API key as basic auth when we have one. */
+    internal fun restGet(url: String): JSONObject {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 15_000
+            readTimeout = 20_000
+            setRequestProperty("User-Agent", "OctopusLive-Android")
+            prefs.apiKey?.takeIf { it.isNotBlank() }?.let {
+                val auth = android.util.Base64.encodeToString("$it:".toByteArray(), android.util.Base64.NO_WRAP)
+                setRequestProperty("Authorization", "Basic $auth")
+            }
+        }
+        try {
+            val code = conn.responseCode
+            if (code == 429) throw ApiException("Rate limited by Octopus", "RATE")
+            if (code !in 200..299) throw ApiException("HTTP $code from Octopus")
+            return JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+        } finally {
+            conn.disconnect()
+        }
+    }
 
     companion object {
+        internal fun JSONArray?.objects(): List<JSONObject> =
+            if (this == null) emptyList() else (0 until length()).mapNotNull { optJSONObject(it) }
+
+        /** ISO date-time (with offset or Z) -> epoch ms, or null. */
+        fun epoch(s: String?): Long? = s?.takeIf { it.isNotBlank() && it != "null" }?.let {
+            try { OffsetDateTime.parse(it).toInstant().toEpochMilli() } catch (e: Exception) { null }
+        }
+
         const val ENDPOINT = "https://api.octopus.energy/v1/graphql/"
         const val NO_GAS = "none"
         const val GAS_EVERY_MS = 30 * 60 * 1000L

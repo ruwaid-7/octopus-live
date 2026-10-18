@@ -154,7 +154,8 @@ class MainActivity : Activity() {
             if (hasGas) listOf(pink, gasColor) else listOf(pink),
             dayLabels, highlightIndex = 6, emptyText = "Collecting the last 7 days…",
         )
-        val known = d?.history.orEmpty()
+        // Only days that actually have readings (not days before the Home Mini was set up)
+        val known = d?.history.orEmpty().filter { it.elecKwh > 0 }
         weekText.text = if (known.isEmpty()) "" else {
             val elecTotal = known.sumOf { it.elecKwh }
             val gasTotal = known.sumOf { it.gasKwh ?: 0.0 }
@@ -166,6 +167,7 @@ class MainActivity : Activity() {
                 if (cost > 0) append(String.format(Locale.UK, ", £%.2f", cost))
                 base?.let { append(".\nLowest always-on: $it W — leave it running all year and that's about ").append(
                     String.format(Locale.UK, "%.0f kWh", it * 24 * 365 / 1000.0)).append(" a year.") }
+                if (known.size < 7) append("\n(History builds up from the day your Home Mini started sending readings.)")
             }
         }
     }

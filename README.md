@@ -152,7 +152,7 @@ updates, or Home Assistant.
 | **Home server relay** | You already run a Linux box / Docker | Your server, once a minute |
 
 Both relays are set up **in your browser**: open the relay's address, paste your API key and choose
-a password. You then sign in to that page with your password to change the key, make a new device
+a username and password. You then sign in to that page with them to change the key, make a new device
 link or change the password — no terminal needed. Your devices get a separate **device link** that
 can only read your usage: tap **Open in Octopus Live** on your phone (or scan the QR code shown on a
 computer) and the app fills it in for you.
@@ -168,7 +168,7 @@ keep running, and you get an `https://` address that works at home and away.
    your own GitHub account and deploys it. There's nothing to fill in.
 2. Open the address it shows, e.g. `https://octopus-live-worker.yourname.workers.dev`, **straight
    away** (until you do, anyone who guesses the address could set it up), paste your API key,
-   choose a password and tap **Connect**.
+   choose a username and password and tap **Connect**.
 3. Tap **Open in Octopus Live** on your phone, or scan the QR code with it. On the PC, copy the
    Rainmeter line into `Settings.inc`.
 
@@ -192,7 +192,7 @@ cd octopus-live/server
 sudo ./install.sh
 ```
 Then open the address it prints (e.g. `http://192.168.1.50:8765/`), paste your API key and choose a
-password. Logs:
+username and password. Logs:
 `journalctl -u octopus-relay -f`. To update later: `git pull && sudo ./install.sh`.
 
 **Or with Docker:** `cd octopus-live/server && sudo docker compose up -d`, then open
@@ -205,7 +205,7 @@ cloudflared runs in Docker on the same network as the relay, or `http://SERVER-L
 otherwise. Set the relay up **before** adding the route. Then open `https://energy.yourdomain/`.
 
 **Upgrading from 1.6 or earlier?** Your existing key and token are kept; the first time you open your
-old link (with `?token=…`) the page asks you to create a password. With Docker, recreate the
+old link (with `?token=…`) the page asks you to create a username and password. With Docker, recreate the
 container with a data folder so changes made on the page are saved:
 ```bash
 sudo mkdir -p /opt/octopus-relay/data
@@ -218,16 +218,16 @@ sudo docker run -d --name octopus-relay --restart unless-stopped -p 8765:8765 --
 ### Forgot your password?
 
 - **Home server:** clear the password, then open your device link (`https://your-address/?token=…`)
-  and the page asks you to create a new one:
+  and the page asks you to create a new password (you can keep or change your username):
   ```bash
   # installer:  F=/var/lib/octopus-relay/settings.json     Docker:  F=/opt/octopus-relay/data/settings.json
   sudo python3 -c "import json,sys; f=sys.argv[1]; d=json.load(open(f)); d['passwordHash']=''; json.dump(d,open(f,'w'))" $F
   sudo systemctl restart octopus-relay      # or: sudo docker restart octopus-relay
   ```
-  Lost the device link too? `sudo cat $F` shows it as `"token"`.
+  Forgot your username or lost the device link too? `sudo cat $F` shows them as `"username"` and `"token"`.
 - **Cloudflare Worker:** in the dashboard, open the Worker → **Settings → Variables and Secrets →
   Add**, type **Secret**, name `ADMIN_TOKEN`, any long password as the value. Open
-  `https://your-worker-address/?token=THAT_VALUE`, create a new password, then delete the
+  `https://your-worker-address/?token=THAT_VALUE`, choose a username and new password, then delete the
   `ADMIN_TOKEN` secret again.
 
 ## Point your devices at a relay

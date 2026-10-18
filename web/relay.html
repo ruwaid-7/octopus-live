@@ -37,6 +37,7 @@ p{margin:0;color:var(--text2)}
 label{display:block;font-size:13px;font-weight:600;color:var(--text2);margin:18px 0 6px}
 input{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--inputLine);background:var(--input);
   color:var(--text);font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;outline:none}
+input[autocomplete=username]{font:15px inherit;font-family:inherit}
 input:focus{border:2px solid var(--pink);padding:0 13px;background:var(--card)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:14px;
   border:0;background:var(--pink);color:#fff;font:600 15px system-ui,sans-serif;cursor:pointer;text-decoration:none;width:100%}
@@ -102,7 +103,9 @@ footer a{color:var(--muted)}
         <label for="setupKey" style="margin-top:0">Octopus API key</label>
         <input id="setupKey" type="password" placeholder="sk_live_…" spellcheck="false" autocapitalize="off" required>
         <div style="margin-top:8px"><a class="link" href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access" target="_blank" rel="noopener">Find your API key ↗</a></div>
-        <label for="setupPw">Choose a password for this page</label>
+        <label for="setupUser">Choose a username</label>
+        <input id="setupUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" required>
+        <label for="setupPw">Choose a password</label>
         <input id="setupPw" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
         <label for="setupPw2">Confirm password</label>
         <input id="setupPw2" type="password" autocomplete="new-password" minlength="8" required>
@@ -114,38 +117,40 @@ footer a{color:var(--muted)}
         <button class="btn" id="setupBtn" style="margin-top:16px">Connect</button>
       </form>
     </div>
-    <p class="small" style="margin:14px 4px 0">You'll sign in to this page with your password. Your phone and PC get their own device link, which can only read your usage.</p>
+    <p class="small" style="margin:14px 4px 0">You'll sign in to this page with your username and password. Your phone and PC get their own device link, which can only read your usage.</p>
   </section>
 
   <!-- Sign in -->
   <section id="vLogin" class="hidden">
     <h1>Sign in</h1>
-    <p>Enter the password for this relay.</p>
+    <p>Sign in to manage this relay.</p>
     <div class="card">
       <form id="loginForm">
-        <input type="text" autocomplete="username" value="octopus-live" hidden>
-        <label for="loginPw" style="margin-top:0">Password</label>
+        <label for="loginUser" style="margin-top:0">Username</label>
+        <input id="loginUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" required>
+        <label for="loginPw">Password</label>
         <input id="loginPw" type="password" autocomplete="current-password" required>
         <div class="err" id="loginErr"></div>
         <button class="btn" id="loginBtn" style="margin-top:16px">Sign in</button>
       </form>
     </div>
-    <p class="small" style="margin:14px 4px 0">Forgot it? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
+    <p class="small" style="margin:14px 4px 0">Forgot your details? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
   </section>
 
   <!-- Older relay or after a reset: create a password (needs the device link) -->
   <section id="vNewPw" class="hidden">
-    <h1>Create a password</h1>
-    <p>From now on you'll sign in to this page with a password. Your devices keep working as they are.</p>
+    <h1>Create your sign-in</h1>
+    <p>From now on you'll sign in to this page with a username and password. Your devices keep working as they are.</p>
     <div class="card">
       <form id="newPwForm">
-        <input type="text" autocomplete="username" value="octopus-live" hidden>
-        <label for="newPw1" style="margin-top:0">Password</label>
+        <label for="newUser" style="margin-top:0">Username</label>
+        <input id="newUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" required>
+        <label for="newPw1">Password</label>
         <input id="newPw1" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters">
         <label for="newPw2">Confirm password</label>
         <input id="newPw2" type="password" autocomplete="new-password" minlength="8" required>
         <div class="err" id="newPwErr"></div>
-        <button class="btn" id="newPwBtn" style="margin-top:16px">Save password</button>
+        <button class="btn" id="newPwBtn" style="margin-top:16px">Save</button>
       </form>
     </div>
   </section>
@@ -165,8 +170,8 @@ footer a{color:var(--muted)}
     <div class="card center" style="padding:32px 24px">
       <div class="lock"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0z"/></svg></div>
       <h2>This relay is private</h2>
-      <p style="margin-top:6px">Open your device link to create a password for this page.</p>
-      <p class="small" style="margin-top:14px">Forgot it? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
+      <p style="margin-top:6px">Open your device link to create a username and password for this page.</p>
+      <p class="small" style="margin-top:14px">Forgot your details? See “Forgot your password” in the <a href="https://github.com/ruwaid-7/octopus-live#forgot-your-password" target="_blank" rel="noopener" style="color:inherit">setup guide</a>.</p>
     </div>
   </section>
 
@@ -233,13 +238,14 @@ footer a{color:var(--muted)}
         </div>
       </form>
       <div class="divider"></div>
-      <h2>Password</h2>
-      <p>Used to sign in to this page. Changing it signs out every browser.</p>
-      <button class="btn ghost small" id="changePwBtn" style="margin-top:12px">Change password</button>
+      <h2>Sign-in</h2>
+      <p>Signed in as <strong id="whoami"></strong>. Changing your details signs out every browser.</p>
+      <button class="btn ghost small" id="changePwBtn" style="margin-top:12px">Change username or password</button>
       <form id="pwForm" class="hidden" autocomplete="off" style="margin-top:4px">
-        <input type="text" autocomplete="username" value="octopus-live" hidden>
+        <label for="pwUser">Username</label>
+        <input id="pwUser" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" required>
         <label for="pw1">New password</label>
-        <input id="pw1" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
+        <input id="pw1" type="password" autocomplete="new-password" minlength="8" placeholder="Leave blank to keep your current one">
         <label for="pw2">Confirm new password</label>
         <input id="pw2" type="password" autocomplete="new-password" minlength="8">
         <div class="err" id="pwErr"></div>
@@ -311,7 +317,7 @@ footer a{color:var(--muted)}
     if ($("setupPw").value !== $("setupPw2").value) { $("setupErr").textContent = "The passwords don't match"; return; }
     var done = busy($("setupBtn"), "Checking your key…");
     try {
-      var j = await api("/api/setup", { apiKey: $("setupKey").value.trim(), account: $("setupAccount").value.trim(), password: $("setupPw").value });
+      var j = await api("/api/setup", { apiKey: $("setupKey").value.trim(), account: $("setupAccount").value.trim(), username: $("setupUser").value.trim(), password: $("setupPw").value });
       cleanUrl();
       await load("You're connected" + (j.account ? " to " + j.account : "") + ". Now add your devices below.");
     } catch (err) { $("setupErr").textContent = err.message; }
@@ -323,7 +329,7 @@ footer a{color:var(--muted)}
     e.preventDefault();
     $("loginErr").textContent = "";
     var done = busy($("loginBtn"), "Signing in…");
-    try { await api("/api/login", { password: $("loginPw").value }); $("loginPw").value = ""; cleanUrl(); urlToken = ""; await load(); }
+    try { await api("/api/login", { username: $("loginUser").value.trim(), password: $("loginPw").value }); $("loginPw").value = ""; cleanUrl(); urlToken = ""; await load(); }
     catch (err) { $("loginErr").textContent = err.message; }
     finally { done(); }
   });
@@ -332,7 +338,7 @@ footer a{color:var(--muted)}
     $("newPwErr").textContent = "";
     if ($("newPw1").value !== $("newPw2").value) { $("newPwErr").textContent = "The passwords don't match"; return; }
     var done = busy($("newPwBtn"), "Saving…");
-    try { await api("/api/password", { password: $("newPw1").value }); cleanUrl(); urlToken = ""; await load("Password saved. Next time, sign in with it."); }
+    try { await api("/api/password", { username: $("newUser").value.trim(), password: $("newPw1").value }); cleanUrl(); urlToken = ""; await load("Saved. Next time, sign in with your username and password."); }
     catch (err) { $("newPwErr").textContent = err.message; }
     finally { done(); }
   });
@@ -383,6 +389,7 @@ footer a{color:var(--muted)}
     $("keyStatus").textContent = s.keyOk === false ? "Not working: " + (s.lastError || "check your key") :
       "Connected" + (s.account ? " · account " + s.account : "");
     $("keyStatus").className = s.keyOk === false ? "err" : "";
+    $("whoami").textContent = s.username || "(no username yet)";
     var warn = $("persistWarn");
     if (s.persistent === false) {
       warn.textContent = "Note: this server has no data folder, so changes made here are lost when it restarts. See the setup guide.";
@@ -410,7 +417,7 @@ footer a{color:var(--muted)}
     finally { done(); }
   });
 
-  $("changePwBtn").addEventListener("click", function () { toggleForm("pwForm", "changePwBtn", true); $("pw1").focus(); });
+  $("changePwBtn").addEventListener("click", function () { toggleForm("pwForm", "changePwBtn", true); $("pwUser").value = state.username || ""; $("pwUser").focus(); });
   $("cancelPwBtn").addEventListener("click", function () { toggleForm("pwForm", "changePwBtn", false); $("pwErr").textContent = ""; });
   $("pwForm").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -418,9 +425,12 @@ footer a{color:var(--muted)}
     if ($("pw1").value !== $("pw2").value) { $("pwErr").textContent = "The passwords don't match"; return; }
     var done = busy($("savePwBtn"), "Saving…");
     try {
-      await api("/api/password", { password: $("pw1").value });
+      var user = $("pwUser").value.trim();
+      if (!user) { $("pwErr").textContent = "Enter a username"; return; }
+      await api("/api/password", { username: user, password: $("pw1").value });
       $("pw1").value = $("pw2").value = ""; toggleForm("pwForm", "changePwBtn", false);
-      toast("Password changed");
+      state.username = user; $("whoami").textContent = user;
+      toast("Sign-in details saved");
     } catch (err) { $("pwErr").textContent = err.message; }
     finally { done(); }
   });
@@ -468,8 +478,8 @@ footer a{color:var(--muted)}
     });
     if (!state.configured) { show("vSetup"); chip(css("--muted"), "Not set up"); return; }
     if (!state.signedIn) {
-      if (state.canReset) { show("vNewPw"); chip(css("--muted"), "New password"); return; }
-      if (state.hasPassword) { show("vLogin"); chip(css("--muted"), "Signed out"); setTimeout(function () { $("loginPw").focus(); }, 50); return; }
+      if (state.canReset) { show("vNewPw"); chip(css("--muted"), "Create sign-in"); return; }
+      if (state.hasPassword) { show("vLogin"); chip(css("--muted"), "Signed out"); setTimeout(function () { $("loginUser").focus(); }, 50); return; }
       show("vLocked"); chip(css("--muted"), "Private"); return;
     }
     token = state.token;

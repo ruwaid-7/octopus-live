@@ -59,6 +59,15 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk dist/OctopusLive.apk
           (cd rainmeter && zip -r ../dist/OctopusLive-Rainmeter.zip OctopusLive)
 
+      # Make sure the Gemini (AppFunctions) service and its function list made it into the APK
+      - name: Check Gemini functions
+        run: |
+          files=$(unzip -l dist/OctopusLive.apk | grep -o "assets/energy_app_functions[^ ]*" | tr '\n' ' ')
+          [ -n "$files" ] || { echo "::error::AppFunctions XML missing from the APK"; exit 1; }
+          unzip -p dist/OctopusLive.apk 'classes*.dex' | grep -aq "EnergyAppFunctionService" || { echo "::error::EnergyAppFunctionService missing"; exit 1; }
+          fns=$(unzip -p dist/OctopusLive.apk assets/energy_app_functions.xml | grep -o "#[A-Za-z]*" | sort -u | tr '\n' ' ')
+          echo "::notice title=Gemini functions::$files| functions: $fns"
+
       - uses: actions/upload-artifact@v4
         with:
           name: OctopusLive

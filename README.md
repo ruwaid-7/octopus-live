@@ -77,7 +77,9 @@ The skin uses the PowerShell built into Windows — nothing else to install.
 standing charge, the current electricity price and when it next changes, a half-hourly chart for
 today, the last 7 days of electricity and gas, and your "always-on" use (lowest half-hour) — the
 power your home never drops below. Works with fixed, Agile, Go, Intelligent and tracker tariffs
-(not yet Economy 7). Prices come from Octopus's public tariff data.
+(not yet Economy 7). Prices come from Octopus's public tariff data and update by themselves:
+prices are re-checked every 3 hours (and just after Agile's next-day prices come out around 4pm),
+and your tariff every 6 hours, so price-cap changes or switching tariff need no app update.
 
 **Alerts** (each can be switched off in the app):
 - **Gas left on** — gas in use for 1½ hours or more (see below).

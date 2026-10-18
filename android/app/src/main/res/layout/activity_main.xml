@@ -857,13 +857,16 @@
                 <LinearLayout style="@style/ListCard">
 
                     <LinearLayout
-                        android:id="@+id/rowSetupAgain"
+                        android:id="@+id/rowAbout"
                         style="@style/Row"
                         android:clickable="true"
                         android:focusable="true">
                         <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/setup_again" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/setup_again_sub" />
+                            <TextView style="@style/RowTitle" android:text="@string/about_row" />
+                            <TextView
+                                android:id="@+id/aboutVersion"
+                                style="@style/RowSubtitle"
+                                tools:text="Version 1.8.0" />
                         </LinearLayout>
                         <ImageView
                             android:layout_width="20dp"
@@ -876,16 +879,13 @@
                     <View style="@style/RowDivider" />
 
                     <LinearLayout
-                        android:id="@+id/rowSource"
+                        android:id="@+id/rowPrivacy"
                         style="@style/Row"
                         android:clickable="true"
                         android:focusable="true">
                         <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/source_code" />
-                            <TextView
-                                android:id="@+id/aboutVersion"
-                                style="@style/RowSubtitle"
-                                tools:text="Version 1.8.0 · GitHub" />
+                            <TextView style="@style/RowTitle" android:text="@string/about_privacy" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/about_privacy_sub" />
                         </LinearLayout>
                         <ImageView
                             android:layout_width="20dp"
@@ -896,11 +896,6 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    style="@style/FieldHelp"
-                    android:layout_marginTop="12dp"
-                    android:paddingStart="4dp"
-                    android:text="@string/disclaimer" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>

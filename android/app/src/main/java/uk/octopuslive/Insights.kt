@@ -360,6 +360,12 @@ class Insights(context: Context) {
         return blocks
     }
 
+    /** Electricity prices that overlap the next [horizonMs] (used by the Gemini functions). */
+    fun upcomingRates(horizonMs: Long): List<Rate> {
+        val now = System.currentTimeMillis()
+        return rates(K_ELEC_RATES).filter { it.to > now && it.from < now + horizonMs }.sortedBy { it.from }
+    }
+
     private fun rates(key: String): List<Rate> = try {
         JSONArray(prefs.str(key) ?: "[]").let { a ->
             (0 until a.length()).map { a.getJSONArray(it).let { r -> Rate(r.getLong(0), r.getLong(1), r.getDouble(2)) } }

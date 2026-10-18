@@ -129,7 +129,7 @@ class Insights(context: Context) {
     // ---------------------------------------------------------------- tariff codes
 
     private fun ensureTariffs(token: String) {
-        if (prefs.str(K_ELEC_TARIFF) != null && System.currentTimeMillis() - prefs.long(K_TARIFF_AT) < DAY_MS) return
+        if (prefs.str(K_ELEC_TARIFF) != null && System.currentTimeMillis() - prefs.long(K_TARIFF_AT) < TARIFF_EVERY_MS) return
         val account = prefs.accountNumber?.takeIf { it.isNotBlank() } ?: prefs.foundAccount ?: return
         val d = api.graphql(
             """query { account(accountNumber: "${api.clean(account)}") {
@@ -177,7 +177,11 @@ class Insights(context: Context) {
         val elecTariff = prefs.str(K_ELEC_TARIFF) ?: return
         val elecProduct = prefs.str(K_ELEC_PRODUCT) ?: return
         val today = LocalDate.now(zone)
-        val fresh = prefs.str(K_RATES_DAY) == today.toString() && System.currentTimeMillis() - prefs.long(K_RATES_AT) < RATES_EVERY_MS
+        // Agile and similar publish tomorrow's prices around 16:00: fetch again soon after that
+        val publish = today.atTime(16, 15).atZone(zone).toInstant().toEpochMilli()
+        val missedPublish = System.currentTimeMillis() >= publish && prefs.long(K_RATES_AT) < publish
+        val fresh = prefs.str(K_RATES_DAY) == today.toString() &&
+            System.currentTimeMillis() - prefs.long(K_RATES_AT) < RATES_EVERY_MS && !missedPublish
         if (fresh) return
 
         val from = today.minusDays(8).atStartOfDay(zone)
@@ -380,7 +384,7 @@ class Insights(context: Context) {
             Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 
         private const val MIN_GAP_MS = 60_000L
-        private const val DAY_MS = 24 * 3600_000L
+        private const val TARIFF_EVERY_MS = 6 * 3600_000L   // notice a tariff switch within a few hours
         private const val RATES_EVERY_MS = 3 * 3600_000L
         private const val TODAY_EVERY_MS = 30 * 60_000L
 

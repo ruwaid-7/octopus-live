@@ -75,7 +75,7 @@ The skin uses the PowerShell built into Windows — nothing else to install.
 2. Open **Octopus Live**, paste your API key, tap **Save & start**, and allow notifications.
 3. **Widget:** long-press your home screen → **Widgets** → **Octopus Live**, and drag it on.
    It updates every minute while the live notification is running (otherwise every 30 minutes).
-   Tap it to refresh.
+   Tap it to refresh, or tick *Tapping the widget opens the app* in settings to open the app instead.
 
 **Costs, prices and history** (needs your API key in the app): today's cost in £ including the
 standing charge, the current electricity price and when it next changes, a half-hourly chart for

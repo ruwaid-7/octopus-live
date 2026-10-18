@@ -318,6 +318,20 @@
                 android:textSize="14sp"
                 tools:text="Start automatically after the phone restarts" />
 
+            <!-- Widget tap -->
+            <CheckBox
+                android:id="@+id/widgetOpensApp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/brand_pink"
+                android:fontFamily="sans-serif"
+                android:minHeight="48dp"
+                android:paddingStart="6dp"
+                android:paddingEnd="4dp"
+                android:text="@string/widget_opens_app"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
             <!-- Gas warning -->
             <CheckBox
                 android:id="@+id/gasAlert"

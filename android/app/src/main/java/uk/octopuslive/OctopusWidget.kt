@@ -100,8 +100,9 @@ class OctopusWidget : AppWidgetProvider() {
                 views.setViewVisibility(R.id.widgetGasBarRow, View.GONE)
             }
 
-            // Tap: start/refresh live updates, or open settings if there's no key yet.
-            val tap = if (hasKey) {
+            // Tap: start/refresh live updates (or open the app, if chosen in settings);
+            // always open the app if there's no key yet.
+            val tap = if (hasKey && !Prefs(context).widgetOpensApp) {
                 PendingIntent.getForegroundService(
                     context, 10,
                     Intent(context, LiveService::class.java).setAction(LiveService.ACTION_REFRESH),

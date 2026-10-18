@@ -48,7 +48,7 @@ jobs:
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             # Show the key error lines as one annotation on the run summary
-            msg=$(grep -E "^e: |What went wrong|error:|Could not|Failed|> " build.log | head -40 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+            msg=$(grep -v "^> Task" build.log | grep -E -A 30 "^e: |What went wrong" | head -60 | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
             echo "::error title=Gradle build failed::$msg"
           fi
           exit $status

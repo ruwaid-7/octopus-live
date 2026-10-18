@@ -98,6 +98,15 @@ default), you get a notification when the meter shows three half-hours in a row 
 Gas readings reach Octopus about an hour late, so the warning arrives roughly an hour after the
 1½-hour mark — good for catching a boiler or hob left on, not an instant alarm.
 
+**Gemini / assistants (Android 16+, early):** the app offers three functions an on-device
+assistant can call: *live energy use* (watts, today's kWh and cost, current price), *gas status*
+(on or off, for how long) and *cheapest electricity times* (next 24 hours). They use Google's
+[AppFunctions](https://developer.android.com/ai/appfunctions/add-appfunctions), which Gemini
+already uses for some apps. Google is still opening it up to other apps, so Gemini may not call
+them yet; once it does, asking *"how much electricity am I using?"* will work with no app update.
+Older Android versions are unaffected. Developers can test with
+[adb](#testing-the-gemini-functions).
+
 **Background running:** while the screen is off the app keeps updating every 5 minutes (so the
 widget and gas warning work with the phone locked). In the app's **Background running** section,
 tap **Allow unrestricted battery use** and **Don't pause app when unused** until both show ✓.
@@ -277,11 +286,30 @@ If you fork this repo, **don't commit `Settings.inc` with your key in it.**
 ## Building it yourself
 
 - **Android:** open the `android` folder in Android Studio and build. If it reports an invalid
-  Gradle JDK, choose *Use Embedded JDK*. The app has no third-party dependencies.
+  Gradle JDK, choose *Use Embedded JDK*. Needs Android Studio with Android Gradle Plugin 9.4
+  support and SDK 37. The only libraries are Google's AppFunctions (for Gemini) and Kotlin
+  coroutines; networking and JSON use Android's built-in classes.
 - **CI:** every push builds both files (see the *Actions* tab). Pushing a tag like `v1.0.0`
   publishes a Release. To sign releases with your own key (so updates install over old versions),
   add repository secrets `SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`
   and `SIGNING_KEY_PASSWORD`.
+
+### Testing the Gemini functions
+
+On an Android 16+ phone with USB debugging:
+
+```sh
+# Check they're registered
+adb shell cmd app_function list-app-functions | grep -A 10 uk.octopuslive.app
+
+# Run one
+adb shell "cmd app_function execute-app-function --package uk.octopuslive.app \
+  --function 'uk.octopuslive.BaseEnergyAppFunctionService#getLiveEnergyUsage' --parameters '{}'"
+```
+
+The other two are `#getGasStatus` and `#getCheapestElectricityTimes`. Google's
+[AppFunctions testing agent](https://github.com/android/appfunctions) can try them with
+natural-language prompts.
 
 ## Licence
 

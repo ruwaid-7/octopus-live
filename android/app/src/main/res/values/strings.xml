@@ -102,5 +102,7 @@
     <string name="widget_description">Live electricity demand and today\'s usage</string>
     <string name="widget_footer_placeholder">Tap to load</string>
     <string name="tile_label">Live electricity</string>
+    <string name="quiet_channel_name">Ongoing warnings</string>
+    <string name="quiet_channel_description">Warnings that stay on screen until usage drops (no sound)</string>
     <string name="mute_until_off">Mute until off</string>
 </resources>

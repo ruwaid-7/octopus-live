@@ -290,7 +290,8 @@ class LiveService : Service() {
     private fun postWarning(id: Int, title: String, text: String, colour: Int, icon: Int, quiet: Boolean, muteAction: String) {
         val sticky = prefs.stickyWarnings
         val openApp = PendingIntent.getActivity(this, 10 + id, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        val b = Notification.Builder(this, GAS_CHANNEL_ID)
+        // Re-shown warnings (e.g. after being swiped away) use a channel with no sound or pop-up
+        val b = Notification.Builder(this, if (quiet) WARN_QUIET_CHANNEL_ID else GAS_CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(text)
@@ -309,8 +310,6 @@ class LiveService : Service() {
         } else {
             b.setAutoCancel(true)
         }
-        // Re-shown warnings (e.g. after being swiped away) update quietly
-        if (quiet && Build.VERSION.SDK_INT >= 31) b.setSilent(true)
         getSystemService(NotificationManager::class.java).notify(id, b.build())
     }
 
@@ -418,7 +417,12 @@ class LiveService : Service() {
         val info = NotificationChannel(INFO_CHANNEL_ID, getString(R.string.info_channel_name), NotificationManager.IMPORTANCE_DEFAULT).apply {
             description = getString(R.string.info_channel_description)
         }
-        getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, gas, info))
+        val quiet = NotificationChannel(WARN_QUIET_CHANNEL_ID, getString(R.string.quiet_channel_name), NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = getString(R.string.quiet_channel_description)
+            setSound(null, null)
+            enableVibration(false)
+        }
+        getSystemService(NotificationManager::class.java).createNotificationChannels(listOf(channel, gas, info, quiet))
     }
 
     private fun buildNotification(): Notification {
@@ -544,6 +548,7 @@ class LiveService : Service() {
         const val ACTION_MUTE_HIGH = "uk.octopuslive.MUTE_HIGH"
         const val K_HIGH_SINCE = "alert_highSince"
         const val GAS_CHANNEL_ID = "gas_alerts"
+        const val WARN_QUIET_CHANNEL_ID = "warnings_ongoing"
         const val GAS_NOTIF_ID = 2
         const val GAS_ALERT_MINUTES = 90
         const val BG_INTERVAL_MS = 5 * 60 * 1000L   // refresh every 5 min while the screen is off

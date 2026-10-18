@@ -70,6 +70,8 @@
     <string name="interval">Refresh every (seconds)</string>
     <string name="interval_help">60 or more without a relay, 10–15 with one.</string>
     <string name="save">Save</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
     <string name="bg_battery">Unrestricted battery</string>
     <string name="bg_unused">Keep running when unused</string>
     <string name="bg_battery_ok">On</string>

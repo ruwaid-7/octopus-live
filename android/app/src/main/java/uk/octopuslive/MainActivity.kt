@@ -14,6 +14,8 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import java.time.LocalDate
+import java.util.Locale
 
 class MainActivity : Activity() {
 
@@ -26,6 +28,18 @@ class MainActivity : Activity() {
     private lateinit var boot: CheckBox
     private lateinit var gasAlert: CheckBox
     private lateinit var bgStatus: TextView
+    private lateinit var insightsText: TextView
+    private lateinit var weekText: TextView
+    private lateinit var chartToday: BarChartView
+    private lateinit var chartWeek: BarChartView
+    private lateinit var highAlert: CheckBox
+    private lateinit var highKw: EditText
+    private lateinit var highMinutes: EditText
+    private lateinit var offlineAlert: CheckBox
+    private lateinit var cheapAlert: CheckBox
+    private lateinit var cheapPence: EditText
+    private lateinit var summaryAlert: CheckBox
+    private lateinit var summaryHour: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,6 +54,18 @@ class MainActivity : Activity() {
         boot = findViewById(R.id.boot)
         gasAlert = findViewById(R.id.gasAlert)
         bgStatus = findViewById(R.id.bgStatus)
+        insightsText = findViewById(R.id.insightsText)
+        weekText = findViewById(R.id.weekText)
+        chartToday = findViewById(R.id.chartToday)
+        chartWeek = findViewById(R.id.chartWeek)
+        highAlert = findViewById(R.id.highAlert)
+        highKw = findViewById(R.id.highKw)
+        highMinutes = findViewById(R.id.highMinutes)
+        offlineAlert = findViewById(R.id.offlineAlert)
+        cheapAlert = findViewById(R.id.cheapAlert)
+        cheapPence = findViewById(R.id.cheapPence)
+        summaryAlert = findViewById(R.id.summaryAlert)
+        summaryHour = findViewById(R.id.summaryHour)
 
         apiKey.setText(prefs.apiKey.orEmpty())
         account.setText(prefs.accountNumber.orEmpty())
@@ -47,6 +73,14 @@ class MainActivity : Activity() {
         interval.setText(prefs.intervalSeconds.toString())
         boot.isChecked = prefs.startOnBoot
         gasAlert.isChecked = prefs.gasAlert
+        highAlert.isChecked = prefs.highAlert
+        highKw.setText(trim(prefs.highKw.toDouble()))
+        highMinutes.setText(prefs.highMinutes.toString())
+        offlineAlert.isChecked = prefs.offlineAlert
+        cheapAlert.isChecked = prefs.cheapAlert
+        cheapPence.setText(trim(prefs.cheapPence.toDouble()))
+        summaryAlert.isChecked = prefs.summaryAlert
+        summaryHour.setText(prefs.summaryHour.toString())
         findViewById<Button>(R.id.bgBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<Button>(R.id.bgUnused).setOnClickListener { openUnusedAppSettings() }
 
@@ -64,9 +98,77 @@ class MainActivity : Activity() {
         super.onResume()
         status.text = prefs.lastSummary ?: getString(R.string.not_started)
         OctopusWidget.updateAll(this)   // keep widgets in step with the installed version
-        LiveService.listener = { text -> runOnUiThread { status.text = text } }
+        LiveService.listener = { text -> runOnUiThread { status.text = text; showInsights() } }
         updateBackgroundStatus()
+        showInsights()
     }
+
+    // ---------- costs & history ----------
+
+    private fun showInsights() {
+        val d = Insights(this).load()
+        if (prefs.apiKey.isNullOrBlank()) {
+            insightsText.text = getString(R.string.insights_need_key)
+        } else if (d == null) {
+            insightsText.text = getString(R.string.insights_waiting)
+        } else {
+            val lines = mutableListOf<String>()
+            val today = (d.elecCostToday ?: 0.0) + (d.gasCostToday ?: 0.0)
+            if (d.elecCostToday != null) {
+                lines += String.format(Locale.UK, "Today so far: £%.2f", today) +
+                    (if (d.gasCostToday != null) String.format(Locale.UK, " (electricity £%.2f, gas £%.2f)", d.elecCostToday, d.gasCostToday) else "")
+            }
+            d.priceNow?.let { p ->
+                var line = String.format(Locale.UK, "Electricity price now: %.1fp/kWh", p)
+                if (d.priceNext != null && d.priceNextAt != null) {
+                    line += String.format(Locale.UK, ", %.1fp from %s", d.priceNext, Insights.formatTime(d.priceNextAt))
+                }
+                lines += line
+            }
+            d.baseW?.let { lines += "Always-on today: $it W (your lowest half-hour)" }
+            d.tariff?.let { lines += "Tariff: $it" }
+            if (d.elecCostToday == null && d.tariff != null) lines += "Costs aren't available for this tariff yet (e.g. Economy 7)."
+            d.error?.let { lines += "Last update problem: $it" }
+            insightsText.text = if (lines.isEmpty()) getString(R.string.insights_waiting) else lines.joinToString("\n")
+        }
+
+        val pink = getColor(R.color.brand_pink)
+        val gasColor = getColor(R.color.gas_orange)
+        // Today: 48 half-hours, labelled every 6 hours
+        val slots = d?.todaySlots ?: emptyList()
+        val labels = (0 until 48).map { if (it % 12 == 0) String.format(Locale.UK, "%02d", it / 2) else "" }
+        chartToday.setData(listOf(slots), listOf(pink), labels)
+
+        // Last 7 days, electricity and gas side by side
+        val days = (7 downTo 1).map { LocalDate.now().minusDays(it.toLong()) }
+        val byDate = d?.history?.associateBy { it.date } ?: emptyMap()
+        val elec = days.map { byDate[it.toString()]?.elecKwh ?: 0.0 }
+        val gas = days.map { byDate[it.toString()]?.gasKwh ?: 0.0 }
+        val dayLabels = days.map { it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.UK) }
+        val hasGas = d?.history?.any { it.gasKwh != null } == true
+        chartWeek.setData(
+            if (hasGas) listOf(elec, gas) else listOf(elec),
+            if (hasGas) listOf(pink, gasColor) else listOf(pink),
+            dayLabels, highlightIndex = 6, emptyText = "Collecting the last 7 days…",
+        )
+        val known = d?.history.orEmpty()
+        weekText.text = if (known.isEmpty()) "" else {
+            val elecTotal = known.sumOf { it.elecKwh }
+            val gasTotal = known.sumOf { it.gasKwh ?: 0.0 }
+            val cost = known.sumOf { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
+            val base = known.mapNotNull { it.baseW }.minOrNull()
+            buildString {
+                append(String.format(Locale.UK, "%d days: electricity %.1f kWh", known.size, elecTotal))
+                if (hasGas) append(String.format(Locale.UK, ", gas %.1f kWh", gasTotal))
+                if (cost > 0) append(String.format(Locale.UK, ", £%.2f", cost))
+                base?.let { append(".\nLowest always-on: $it W — leave it running all year and that's about ").append(
+                    String.format(Locale.UK, "%.0f kWh", it * 24 * 365 / 1000.0)).append(" a year.") }
+            }
+        }
+    }
+
+    private fun trim(v: Double): String =
+        if (v == Math.floor(v)) v.toLong().toString() else String.format(Locale.UK, "%.1f", v)
 
     // ---------- background running ----------
 
@@ -131,6 +233,18 @@ class MainActivity : Activity() {
         prefs.intervalSeconds = secs
         prefs.startOnBoot = boot.isChecked
         prefs.gasAlert = gasAlert.isChecked
+        prefs.highAlert = highAlert.isChecked
+        prefs.highKw = highKw.text.toString().toFloatOrNull()?.coerceIn(0.5f, 20f) ?: 3f
+        prefs.highMinutes = highMinutes.text.toString().toIntOrNull()?.coerceIn(5, 600) ?: 45
+        prefs.offlineAlert = offlineAlert.isChecked
+        prefs.cheapAlert = cheapAlert.isChecked
+        prefs.cheapPence = cheapPence.text.toString().toFloatOrNull()?.coerceIn(-50f, 100f) ?: 0f
+        prefs.summaryAlert = summaryAlert.isChecked
+        prefs.summaryHour = summaryHour.text.toString().toIntOrNull()?.coerceIn(0, 23) ?: 8
+        highKw.setText(trim(prefs.highKw.toDouble()))
+        highMinutes.setText(prefs.highMinutes.toString())
+        cheapPence.setText(trim(prefs.cheapPence.toDouble()))
+        summaryHour.setText(prefs.summaryHour.toString())
         interval.setText(secs.toString())
         currentFocus?.clearFocus()
 

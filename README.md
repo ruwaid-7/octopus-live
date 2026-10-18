@@ -73,6 +73,24 @@ The skin uses the PowerShell built into Windows — nothing else to install.
    It updates every minute while the live notification is running (otherwise every 30 minutes).
    Tap it to refresh.
 
+**Costs, prices and history** (needs your API key in the app): today's cost in £ including the
+standing charge, the current electricity price and when it next changes, a half-hourly chart for
+today, the last 7 days of electricity and gas, and your "always-on" use (lowest half-hour) — the
+power your home never drops below. Works with fixed, Agile, Go, Intelligent and tracker tariffs
+(not yet Economy 7). Prices come from Octopus's public tariff data.
+
+**Alerts** (each can be switched off in the app):
+- **Gas left on** — gas in use for 1½ hours or more (see below).
+- **High electricity use** — above 3 kW for 45 minutes (both adjustable). Live, so it's prompt.
+- **Home Mini offline** — no new meter readings for 30 minutes.
+- **Cheap electricity** — on Agile / Go / smart tariffs, a heads-up for upcoming half-hours at or
+  below your chosen price (default 0p, i.e. free or paid-to-use "plunge" pricing).
+- **Daily summary** — each morning (default 8:00): yesterday's electricity and gas, cost, the
+  change on the day before, and always-on use.
+
+**Quick Settings tile:** swipe down twice → ✏ edit → drag **Live electricity** into your tiles to
+see live watts and today's cost in the pull-down panel. Tap it to refresh.
+
 **Gas warning:** with *Warn me if the gas has been on for 1½ hours or more* ticked (on by
 default), you get a notification when the meter shows three half-hours in a row with gas in use.
 Gas readings reach Octopus about an hour late, so the warning arrives roughly an hour after the
@@ -196,6 +214,41 @@ Works the same for the Cloudflare Worker and the home server — use the full ad
 
 If you also keep your API key on a device, it falls back to calling Octopus directly (at most once a
 minute) when the relay can't be reached — e.g. a home-only server while you're out.
+
+## Home Assistant
+
+If you run [Home Assistant](https://www.home-assistant.io), it can read the relay (home server or
+Cloudflare Worker). Add to `configuration.yaml`, replacing the address and token:
+
+```yaml
+rest:
+  - resource: "https://energy.example.com/api/live?token=YOUR-TOKEN"
+    scan_interval: 30
+    sensor:
+      - name: "Octopus Live power"
+        value_template: "{{ value_json.demandW }}"
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+      - name: "Octopus Live electricity today"
+        value_template: "{{ value_json.todayKwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+      - name: "Octopus Live gas today"
+        value_template: "{{ value_json.gasKwh }}"
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+      - name: "Octopus Live gas on (minutes)"
+        value_template: "{{ value_json.gasRunMinutes }}"
+        unit_of_measurement: "min"
+```
+
+The "today" sensors reset at midnight, which `total_increasing` handles, so they can feed the
+Energy dashboard. (For full tariff and cost features in Home Assistant, the
+[Octopus Energy integration](https://github.com/BottlecapDave/HomeAssistant-OctopusEnergy) is
+excellent.)
 
 ## How it works
 

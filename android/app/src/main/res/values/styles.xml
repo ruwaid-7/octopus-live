@@ -66,4 +66,16 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- Alert tick boxes -->
+    <style name="AlertCheck">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:buttonTint">@color/brand_pink</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
 </resources>

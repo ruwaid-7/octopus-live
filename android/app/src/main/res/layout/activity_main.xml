@@ -114,6 +114,74 @@
             android:layout_width="match_parent"
             android:layout_height="18dp" />
 
+        <!-- Costs & history -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_settings_card"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                style="@style/FieldLabel"
+                android:text="@string/history_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/insightsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/insights_waiting"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/chart_today"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <uk.octopuslive.BarChartView
+                android:id="@+id/chartToday"
+                android:layout_width="match_parent"
+                android:layout_height="96dp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/chart_week"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+
+            <uk.octopuslive.BarChartView
+                android:id="@+id/chartWeek"
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/weekText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingExtra="3dp"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
         <!-- 3. Main Configuration Card -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -273,6 +341,157 @@
                 android:textColor="@color/text_muted"
                 android:textSize="12sp" />
 
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="18dp" />
+
+        <!-- Alerts -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_settings_card"
+            android:elevation="1dp"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                style="@style/FieldLabel"
+                android:text="@string/alerts_title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <CheckBox
+                android:id="@+id/highAlert"
+                style="@style/AlertCheck"
+                android:text="@string/high_alert" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="38dp">
+
+                <EditText
+                    android:id="@+id/highKw"
+                    style="@style/InputField"
+                    android:layout_width="72dp"
+                    android:importantForAutofill="no"
+                    android:inputType="numberDecimal"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="@string/kw_for"
+                    android:textColor="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/highMinutes"
+                    style="@style/InputField"
+                    android:layout_width="72dp"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/minutes"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/offlineAlert"
+                style="@style/AlertCheck"
+                android:layout_marginTop="8dp"
+                android:text="@string/offline_alert" />
+
+            <CheckBox
+                android:id="@+id/cheapAlert"
+                style="@style/AlertCheck"
+                android:layout_marginTop="8dp"
+                android:text="@string/cheap_alert" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="38dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/at_or_below"
+                    android:textColor="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/cheapPence"
+                    style="@style/InputField"
+                    android:layout_width="80dp"
+                    android:importantForAutofill="no"
+                    android:inputType="numberDecimal|numberSigned"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/pence_kwh"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/summaryAlert"
+                style="@style/AlertCheck"
+                android:layout_marginTop="8dp"
+                android:text="@string/summary_alert" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="38dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/at_hour"
+                    android:textColor="@color/text_secondary" />
+
+                <EditText
+                    android:id="@+id/summaryHour"
+                    style="@style/InputField"
+                    android:layout_width="72dp"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:maxLines="1" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/oclock"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/alerts_help"
+                android:textColor="@color/text_muted"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <Space

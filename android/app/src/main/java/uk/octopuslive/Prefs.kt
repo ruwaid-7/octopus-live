@@ -19,6 +19,43 @@ class Prefs(context: Context) {
         get() = p.getLong("lastDirectAt", 0)
         set(v) = p.edit().putLong("lastDirectAt", v).apply()
 
+    /** Account number found automatically (used by the insights look-ups). */
+    var foundAccount: String?
+        get() = p.getString("foundAccount", null)
+        set(v) = p.edit().putString("foundAccount", v).apply()
+
+    // Generic storage for the insights cache and alert state
+    fun str(key: String): String? = p.getString(key, null)
+    fun setStr(key: String, v: String?) = p.edit().putString(key, v).apply()
+    fun long(key: String): Long = p.getLong(key, 0L)
+    fun setLong(key: String, v: Long) = p.edit().putLong(key, v).apply()
+
+    // Alert settings
+    var highAlert: Boolean
+        get() = p.getBoolean("highAlert", true)
+        set(v) = p.edit().putBoolean("highAlert", v).apply()
+    var highKw: Float
+        get() = p.getFloat("highKw", 3.0f)
+        set(v) = p.edit().putFloat("highKw", v).apply()
+    var highMinutes: Int
+        get() = p.getInt("highMinutes", 45)
+        set(v) = p.edit().putInt("highMinutes", v).apply()
+    var offlineAlert: Boolean
+        get() = p.getBoolean("offlineAlert", true)
+        set(v) = p.edit().putBoolean("offlineAlert", v).apply()
+    var cheapAlert: Boolean
+        get() = p.getBoolean("cheapAlert", true)
+        set(v) = p.edit().putBoolean("cheapAlert", v).apply()
+    var cheapPence: Float
+        get() = p.getFloat("cheapPence", 0f)
+        set(v) = p.edit().putFloat("cheapPence", v).apply()
+    var summaryAlert: Boolean
+        get() = p.getBoolean("summaryAlert", true)
+        set(v) = p.edit().putBoolean("summaryAlert", v).apply()
+    var summaryHour: Int
+        get() = p.getInt("summaryHour", 8)
+        set(v) = p.edit().putInt("summaryHour", v).apply()
+
     var accountNumber: String?
         get() = p.getString("account", null)
         set(v) = p.edit().putString("account", v).apply()
@@ -128,6 +165,7 @@ class Prefs(context: Context) {
             .putString("lastReadAt", r.readAt)
             .putLong("lastFetchedAt", r.fetchedAt)
             .putBoolean("lastViaServer", r.viaServer)
+            .putLong("lastReadAtMs", r.readAtMs ?: 0L)
             .apply()
         // Keep gas in step too (in home-server mode it comes from the server, not the cache)
         gasKwh = r.gasTodayKwh
@@ -151,6 +189,7 @@ class Prefs(context: Context) {
             gasRunMinutes = gasRunMinutes,
             gasRunSince = gasRunSince,
             viaServer = p.getBoolean("lastViaServer", false),
+            readAtMs = p.getLong("lastReadAtMs", 0L).takeIf { it > 0 },
         )
     }
 

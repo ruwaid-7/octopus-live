@@ -5,7 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-EnvironmentFile=/etc/octopus-relay.env
+EnvironmentFile=-/etc/octopus-relay.env
+Environment=DATA_DIR=/var/lib/octopus-relay
+StateDirectory=octopus-relay
+StateDirectoryMode=0700
 ExecStart=/usr/bin/python3 /opt/octopus-relay/octopus_relay.py
 Restart=always
 RestartSec=10

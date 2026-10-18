@@ -1,6 +1,6 @@
 {
   "name": "octopus-live-worker",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "private": true,
   "description": "Octopus Live relay on Cloudflare Workers: calls the Octopus API once a minute and shares live electricity + gas with all your devices.",
   "scripts": {
@@ -9,12 +9,6 @@
   },
   "cloudflare": {
     "bindings": {
-      "OCTOPUS_API_KEY": {
-        "description": "Your Octopus Energy API key (starts with sk_live_). Find it at octopus.energy > Personal details > API access."
-      },
-      "RELAY_TOKEN": {
-        "description": "A password your devices add to the address (?token=...). Use a long random string."
-      },
       "POLL_SECONDS": {
         "description": "Seconds between Octopus requests. 60 keeps you safely under Octopus's rate limit."
       },

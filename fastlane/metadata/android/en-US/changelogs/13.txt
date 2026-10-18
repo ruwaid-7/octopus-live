@@ -1,0 +1,3 @@
+• History no longer counts days before your Home Mini started sending readings (fixes inflated 7-day costs)
+• "Always-on" only uses full days, so a part day can't overstate it
+• Daily summary skips empty days and only compares with full days

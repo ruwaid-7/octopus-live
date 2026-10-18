@@ -11,12 +11,12 @@ android {
         applicationId = "uk.octopuslive.app"
         minSdk = 29          // Android 10+
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.7.1"
+        versionCode = 12
+        versionName = "1.7.2"
     }
 
     // Release signing: uses a real keystore when the CI secrets are set (so updates install over
-    // older versions), otherwise falls back to the debug key so local builds just work.
+    // older versions).
     val keystoreFile = System.getenv("SIGNING_KEYSTORE_FILE")
     signingConfigs {
         if (keystoreFile != null) {
@@ -32,7 +32,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName(if (keystoreFile != null) "release" else "debug")
+            // Signed only when the CI keystore is present. Otherwise the release APK is left unsigned,
+            // which is what F-Droid expects (it signs with its own key). For your own builds, use
+            // the debug build (Android Studio's Run button), which is signed automatically.
+            if (keystoreFile != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -88,6 +88,7 @@ class LiveService : Service() {
         api = OctopusApi(this)
         insights = Insights(this)
         last = prefs.loadReading()   // show the previous value straight away
+        highSince = prefs.long(K_HIGH_SINCE)
         ins = insights.load()
         createChannel()
         val filter = IntentFilter().apply {
@@ -113,6 +114,17 @@ class LiveService : Service() {
         }
 
         when (intent?.action) {
+            ACTION_MUTE_GAS, ACTION_MUTE_HIGH -> {
+                val nm = getSystemService(NotificationManager::class.java)
+                if (intent?.action == ACTION_MUTE_GAS) {
+                    prefs.mutedGasRun = prefs.gasAlertSentFor
+                    nm.cancel(GAS_NOTIF_ID)
+                } else {
+                    prefs.mutedHighSince = highSince
+                    nm.cancel(HIGH_NOTIF_ID)
+                }
+                if (!prefs.running) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return START_NOT_STICKY }
+            }
             ACTION_STOP -> {
                 prefs.running = false
                 cancelBackground()
@@ -214,35 +226,92 @@ class LiveService : Service() {
         wakeLock = null
     }
 
-    // ---------- gas warning ----------
+    // ---------- gas and high-use warnings ----------
 
-    /** Warn once per run when gas has been on for [GAS_ALERT_MINUTES] or more. */
+    /**
+     * Gas on for [GAS_ALERT_MINUTES] or more. With "keep warnings on screen" the notification stays
+     * (and is re-shown if swiped away) until the gas goes off or it's muted; otherwise it's sent
+     * once per run and can be dismissed.
+     */
     private fun checkGasAlert(r: Reading) {
-        if (!prefs.gasAlert || r.gasTodayKwh == null) return
-        if (r.gasRunMinutes < GAS_ALERT_MINUTES) return
+        val nm = getSystemService(NotificationManager::class.java)
+        val on = prefs.gasAlert && r.gasTodayKwh != null && r.gasRunMinutes >= GAS_ALERT_MINUTES
+        if (!on) {
+            if (prefs.stickyWarnings) nm.cancel(GAS_NOTIF_ID)
+            return
+        }
         val runKey = "${LocalDate.now()}@${r.gasRunSince}"
-        if (prefs.gasAlertSentFor == runKey) return
+        if (prefs.mutedGasRun == runKey) return
+        val firstTime = prefs.gasAlertSentFor != runKey
+        if (!prefs.stickyWarnings && !firstTime) return
         prefs.gasAlertSentFor = runKey
 
-        val hours = r.gasRunMinutes / 60
-        val mins = r.gasRunMinutes % 60
-        val duration = if (mins == 0) "$hours h" else "$hours h $mins min"
-        val since = r.gasRunSince?.let { " since $it" } ?: ""
-        val openApp = PendingIntent.getActivity(this, 4, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
-        val text = "Your gas has been in use for about $duration$since " +
-            String.format(Locale.UK, "(%.1f kW in the latest half-hour). ", r.gasKw ?: 0.0) +
+        val since = r.gasRunSince?.let { "Since $it" } ?: "Still on"
+        val text = since + String.format(Locale.UK, " · %.1f kW in the latest half-hour. ", r.gasKw ?: 0.0) +
             "Gas readings arrive about an hour late, so it may already be off."
-        val n = Notification.Builder(this, GAS_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_flame)
-            .setContentTitle("🔥 Gas on for $duration")
+        postWarning(
+            GAS_NOTIF_ID, "Gas on for ${duration(r.gasRunMinutes)}", text,
+            Color.rgb(240, 122, 42), R.drawable.ic_flame, quiet = !firstTime, muteAction = ACTION_MUTE_GAS,
+        )
+    }
+
+    /** Electricity above the chosen level for the chosen time (e.g. 3 kW for 45 min). */
+    private fun checkHighUsage(r: Reading) {
+        val w = r.demandWatts ?: return
+        val nm = getSystemService(NotificationManager::class.java)
+        if (w < prefs.highKw * 1000) {
+            if (highSince != 0L) setHighSince(0L)
+            if (prefs.stickyWarnings) nm.cancel(HIGH_NOTIF_ID)
+            return
+        }
+        if (highSince == 0L) setHighSince(System.currentTimeMillis())
+        val mins = ((System.currentTimeMillis() - highSince) / 60_000).toInt()
+        if (!prefs.highAlert || mins < prefs.highMinutes || prefs.mutedHighSince == highSince) {
+            if (!prefs.highAlert && prefs.stickyWarnings) nm.cancel(HIGH_NOTIF_ID)
+            return
+        }
+        val firstTime = !highNotified
+        if (!prefs.stickyWarnings && !firstTime) return
+        highNotified = true
+        postWarning(
+            HIGH_NOTIF_ID, "Electricity above ${trimKw(prefs.highKw)} kW for ${duration(mins)}",
+            "Since ${Insights.formatTime(highSince)} · ${formatWatts(w)} now. Is something left on?",
+            Color.rgb(229, 72, 77), R.drawable.ic_bolt, quiet = !firstTime, muteAction = ACTION_MUTE_HIGH,
+        )
+    }
+
+    private fun setHighSince(t: Long) {
+        highSince = t
+        highNotified = false
+        prefs.setLong(K_HIGH_SINCE, t)
+    }
+
+    /** A warning notification; "sticky" ones stay until usage drops and offer "Mute until off". */
+    private fun postWarning(id: Int, title: String, text: String, colour: Int, icon: Int, quiet: Boolean, muteAction: String) {
+        val sticky = prefs.stickyWarnings
+        val openApp = PendingIntent.getActivity(this, 10 + id, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        val b = Notification.Builder(this, GAS_CHANNEL_ID)
+            .setSmallIcon(icon)
+            .setContentTitle(title)
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
-            .setColor(Color.rgb(255, 138, 61))
+            .setColor(colour)
             .setCategory(Notification.CATEGORY_REMINDER)
             .setContentIntent(openApp)
-            .setAutoCancel(true)
-            .build()
-        getSystemService(NotificationManager::class.java).notify(GAS_NOTIF_ID, n)
+            .setOnlyAlertOnce(true)
+        if (sticky) {
+            val mute = PendingIntent.getService(
+                this, 20 + id, Intent(this, LiveService::class.java).setAction(muteAction), PendingIntent.FLAG_IMMUTABLE,
+            )
+            b.setOngoing(true)
+                .setAutoCancel(false)
+                .addAction(Notification.Action.Builder(null, getString(R.string.mute_until_off), mute).build())
+        } else {
+            b.setAutoCancel(true)
+        }
+        // Re-shown warnings (e.g. after being swiped away) update quietly
+        if (quiet && Build.VERSION.SDK_INT >= 31) b.setSilent(true)
+        getSystemService(NotificationManager::class.java).notify(id, b.build())
     }
 
     // ---------- other warnings and notices ----------
@@ -261,24 +330,6 @@ class LiveService : Service() {
         getSystemService(NotificationManager::class.java).notify(id, n)
     }
 
-    /** Electricity above the chosen level for the chosen time (e.g. 3 kW for 45 min). */
-    private fun checkHighUsage(r: Reading) {
-        val w = r.demandWatts ?: return
-        val limit = prefs.highKw * 1000
-        if (w < limit) { highSince = 0; highNotified = false; return }
-        if (highSince == 0L) highSince = System.currentTimeMillis()
-        val mins = (System.currentTimeMillis() - highSince) / 60_000
-        if (!prefs.highAlert || highNotified || mins < prefs.highMinutes) return
-        highNotified = true
-        notifyAlert(
-            HIGH_NOTIF_ID, GAS_CHANNEL_ID,
-            "⚡ High electricity use for $mins min",
-            String.format(Locale.UK, "Your home has been using over %.1f kW since %s (%s now). Is something left on?",
-                prefs.highKw, Insights.formatTime(highSince), formatWatts(w)),
-            Color.rgb(255, 82, 82),
-        )
-    }
-
     /** No new meter readings (or no contact at all) for 30 minutes. */
     private fun checkOffline() {
         if (!prefs.offlineAlert) return
@@ -295,7 +346,7 @@ class LiveService : Service() {
         }
         if (!stale || prefs.str(K_OFFLINE_SENT) == key) return
         prefs.setStr(K_OFFLINE_SENT, key)
-        notifyAlert(OFFLINE_NOTIF_ID, GAS_CHANNEL_ID, "📡 No new energy readings", text, Color.rgb(255, 179, 0))
+        notifyAlert(OFFLINE_NOTIF_ID, GAS_CHANNEL_ID, "No new energy readings", text, Color.rgb(255, 179, 0))
     }
 
     /** Agile / Go etc: a heads-up for upcoming half-hours at or below the chosen price. */
@@ -310,7 +361,7 @@ class LiveService : Service() {
             val day = if (java.time.Instant.ofEpochMilli(b.from).atZone(java.time.ZoneId.systemDefault()).toLocalDate() == LocalDate.now()) "Today" else "Tomorrow"
             notifyAlert(
                 CHEAP_NOTIF_ID, INFO_CHANNEL_ID,
-                String.format(Locale.UK, "💷 Cheap electricity %s %s–%s", day.lowercase(), Insights.formatTime(b.from), Insights.formatTime(b.to)),
+                String.format(Locale.UK, "Cheap electricity %s %s–%s", day.lowercase(), Insights.formatTime(b.from), Insights.formatTime(b.to)),
                 String.format(Locale.UK, "%s from %s to %s, as low as %.1fp/kWh. A good time for the washing machine, dishwasher or charging.",
                     day, Insights.formatTime(b.from), Insights.formatTime(b.to), b.p),
                 Color.rgb(0, 230, 118),
@@ -351,7 +402,7 @@ class LiveService : Service() {
             } else text += "."
         }
         y.baseW?.let { text += " Always-on: $it W." }
-        notifyAlert(SUMMARY_NOTIF_ID, INFO_CHANNEL_ID, "📊 Yesterday's energy", text, Color.rgb(232, 71, 139))
+        notifyAlert(SUMMARY_NOTIF_ID, INFO_CHANNEL_ID, "Yesterday's energy", text, Color.rgb(232, 71, 139))
     }
 
     // ---------- notification ----------
@@ -383,22 +434,20 @@ class LiveService : Service() {
         )
 
         val title = when {
-            r?.demandWatts != null -> "⚡ ${formatWatts(r.demandWatts)} now"
+            r?.demandWatts != null -> formatWatts(r.demandWatts)
             lastError != null -> "Octopus Live"
-            else -> "Connecting to Octopus…"
+            else -> "Connecting…"
         }
         val text = buildString {
             if (r != null) {
                 append(String.format(Locale.UK, "Today %.2f kWh", r.todayKwh))
-                ins?.elecCostToday?.let { append(String.format(Locale.UK, " (£%.2f)", it)) }
+                ins?.elecCostToday?.let { append(String.format(Locale.UK, " · £%.2f", it)) }
                 r.gasTodayKwh?.let { append(String.format(Locale.UK, "  ·  Gas %.2f kWh", it)) }
-                r.gasKw?.let { if (r.gasTodayKwh != null) append(String.format(Locale.UK, " (%.1f kW)", it)) }
-                append("  ·  meter ").append(r.readAt)
-                ins?.priceNow?.let { append(String.format(Locale.UK, "  ·  %.1fp/kWh now", it)) }
+                if (r.gasTodayKwh != null && r.gasRunMinutes > 0) append(" (on)")
             }
             if (lastError != null) {
                 if (isNotEmpty()) append("  ·  ")
-                append("⚠ ").append(lastError)
+                append("Couldn't update: ").append(lastError)
             }
             if (isEmpty()) append("Waiting for first reading")
         }
@@ -410,6 +459,7 @@ class LiveService : Service() {
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
+            .setSubText(r?.let { "Meter ${it.readAt}" })
             .setCategory(Notification.CATEGORY_STATUS)
             .setContentIntent(openApp)
             .setColor(levelColor(r?.demandWatts))
@@ -490,6 +540,9 @@ class LiveService : Service() {
         const val ACTION_REFRESH = "uk.octopuslive.REFRESH"
         const val ACTION_STOP = "uk.octopuslive.STOP"
         const val ACTION_BG_POLL = "uk.octopuslive.BG_POLL"
+        const val ACTION_MUTE_GAS = "uk.octopuslive.MUTE_GAS"
+        const val ACTION_MUTE_HIGH = "uk.octopuslive.MUTE_HIGH"
+        const val K_HIGH_SINCE = "alert_highSince"
         const val GAS_CHANNEL_ID = "gas_alerts"
         const val GAS_NOTIF_ID = 2
         const val GAS_ALERT_MINUTES = 90
@@ -506,6 +559,15 @@ class LiveService : Service() {
 
         /** Set by MainActivity while visible, to show the latest result. */
         @Volatile var listener: ((String) -> Unit)? = null
+
+        fun duration(min: Int): String = when {
+            min < 60 -> "$min min"
+            min % 60 == 0 -> "${min / 60} h"
+            else -> "${min / 60} h ${min % 60} min"
+        }
+
+        fun trimKw(v: Float): String =
+            if (v == Math.floor(v.toDouble()).toFloat()) v.toLong().toString() else String.format(Locale.UK, "%.1f", v)
 
         fun formatWatts(w: Int): String =
             if (w >= 1000) String.format(Locale.UK, "%.2f kW", w / 1000.0) else "$w W"

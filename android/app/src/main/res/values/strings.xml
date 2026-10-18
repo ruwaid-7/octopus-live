@@ -1,61 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Octopus Live</string>
-    <string name="tagline">Live electricity from your Octopus Home Mini, in your notifications.</string>
-    <string name="api_key">Octopus API key</string>
-    <string name="get_key">Where do I find my API key? →</string>
-    <string name="account">Account number (optional — found automatically)</string>
-    <string name="interval">Refresh every (seconds — 60 direct, 10–15 with a relay)</string>
-    <string name="widget_opens_app">Tapping the widget opens the app (instead of refreshing)</string>
-    <string name="start_on_boot">Start automatically after the phone restarts</string>
-    <string name="save_start">Save &amp; start</string>
-    <string name="stop">Stop</string>
-    <string name="not_started">Not running yet. Enter your API key and tap Save &amp; start.</string>
-    <string name="connecting">Connecting to Octopus…</string>
-    <string name="stopped">Stopped.</string>
-    <string name="key_required">Enter your API key or a relay address</string>
-    <string name="relay_label">Relay address (optional)</string>
-    <string name="relay_help">Your Octopus Live relay — a free Cloudflare Worker or your own server, e.g. https://octopus-live-worker.you.workers.dev/?token=… The app then reads from it instead of Octopus, so it can refresh every 10 seconds and doesn\'t need your API key. See the GitHub page for setup.</string>
-    <string name="notify_denied">Notifications are off for this app — enable them in Settings to see live usage.</string>
-    <string name="channel_name">Live usage</string>
-    <string name="channel_description">Ongoing notification with live electricity demand</string>
-    <string name="footnote">While the screen is off it updates every 5 minutes. Your API key is stored only on this phone and is sent only to Octopus Energy. Without a relay, Octopus limits how often its API can be called: keep the interval at 60 seconds or more, or 90 if the PC skin also calls Octopus directly.</string>
-    <string name="widget_description">Live electricity demand and today\'s usage</string>
-    <string name="widget_footer_placeholder">Tap to load</string>
-    <string name="saved_started">Saved — live updates started</string>
-    <string name="saved_restarted">Saved — settings updated</string>
-    <string name="gas_alert">Warn me if the gas has been on for 1½ hours or more</string>
-    <string name="gas_alert_help">Gas meters report every half-hour and readings reach Octopus about an hour late, so the warning comes roughly an hour after the 1½-hour mark. Useful for catching a boiler or hob left on.</string>
-    <string name="gas_channel_name">Warnings</string>
-    <string name="gas_channel_description">Gas left on, high electricity use, Home Mini offline</string>
-    <string name="bg_title">Background running</string>
-    <string name="bg_help">So the notification, widget and gas warning keep working while the phone is locked or the app hasn\'t been opened for a while.</string>
-    <string name="bg_battery">Allow unrestricted battery use</string>
-    <string name="bg_unused">Don\'t pause app when unused</string>
-    <string name="bg_battery_ok">✓ Battery: unrestricted</string>
-    <string name="bg_battery_no">✗ Battery: optimised — Android may stop updates</string>
-    <string name="bg_unused_ok">✓ Won\'t be paused when unused</string>
-    <string name="bg_unused_no">✗ May be paused if unused for a few months</string>
-    <string name="bg_samsung">Samsung: also go to Settings → Battery → Background usage limits → Never sleeping apps, and add Octopus Live.</string>
-    <string name="bg_unused_tip">Turn off “Pause app activity if unused” (or “Remove permissions if app isn\'t used”) on the next screen.</string>
-    <string name="history_title">Costs &amp; history</string>
+
+    <!-- Tabs -->
+    <string name="tab_home">Home</string>
+    <string name="tab_usage">Usage</string>
+    <string name="tab_alerts">Alerts</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Home -->
+    <string name="using_now">Using now</string>
+    <string name="electricity_today">Electricity today</string>
+    <string name="gas_today">Gas today</string>
+    <string name="today">Today</string>
+    <string name="price_now">Price now</string>
+    <string name="always_on">Always on</string>
+    <string name="always_on_sub">Lowest half-hour today</string>
+    <string name="setup_title">Connect your Home Mini</string>
+    <string name="setup_body">Add your Octopus API key or a relay address to see your live usage.</string>
+    <string name="setup_button">Set up</string>
+    <string name="paused_title">Live updates are off</string>
+    <string name="paused_body">Turn them on to see what your home is using now.</string>
+    <string name="paused_button">Start</string>
+
+    <!-- Usage -->
+    <string name="this_week">Last 7 days</string>
+    <string name="daily">By day</string>
+    <string name="tariff">Tariff</string>
+    <string name="legend_elec">Electricity</string>
+    <string name="legend_gas">Gas</string>
+    <string name="history_building">History builds up from the day your Home Mini started sending readings.</string>
     <string name="insights_waiting">Loading costs and history…</string>
-    <string name="insights_need_key">Add your API key above to see costs, prices and history. It\'s only used for these slower look-ups — live readings can still come from your relay.</string>
-    <string name="chart_today">Today, every half-hour (kWh)</string>
-    <string name="chart_week">Last 7 days (kWh) — electricity and gas</string>
-    <string name="alerts_title">Alerts</string>
-    <string name="high_alert">Warn me if electricity stays high</string>
+    <string name="insights_need_key">Add your API key in Settings to see costs, prices and history.</string>
+
+    <!-- Alerts -->
+    <string name="section_warnings">Warnings</string>
+    <string name="section_updates">Updates</string>
+    <string name="gas_alert">Gas left on</string>
+    <string name="gas_alert_sub">On for 1½ hours or more. Readings arrive about an hour late.</string>
+    <string name="high_alert">High electricity use</string>
+    <string name="high_alert_sub">Stays above a level for a while</string>
     <string name="kw_for">kW for</string>
-    <string name="minutes">minutes</string>
-    <string name="offline_alert">Warn me if the Home Mini stops sending readings (30 min)</string>
-    <string name="cheap_alert">Tell me about cheap electricity (Agile, Go and other smart tariffs)</string>
+    <string name="minutes">min</string>
+    <string name="offline_alert">Home Mini offline</string>
+    <string name="offline_alert_sub">No new readings for 30 minutes</string>
+    <string name="sticky_alert">Keep warnings on screen</string>
+    <string name="sticky_alert_sub">Gas and high-use warnings stay in your notifications until usage drops</string>
+    <string name="cheap_alert">Cheap electricity</string>
+    <string name="cheap_alert_sub">Agile, Go and other smart tariffs</string>
     <string name="at_or_below">At or below</string>
     <string name="pence_kwh">p/kWh</string>
-    <string name="summary_alert">Daily summary of yesterday\'s use and cost</string>
+    <string name="summary_alert">Daily summary</string>
+    <string name="summary_alert_sub">Yesterday\'s use and cost</string>
     <string name="at_hour">At</string>
     <string name="oclock">:00</string>
-    <string name="alerts_help">Costs, cheap-price alerts and the daily summary need your API key. Cheap-price alerts only matter on tariffs whose price changes during the day; 0p means \"only when it\'s free or you get paid\".</string>
+    <string name="alerts_help">Costs, cheap-price alerts and the daily summary need your API key.</string>
+
+    <!-- Settings -->
+    <string name="section_connection">Connection</string>
+    <string name="section_background">Background</string>
+    <string name="section_general">General</string>
+    <string name="section_about">About</string>
+    <string name="live_updates">Live updates</string>
+    <string name="api_key">Octopus API key</string>
+    <string name="get_key">Find your API key</string>
+    <string name="relay_label">Relay address (optional)</string>
+    <string name="relay_help">A free Cloudflare Worker or your own server. Lets the app refresh every 10 seconds.</string>
+    <string name="account">Account number (optional)</string>
+    <string name="interval">Refresh every (seconds)</string>
+    <string name="interval_help">60 or more without a relay, 10–15 with one.</string>
+    <string name="save">Save</string>
+    <string name="bg_battery">Unrestricted battery</string>
+    <string name="bg_unused">Keep running when unused</string>
+    <string name="bg_battery_ok">On</string>
+    <string name="bg_battery_no">Off — Android may stop updates</string>
+    <string name="bg_unused_ok">On</string>
+    <string name="bg_unused_no">Off — may be paused after a few months</string>
+    <string name="bg_unused_tip">Turn off “Pause app activity if unused” on the next screen.</string>
+    <string name="start_on_boot">Start after restart</string>
+    <string name="widget_opens_app">Widget opens the app</string>
+    <string name="widget_opens_app_sub">Instead of refreshing when tapped</string>
+    <string name="source_code">Source code</string>
+    <string name="disclaimer">Unofficial. Not affiliated with Octopus Energy. Built with help from Claude.</string>
+
+    <!-- Status and messages -->
+    <string name="not_started">Not running</string>
+    <string name="connecting">Connecting…</string>
+    <string name="stopped">Stopped</string>
+    <string name="key_required">Enter your API key or a relay address</string>
+    <string name="notify_denied">Notifications are off for this app. Turn them on in Settings to see live usage.</string>
+    <string name="saved_started">Saved. Live updates started</string>
+    <string name="saved_restarted">Saved</string>
+
+    <!-- Notifications, widget, tile -->
+    <string name="channel_name">Live usage</string>
+    <string name="channel_description">Ongoing notification with live electricity demand</string>
+    <string name="gas_channel_name">Warnings</string>
+    <string name="gas_channel_description">Gas left on, high electricity use, Home Mini offline</string>
     <string name="info_channel_name">Daily summary and prices</string>
     <string name="info_channel_description">Yesterday\'s use and cost, and cheap-electricity tips</string>
+    <string name="widget_description">Live electricity demand and today\'s usage</string>
+    <string name="widget_footer_placeholder">Tap to load</string>
     <string name="tile_label">Live electricity</string>
+    <string name="mute_until_off">Mute until off</string>
 </resources>

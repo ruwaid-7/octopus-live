@@ -325,6 +325,7 @@ class LiveService : Service() {
         val today = LocalDate.now()
         if (LocalTime.now().hour < prefs.summaryHour || prefs.str(K_SUMMARY_SENT) == today.toString()) return
         val y = d.history.firstOrNull { it.date == today.minusDays(1).toString() } ?: return
+        if (y.elecKwh <= 0) return   // no readings that day (e.g. Home Mini not set up yet)
         // Wait until yesterday's late gas readings have been collected (after 03:00)
         val complete = today.atStartOfDay(java.time.ZoneId.systemDefault()).plusHours(3).toInstant().toEpochMilli()
         if (y.fetchedAt < complete) return
@@ -338,7 +339,8 @@ class LiveService : Service() {
         val before = d.history.firstOrNull { it.date == today.minusDays(2).toString() }
         if (total > 0) {
             text += String.format(Locale.UK, " Total £%.2f", total)
-            val prevTotal = before?.let { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
+            // Only compare with a full day (a part day has no always-on figure), so % changes are fair
+            val prevTotal = before?.takeIf { it.baseW != null }?.let { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
             if (prevTotal != null && prevTotal > 0) {
                 val pct = Math.round((total - prevTotal) / prevTotal * 100)
                 text += when {

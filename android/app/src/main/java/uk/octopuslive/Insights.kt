@@ -250,6 +250,11 @@ class Insights(context: Context) {
     /** Fills the last 7 days, one day per call; re-fetches yesterday once its late gas readings are in. */
     private fun backfillOneDay(token: String) {
         val elecId = prefs.deviceId ?: return
+        // History saved by older versions counted empty days and part-day always-on; start it afresh
+        if (prefs.str(K_HISTORY_VER) != HISTORY_VER) {
+            prefs.setStr(K_HISTORY, null)
+            prefs.setStr(K_HISTORY_VER, HISTORY_VER)
+        }
         val today = LocalDate.now(zone)
         val history = loadHistory().associateBy { it.date }.toMutableMap()
 
@@ -267,13 +272,17 @@ class Insights(context: Context) {
         val gas = gasId?.let { id -> api.halfHourly(token, id, start, end).filter { it.first < end.toInstant().toEpochMilli() } }
 
         val dayStart = start.toInstant().toEpochMilli()
+        // No readings at all (e.g. before the Home Mini was set up): remember the day so it isn't
+        // fetched again, but with no usage or cost, so it doesn't count as a real day.
+        val noData = elec.isEmpty()
         history[missing.toString()] = DayStats(
             date = missing.toString(),
             elecKwh = elec.sumOf { it.second } / 1000.0,
-            gasKwh = gas?.let { g -> g.sumOf { it.second } / 1000.0 },
-            elecCost = cost(elec, rates(K_ELEC_RATES), rates(K_ELEC_STANDING), dayStart),
-            gasCost = gas?.let { cost(it, rates(K_GAS_RATES), rates(K_GAS_STANDING), dayStart) },
-            baseW = baseload(elec),
+            gasKwh = gas?.takeIf { it.isNotEmpty() }?.let { g -> g.sumOf { it.second } / 1000.0 },
+            elecCost = if (noData) null else cost(elec, rates(K_ELEC_RATES), rates(K_ELEC_STANDING), dayStart),
+            gasCost = gas?.takeIf { it.isNotEmpty() }?.let { cost(it, rates(K_GAS_RATES), rates(K_GAS_STANDING), dayStart) },
+            // Only a (nearly) full day gives a fair "always-on" figure; a part day may have no night-time
+            baseW = if (elec.size >= FULL_DAY_SLOTS) baseload(elec) else null,
             fetchedAt = System.currentTimeMillis(),
         )
         val keep = today.minusDays(7).toString()
@@ -390,6 +399,9 @@ class Insights(context: Context) {
             Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 
         private const val MIN_GAP_MS = 60_000L
+        private const val HISTORY_VER = "2"
+        private const val K_HISTORY_VER = "ins_historyVer"
+        private const val FULL_DAY_SLOTS = 44   // of 48 half-hours (allows for a few gaps)
         private const val TARIFF_EVERY_MS = 6 * 3600_000L   // notice a tariff switch within a few hours
         private const val RATES_EVERY_MS = 3 * 3600_000L
         private const val TODAY_EVERY_MS = 30 * 60_000L

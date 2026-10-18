@@ -40,8 +40,16 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         prefs = Prefs(this)
+        // New install: the welcome steps first (unless we were opened by a relay's "Open in Octopus Live" link)
+        val connectLink = intent?.data?.scheme == "octopuslive"
+        if (savedInstanceState == null && !connectLink && SetupActivity.needed(prefs)) {
+            startActivity(Intent(this, SetupActivity::class.java))
+            finish()
+            return
+        }
+        if (prefs.isConfigured) prefs.onboarded = true
+        setContentView(R.layout.activity_main)
 
         setUpNav()
         setUpAlerts()
@@ -73,6 +81,7 @@ class MainActivity : Activity() {
             .setPositiveButton("Connect") { _, _ ->
                 if (relay != prefs.relayUrl.orEmpty()) prefs.clearCachedApiState()
                 prefs.relayUrl = relay
+                prefs.onboarded = true
                 if (prefs.intervalSeconds > 15) prefs.intervalSeconds = 15
                 loadControls()
                 showTab(TAB_HOME)
@@ -179,7 +188,7 @@ class MainActivity : Activity() {
             findViewById<TextView>(R.id.homePromptBody).setText(if (setUp) R.string.setup_body else R.string.paused_body)
             findViewById<Button>(R.id.homePromptButton).apply {
                 setText(if (setUp) R.string.setup_button else R.string.paused_button)
-                setOnClickListener { if (setUp) showTab(TAB_SETTINGS) else startWithPermission() }
+                setOnClickListener { if (setUp) openSetup(SetupActivity.CHOOSE) else startWithPermission() }
             }
             return
         }
@@ -472,6 +481,8 @@ class MainActivity : Activity() {
         }
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
+        findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
+        findViewById<View>(R.id.rowSetupAgain).setOnClickListener { openSetup(SetupActivity.WELCOME) }
         findViewById<View>(R.id.rowSource).setOnClickListener {
             tryStart(Intent(Intent.ACTION_VIEW, Uri.parse(SOURCE_URL)), null)
         }
@@ -567,6 +578,11 @@ class MainActivity : Activity() {
         LiveService.start(this, LiveService.ACTION_REFRESH)
         Toast.makeText(this, if (wasRunning) R.string.saved_restarted else R.string.saved_started, Toast.LENGTH_SHORT).show()
         renderAll()
+    }
+
+    private fun openSetup(step: Int) {
+        saveAlertNumbers()
+        startActivity(Intent(this, SetupActivity::class.java).putExtra(SetupActivity.EXTRA_STEP, step))
     }
 
     // ================================================================= background running

@@ -80,6 +80,11 @@ class Prefs(context: Context) {
         get() = p.getBoolean("widgetOpensApp", false)
         set(v) = p.edit().putBoolean("widgetOpensApp", v).apply()
 
+    /** The first-run setup has been completed (or skipped by connecting another way). */
+    var onboarded: Boolean
+        get() = p.getBoolean("onboarded", false)
+        set(v) = p.edit().putBoolean("onboarded", v).apply()
+
     var startOnBoot: Boolean
         get() = p.getBoolean("boot", true)
         set(v) = p.edit().putBoolean("boot", v).apply()

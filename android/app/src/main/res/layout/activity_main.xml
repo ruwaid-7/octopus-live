@@ -725,6 +725,16 @@
                         android:maxLines="1"
                         android:textSize="14sp" />
                     <TextView style="@style/FieldHelp" android:text="@string/relay_help" />
+                    <TextView
+                        android:id="@+id/makeRelay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="4dp"
+                        android:text="@string/make_relay_link"
+                        android:textColor="@color/brand_pink"
+                        android:textSize="13sp" />
 
                     <TextView
                         style="@style/FieldLabel"
@@ -845,6 +855,25 @@
                     android:text="@string/section_about" />
 
                 <LinearLayout style="@style/ListCard">
+
+                    <LinearLayout
+                        android:id="@+id/rowSetupAgain"
+                        style="@style/Row"
+                        android:clickable="true"
+                        android:focusable="true">
+                        <LinearLayout style="@style/RowText">
+                            <TextView style="@style/RowTitle" android:text="@string/setup_again" />
+                            <TextView style="@style/RowSubtitle" android:text="@string/setup_again_sub" />
+                        </LinearLayout>
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+
+                    <View style="@style/RowDivider" />
 
                     <LinearLayout
                         android:id="@+id/rowSource"

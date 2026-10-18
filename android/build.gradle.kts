@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.application") version "8.13.0" apply false
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    // AGP 9 compiles Kotlin itself ("built-in Kotlin"), so there's no separate Kotlin plugin.
+    id("com.android.application") version "9.4.0" apply false
     // Code generator for the Gemini / AppFunctions integration
-    id("com.google.devtools.ksp") version "2.2.20-2.0.3" apply false
+    id("com.google.devtools.ksp") version "2.3.12" apply false
 }

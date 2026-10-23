@@ -26,9 +26,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
             <!-- "Open in Octopus Live" button on the relay's web page -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -37,12 +34,6 @@
                 <data android:scheme="octopuslive" android:host="connect" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".MeterDisplayActivity"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
-            android:exported="false"
-            android:label="@string/md_open" />
 
         <activity
             android:name=".AboutActivity"

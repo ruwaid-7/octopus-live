@@ -62,4 +62,11 @@
     <color name="gas_accent">#FFF07A2A</color>
     <color name="gas_banner_bg">#14F07A2A</color>
     <color name="warn_banner_bg">#14E5484D</color>
+
+    <!-- Flat tints for badges and banners (Home design) -->
+    <color name="tint_green">#141FA463</color>
+    <color name="tint_amber">#14E69A00</color>
+    <color name="tint_red">#14E5484D</color>
+    <color name="tint_orange">#14F07A2A</color>
+    <color name="tint_pink">#1AE8478B</color>
 </resources>

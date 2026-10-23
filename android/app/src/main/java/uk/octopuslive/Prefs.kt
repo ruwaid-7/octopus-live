@@ -80,6 +80,11 @@ class Prefs(context: Context) {
         get() = p.getBoolean("widgetOpensApp", false)
         set(v) = p.edit().putBoolean("widgetOpensApp", v).apply()
 
+    /** Daily budget in £ for the meter display (electricity + gas); 0 = none. */
+    var dailyBudget: Float
+        get() = p.getFloat("dailyBudget", 0f)
+        set(v) = p.edit().putFloat("dailyBudget", v).apply()
+
     /** The first-run setup has been completed (or skipped by connecting another way). */
     var onboarded: Boolean
         get() = p.getBoolean("onboarded", false)

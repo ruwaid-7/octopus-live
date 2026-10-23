@@ -190,18 +190,46 @@
     <!-- Home -->
     <string name="home_live_badge">Home Mini · Live</string>
     <string name="home_today_so_far">Today so far</string>
-    <string name="home_chart_title">24h electricity</string>
     <string name="home_base_sub">Baseload standby</string>
     <string name="home_gas_avg">30-min average · to %1$s</string>
     <string name="home_gas_avg_none">30-min average</string>
     <string name="home_gas_on_for">On for %1$s</string>
     <string name="home_gas_off">Off</string>
     <string name="home_since">since %1$s</string>
-    <string name="home_cadence">Every %1$s</string>
     <string name="home_next_price">%1$s from %2$s</string>
     <string name="home_elec_now">Electricity · Now</string>
-    <string name="home_gas_half_hourly">Gas · Half-hourly</string>
-    <string name="home_zone_low">Low load · under 0.5 kW</string>
-    <string name="home_zone_mid">Moderate load · 0.5–2 kW</string>
-    <string name="home_zone_high">High load · over 2 kW</string>
+    <string name="home_gas_chart_note">Half-hours to %1$s</string>
+    <string name="home_gas_chart_none">No gas readings yet today</string>
+
+    <!-- Usage, Alerts, Settings (card design) -->
+    <string name="step_less">Less</string>
+    <string name="step_more">More</string>
+    <string name="usage_halfhourly">Electricity · Half-hourly</string>
+    <string name="usage_total">Total energy</string>
+    <string name="usage_cost">Cost + standing</string>
+    <string name="usage_avg_rate">Avg rate</string>
+    <string name="usage_breakdown">Time-of-day breakdown</string>
+    <string name="usage_peak">%1$s–%2$s peak</string>
+    <string name="usage_night">Night (00:00–07:00)</string>
+    <string name="usage_day">Day (07:00–16:00)</string>
+    <string name="usage_peak_period">Peak (16:00–19:00)</string>
+    <string name="usage_evening">Evening (19:00–24:00)</string>
+    <string name="usage_no_gas_yet">No gas readings yet today. They arrive about an hour late.</string>
+    <string name="alert_threshold">Power threshold</string>
+    <string name="alert_duration">Sustained for</string>
+    <string name="alert_gas_run">On for at least</string>
+    <string name="alert_gas_note">Gas readings arrive about an hour late, so this can\'t detect a leak.</string>
+    <string name="alert_send_at">Send at</string>
+    <string name="alerts_recent">Recent alerts</string>
+    <string name="alerts_none">No alerts yet</string>
+    <string name="set_home_mini">Octopus Home Mini</string>
+    <string name="set_cadence">Updates</string>
+    <string name="set_connection">Connection</string>
+    <string name="set_last_reading">Last reading</string>
+    <string name="set_meters">Meters &amp; tariff</string>
+    <string name="set_mpan">Electricity MPAN</string>
+    <string name="set_mprn">Gas MPRN</string>
+    <string name="set_standing">Standing charge</string>
+    <string name="set_meters_help">Tap a meter number to show it in full.</string>
+    <string name="set_preferences">Preferences</string>
 </resources>

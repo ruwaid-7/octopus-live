@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- White knob, inset 4dp inside the 32dp track -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="32dp" android:height="32dp">
+        <shape android:shape="oval"><solid android:color="@android:color/transparent" /></shape>
+    </item>
+    <item android:left="4dp" android:top="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="oval"><solid android:color="#FFFFFFFF" /></shape>
+    </item>
+</layer-list>

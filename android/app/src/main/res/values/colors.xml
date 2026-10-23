@@ -69,4 +69,6 @@
     <color name="tint_red">#14E5484D</color>
     <color name="tint_orange">#14F07A2A</color>
     <color name="tint_pink">#1AE8478B</color>
+    <color name="switch_off">#FFD9D9E0</color>
+    <color name="evening">#FFA8770F</color>
 </resources>

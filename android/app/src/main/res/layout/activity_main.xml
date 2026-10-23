@@ -330,18 +330,6 @@
                                         android:textStyle="bold"
                                         tools:text="kW" />
                                 </LinearLayout>
-
-                                <TextView
-                                    android:id="@+id/homeZone"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:letterSpacing="0.02"
-                                    android:textColor="@color/elec_mid"
-                                    android:textSize="11sp"
-                                    android:textStyle="bold"
-                                    tools:text="Moderate load · 0.5–2 kW" />
                             </LinearLayout>
                         </FrameLayout>
 
@@ -367,15 +355,6 @@
                                 android:textSize="14sp"
                                 android:textStyle="bold"
                                 tools:text="About 31p an hour" />
-
-                            <TextView
-                                android:id="@+id/homeCadence"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/text_muted"
-                                android:textSize="11sp"
-                                tools:text="Every 15 sec" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -412,7 +391,7 @@
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
-                                android:text="@string/home_gas_half_hourly" />
+                                android:text="@string/legend_gas" />
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
@@ -661,57 +640,104 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:text="@string/home_chart_title"
-                                android:textColor="@color/text_muted"
-                                android:textSize="11sp" />
+                            <!-- Electricity | Gas switch (gas only if there's a gas meter) -->
+                            <LinearLayout
+                                android:id="@+id/homeChartSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="24dp"
+                                android:background="@drawable/bg_badge_delayed"
+                                android:orientation="horizontal"
+                                android:padding="2dp">
+
+                                <TextView
+                                    android:id="@+id/homeChartElec"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:gravity="center"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
+                                    android:text="@string/legend_elec"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="11sp" />
+
+                                <TextView
+                                    android:id="@+id/homeChartGas"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:gravity="center"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
+                                    android:text="@string/legend_gas"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
 
                             <View
-                                android:layout_width="6dp"
-                                android:layout_height="6dp"
-                                android:layout_marginStart="0dp"
-                                android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/elec_low" />
-                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="1dp"
+                                android:layout_weight="1" />
+
+                            <LinearLayout
+                                android:id="@+id/homeChartLegend"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="4dp"
-                                android:fontFamily="sans-serif-medium"
-                                android:text="&lt;0.5"
-                                android:textColor="@color/text_muted"
-                                android:textSize="10sp" />
-                            <View
-                                android:layout_width="6dp"
-                                android:layout_height="6dp"
-                                android:layout_marginStart="8dp"
-                                android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/elec_mid" />
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:layout_marginStart="0dp"
+                                    android:background="@drawable/bg_swatch"
+                                    android:backgroundTint="@color/elec_low" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:text="&lt;0.5"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="10sp" />
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@drawable/bg_swatch"
+                                    android:backgroundTint="@color/elec_mid" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:text="0.5–2"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="10sp" />
+                                <View
+                                    android:layout_width="6dp"
+                                    android:layout_height="6dp"
+                                    android:layout_marginStart="8dp"
+                                    android:background="@drawable/bg_swatch"
+                                    android:backgroundTint="@color/elec_high" />
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:text="2 kW+"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="10sp" />
+                            </LinearLayout>
+
                             <TextView
+                                android:id="@+id/homeChartNote"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="4dp"
                                 android:fontFamily="sans-serif-medium"
-                                android:text="0.5–2"
                                 android:textColor="@color/text_muted"
-                                android:textSize="10sp" />
-                            <View
-                                android:layout_width="6dp"
-                                android:layout_height="6dp"
-                                android:layout_marginStart="8dp"
-                                android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/elec_high" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="4dp"
-                                android:fontFamily="sans-serif-medium"
-                                android:text="2 kW+"
-                                android:textColor="@color/text_muted"
-                                android:textSize="10sp" />
+                                android:textSize="10sp"
+                                android:visibility="gone"
+                                tools:text="Half-hours to 22:30" />
                         </LinearLayout>
 
                         <uk.octopuslive.SlotBarsView
@@ -779,6 +805,7 @@
                             </LinearLayout>
 
                             <LinearLayout
+                                android:id="@+id/homePriceNextRow"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="5dp"
@@ -868,19 +895,22 @@
             style="@style/Page"
             android:visibility="gone">
 
-            <LinearLayout style="@style/PageContent">
+            <LinearLayout
+                style="@style/PageContent"
+                android:paddingStart="16dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="16dp">
 
                 <TextView
-                    style="@style/PageTitle"
+                    style="@style/TabHeader"
                     android:text="@string/tab_usage" />
 
                 <TextView
                     android:id="@+id/usageMessage"
-                    style="@style/RowSubtitle"
+                    style="@style/SRowSub"
                     android:layout_marginTop="12dp"
                     android:textSize="14sp"
-                    android:visibility="gone"
-                    tools:text="Add your API key in Settings to see costs, prices and history." />
+                    tools:text="Loading costs and history…" />
 
                 <LinearLayout
                     android:id="@+id/usageContent"
@@ -888,109 +918,325 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <!-- Week summary + chart -->
                     <LinearLayout
-                        style="@style/Card"
-                        android:layout_marginTop="20dp">
+                        style="@style/HCard"
+                        android:layout_marginTop="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/usageChartTitle"
+                                style="@style/Eyebrow"
+                                android:text="@string/usage_halfhourly" />
+
+                            <LinearLayout
+                                android:id="@+id/usageSwitch"
+                                android:layout_width="wrap_content"
+                                android:layout_height="26dp"
+                                android:background="@drawable/bg_badge_delayed"
+                                android:orientation="horizontal"
+                                android:padding="2dp">
+
+                                <TextView
+                                    android:id="@+id/usageElec"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:gravity="center"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
+                                    android:text="@string/legend_elec"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="11sp" />
+
+                                <TextView
+                                    android:id="@+id/usageGas"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="match_parent"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:gravity="center"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="10dp"
+                                    android:text="@string/legend_gas"
+                                    android:textColor="@color/text_muted"
+                                    android:textSize="11sp" />
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="0dp"
+                                android:layout_height="1dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/usageDate"
+                                android:layout_width="wrap_content"
+                                android:layout_height="22dp"
+                                android:background="@drawable/bg_badge_delayed"
+                                android:fontFamily="sans-serif-medium"
+                                android:gravity="center"
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp"
+                                tools:text="Today · 23 Oct" />
+                        </LinearLayout>
+
+                        <uk.octopuslive.SlotBarsView
+                            android:id="@+id/usageSlots"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp" />
+
+                        <LinearLayout
+                            android:id="@+id/usagePeakRow"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:background="@drawable/bg_strip"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingTop="10dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                android:id="@+id/usagePeakTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="12dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/text_primary"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                tools:text="21:30–22:00 peak" />
+
+                            <TextView
+                                android:id="@+id/usagePeakDetail"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="sans-serif-medium"
+                                android:gravity="end"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="13sp"
+                                tools:text="3.15 kW avg · 1.58 kWh · 39p" />
+                        </LinearLayout>
+
+                        <View
+                            style="@style/SDivider"
+                            android:layout_marginTop="14dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="start"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/SRowSub"
+                                    android:text="@string/usage_total"
+                                    android:layout_marginTop="0dp"
+                                    android:textColor="@color/text_secondary" />
+
+                                <TextView
+                                    android:id="@+id/usageTotal"
+                                    style="@style/SRowValue"
+                                    android:layout_marginTop="2dp"
+                                    android:textSize="18sp"
+                                    tools:text="8.42 kWh" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="start"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/SRowSub"
+                                    android:text="@string/usage_cost"
+                                    android:layout_marginTop="0dp"
+                                    android:textColor="@color/text_secondary" />
+
+                                <TextView
+                                    android:id="@+id/usageCost"
+                                    style="@style/SRowValue"
+                                    android:layout_marginTop="2dp"
+                                    android:textSize="18sp"
+                                    tools:text="£2.10" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:gravity="start"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    style="@style/SRowSub"
+                                    android:text="@string/usage_avg_rate"
+                                    android:layout_marginTop="0dp"
+                                    android:textColor="@color/text_secondary" />
+
+                                <TextView
+                                    android:id="@+id/usageAvg"
+                                    style="@style/SRowValue"
+                                    android:layout_marginTop="2dp"
+                                    android:textSize="18sp"
+                                    tools:text="24.9p/kWh" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/HCard"
+                        android:paddingBottom="8dp">
 
                         <TextView
-                            style="@style/Label"
-                            android:text="@string/this_week" />
+                            style="@style/Eyebrow"
+                            android:text="@string/usage_breakdown" />
 
-                        <TextView
-                            android:id="@+id/usageWeekCost"
-                            style="@style/Value"
-                            android:textSize="28sp"
-                            tools:text="£2.68" />
+                        <LinearLayout
+                            android:id="@+id/usageBreakdown"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="vertical" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/HCard">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                style="@style/Eyebrow"
+                                android:text="@string/this_week"
+                                android:layout_width="0dp"
+                                android:layout_weight="1" />
+
+                            <TextView
+                                android:id="@+id/usageWeekCost"
+                                style="@style/SRowValue"
+                                android:textSize="18sp"
+                                tools:text="£18.40" />
+                        </LinearLayout>
 
                         <TextView
                             android:id="@+id/usageWeekSub"
-                            style="@style/Muted"
-                            tools:text="Electricity 4.9 kWh · Gas 6.8 kWh" />
+                            style="@style/SRowSub"
+                            android:layout_marginTop="4dp"
+                            tools:text="Electricity 58 kWh · Gas 160 kWh" />
 
                         <uk.octopuslive.BarChartView
                             android:id="@+id/chartWeek"
                             android:layout_width="match_parent"
-                            android:layout_height="150dp"
-                            android:layout_marginTop="16dp" />
+                            android:layout_height="130dp"
+                            android:layout_marginTop="12dp" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
                             <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_dot"
+                                android:layout_width="7dp"
+                                android:layout_height="7dp"
+                                android:background="@drawable/bg_swatch"
                                 android:backgroundTint="@color/brand_pink" />
 
                             <TextView
-                                style="@style/Muted"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_marginStart="6dp"
-                                android:layout_marginTop="0dp"
-                                android:text="@string/legend_elec" />
+                                android:text="@string/legend_elec"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
 
                             <View
                                 android:id="@+id/legendGasDot"
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:layout_marginStart="16dp"
-                                android:background="@drawable/bg_dot"
+                                android:layout_width="7dp"
+                                android:layout_height="7dp"
+                                android:layout_marginStart="14dp"
+                                android:background="@drawable/bg_swatch"
                                 android:backgroundTint="@color/gas_accent" />
 
                             <TextView
                                 android:id="@+id/legendGas"
-                                style="@style/Muted"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                                 android:layout_marginStart="6dp"
-                                android:layout_marginTop="0dp"
-                                android:text="@string/legend_gas" />
+                                android:text="@string/legend_gas"
+                                android:textColor="@color/text_muted"
+                                android:textSize="11sp" />
                         </LinearLayout>
+
+                        <View
+                            style="@style/SDivider"
+                            android:layout_marginTop="14dp" />
+
+                        <LinearLayout
+                            android:id="@+id/usageDays"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
+
+                        <TextView
+                            android:id="@+id/usageNote"
+                            style="@style/SRowSub"
+                            android:text="@string/history_building"
+                            android:layout_marginTop="8dp"
+                            android:textSize="12sp" />
                     </LinearLayout>
 
-                    <!-- Day by day -->
-                    <TextView
-                        style="@style/SectionTitle"
-                        android:text="@string/daily" />
-
                     <LinearLayout
-                        android:id="@+id/usageDays"
-                        style="@style/ListCard" />
+                        style="@style/HCard">
 
-                    <TextView
-                        android:id="@+id/usageNote"
-                        style="@style/FieldHelp"
-                        android:layout_marginTop="8dp"
-                        android:paddingStart="4dp"
-                        android:text="@string/history_building" />
-
-                    <!-- Tariff -->
-                    <TextView
-                        style="@style/SectionTitle"
-                        android:text="@string/tariff" />
-
-                    <LinearLayout style="@style/Card">
+                        <TextView
+                            style="@style/Eyebrow"
+                            android:text="@string/tariff" />
 
                         <TextView
                             android:id="@+id/usageTariff"
-                            style="@style/RowTitle"
-                            android:fontFamily="sans-serif-medium"
-                            tools:text="Flexible Octopus" />
+                            style="@style/SRowValue"
+                            android:layout_marginTop="8dp"
+                            android:textSize="17sp"
+                            tools:text="Agile Octopus" />
 
                         <TextView
                             android:id="@+id/usageTariffCode"
-                            style="@style/Muted"
-                            tools:text="E-1R-VAR-22-11-01-M" />
+                            style="@style/SRowSub"
+                            android:fontFamily="monospace"
+                            android:textSize="12sp"
+                            tools:text="E-1R-AGILE-24-10-01-C" />
 
                         <TextView
                             android:id="@+id/usageTariffDetail"
-                            style="@style/RowSubtitle"
-                            android:layout_marginTop="10dp"
-                            android:lineSpacingExtra="4dp"
-                            android:textSize="14sp"
-                            tools:text="25.6p/kWh now\nAlways on: 36 W, about 315 kWh a year" />
+                            style="@style/SRowSub"
+                            android:layout_marginTop="8dp"
+                            android:lineSpacingExtra="3dp"
+                            android:textColor="@color/text_secondary"
+                            tools:text="25.6p/kWh now" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -1002,150 +1248,393 @@
             style="@style/Page"
             android:visibility="gone">
 
-            <LinearLayout style="@style/PageContent">
+            <LinearLayout
+                style="@style/PageContent"
+                android:paddingStart="16dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="16dp">
 
                 <TextView
-                    style="@style/PageTitle"
+                    style="@style/TabHeader"
                     android:text="@string/tab_alerts" />
 
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_warnings" />
+                <LinearLayout
+                    style="@style/HCard"
+                    android:layout_marginTop="2dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
 
-                <LinearLayout style="@style/ListCard">
+                    <LinearLayout
+                        style="@style/SRow"
+                        android:minHeight="48dp">
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/gas_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/gas_alert_sub" />
-                        </LinearLayout>
-                        <Switch
-                            android:id="@+id/swGas"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_bolt"
+                            android:tint="@color/elec_high" />
 
-                    <View style="@style/RowDivider" />
+                        <TextView
+                            style="@style/SRowTitle"
+                            android:layout_marginStart="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/high_alert"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/high_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/high_alert_sub" />
-                        </LinearLayout>
                         <Switch
                             android:id="@+id/swHigh"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/PinkSwitch" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/highOptions"
-                        style="@style/OptionsRow">
-                        <EditText
-                            android:id="@+id/highKw"
-                            style="@style/SmallInput"
-                            android:inputType="numberDecimal" />
-                        <TextView style="@style/OptionText" android:text="@string/kw_for" />
-                        <EditText
-                            android:id="@+id/highMinutes"
-                            style="@style/SmallInput"
-                            android:inputType="number" />
-                        <TextView style="@style/OptionText" android:text="@string/minutes" />
-                    </LinearLayout>
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                    <View style="@style/RowDivider" />
+                        <View style="@style/SDivider" />
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/offline_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/offline_alert_sub" />
+                        <LinearLayout
+                            style="@style/SRow">
+
+                            <TextView
+                                style="@style/SRowLabel"
+                                android:text="@string/alert_threshold" />
+
+                            <TextView
+                                android:id="@+id/highKwMinus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_less"
+                                android:text="−" />
+
+                            <TextView
+                                android:id="@+id/highKwValue"
+                                style="@style/StepValue"
+                                tools:text="3.0 kW" />
+
+                            <TextView
+                                android:id="@+id/highKwPlus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_more"
+                                android:text="+" />
                         </LinearLayout>
-                        <Switch
-                            android:id="@+id/swOffline"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
 
-                    <View style="@style/RowDivider" />
+                        <View style="@style/SDivider" />
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/sticky_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/sticky_alert_sub" />
+                        <LinearLayout
+                            style="@style/SRow">
+
+                            <TextView
+                                style="@style/SRowLabel"
+                                android:text="@string/alert_duration" />
+
+                            <TextView
+                                android:id="@+id/highMinMinus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_less"
+                                android:text="−" />
+
+                            <TextView
+                                android:id="@+id/highMinValue"
+                                style="@style/StepValue"
+                                tools:text="45 min" />
+
+                            <TextView
+                                android:id="@+id/highMinPlus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_more"
+                                android:text="+" />
                         </LinearLayout>
-                        <Switch
-                            android:id="@+id/swSticky"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_updates" />
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
 
-                <LinearLayout style="@style/ListCard">
+                    <LinearLayout
+                        style="@style/SRow"
+                        android:minHeight="48dp">
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/cheap_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/cheap_alert_sub" />
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_flame"
+                            android:tint="@color/gas_accent" />
+
+                        <TextView
+                            style="@style/SRowTitle"
+                            android:layout_marginStart="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/gas_alert"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
+                        <Switch
+                            android:id="@+id/swGas"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/gasOptions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <View style="@style/SDivider" />
+
+                        <LinearLayout
+                            style="@style/SRow">
+
+                            <TextView
+                                style="@style/SRowLabel"
+                                android:text="@string/alert_gas_run" />
+
+                            <TextView
+                                android:id="@+id/gasRunMinus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_less"
+                                android:text="−" />
+
+                            <TextView
+                                android:id="@+id/gasRunValue"
+                                style="@style/StepValue"
+                                tools:text="1.5 h" />
+
+                            <TextView
+                                android:id="@+id/gasRunPlus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_more"
+                                android:text="+" />
                         </LinearLayout>
+
+                        <TextView
+                            style="@style/SRowSub"
+                            android:text="@string/alert_gas_note"
+                            android:layout_marginBottom="8dp"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <LinearLayout
+                        style="@style/SRow"
+                        android:minHeight="48dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron_down_small"
+                            android:tint="@color/elec_low" />
+
+                        <TextView
+                            style="@style/SRowTitle"
+                            android:layout_marginStart="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/cheap_alert"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
                         <Switch
                             android:id="@+id/swCheap"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/PinkSwitch" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/cheapOptions"
-                        style="@style/OptionsRow">
-                        <TextView
-                            style="@style/OptionText"
-                            android:layout_marginStart="0dp"
-                            android:text="@string/at_or_below" />
-                        <EditText
-                            android:id="@+id/cheapPence"
-                            style="@style/SmallInput" />
-                        <TextView style="@style/OptionText" android:text="@string/pence_kwh" />
-                    </LinearLayout>
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
 
-                    <View style="@style/RowDivider" />
+                        <View style="@style/SDivider" />
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/summary_alert" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/summary_alert_sub" />
+                        <LinearLayout
+                            style="@style/SRow">
+
+                            <TextView
+                                style="@style/SRowLabel"
+                                android:text="@string/at_or_below" />
+
+                            <TextView
+                                android:id="@+id/cheapMinus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_less"
+                                android:text="−" />
+
+                            <TextView
+                                android:id="@+id/cheapValue"
+                                style="@style/StepValue"
+                                tools:text="0p" />
+
+                            <TextView
+                                android:id="@+id/cheapPlus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_more"
+                                android:text="+" />
                         </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp">
+
+                    <LinearLayout
+                        style="@style/SRow"
+                        android:minHeight="48dp">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_nav_usage"
+                            android:tint="@color/brand_pink" />
+
+                        <TextView
+                            style="@style/SRowTitle"
+                            android:layout_marginStart="12dp"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="@string/summary_alert"
+                            android:textSize="17sp"
+                            android:textStyle="bold" />
+
                         <Switch
                             android:id="@+id/swSummary"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/PinkSwitch" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/summaryOptions"
-                        style="@style/OptionsRow">
-                        <TextView
-                            style="@style/OptionText"
-                            android:layout_marginStart="0dp"
-                            android:text="@string/at_hour" />
-                        <EditText
-                            android:id="@+id/summaryHour"
-                            style="@style/SmallInput"
-                            android:inputType="number" />
-                        <TextView
-                            style="@style/OptionText"
-                            android:layout_marginStart="2dp"
-                            android:text="@string/oclock" />
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <View style="@style/SDivider" />
+
+                        <LinearLayout
+                            style="@style/SRow">
+
+                            <TextView
+                                style="@style/SRowLabel"
+                                android:text="@string/alert_send_at" />
+
+                            <TextView
+                                android:id="@+id/summaryMinus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_less"
+                                android:text="−" />
+
+                            <TextView
+                                android:id="@+id/summaryValue"
+                                style="@style/StepValue"
+                                tools:text="08:00" />
+
+                            <TextView
+                                android:id="@+id/summaryPlus"
+                                style="@style/StepBtn"
+                                android:contentDescription="@string/step_more"
+                                android:text="+" />
+                        </LinearLayout>
                     </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
+
+                    <LinearLayout
+                        style="@style/SRow">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/offline_alert"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/offline_alert_sub" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/swOffline"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        style="@style/SRow">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/sticky_alert"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/sticky_alert_sub" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/swSticky"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingBottom="8dp">
+
+                    <TextView
+                        style="@style/Eyebrow"
+                        android:text="@string/alerts_recent" />
+
+                    <LinearLayout
+                        android:id="@+id/alertsRecent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="vertical" />
                 </LinearLayout>
 
                 <TextView
                     style="@style/FieldHelp"
+                    android:text="@string/alerts_help"
                     android:layout_marginTop="12dp"
-                    android:paddingStart="4dp"
-                    android:text="@string/alerts_help" />
+                    android:paddingStart="4dp" />
             </LinearLayout>
         </ScrollView>
 
@@ -1155,39 +1644,230 @@
             style="@style/Page"
             android:visibility="gone">
 
-            <LinearLayout style="@style/PageContent">
+            <LinearLayout
+                style="@style/PageContent"
+                android:paddingStart="16dp"
+                android:paddingTop="0dp"
+                android:paddingEnd="16dp">
 
                 <TextView
-                    style="@style/PageTitle"
+                    style="@style/TabHeader"
                     android:text="@string/tab_settings" />
 
-                <!-- Live updates on/off -->
                 <LinearLayout
-                    style="@style/ListCard"
-                    android:layout_marginTop="20dp">
+                    style="@style/HCard"
+                    android:layout_marginTop="2dp"
+                    android:paddingBottom="8dp">
 
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/live_updates" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            style="@style/Eyebrow"
+                            android:text="@string/set_home_mini"
+                            android:layout_width="0dp"
+                            android:layout_weight="1" />
+
+                        <LinearLayout
+                            android:id="@+id/setStatusBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="22dp"
+                            android:background="@drawable/bg_live_pill"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp">
+
+                            <View
+                                android:id="@+id/setStatusDot"
+                                android:layout_width="5dp"
+                                android:layout_height="5dp"
+                                android:background="@drawable/bg_dot"
+                                android:backgroundTint="@color/elec_low" />
+
                             <TextView
-                                android:id="@+id/liveStatus"
-                                style="@style/RowSubtitle"
-                                tools:text="Running · via relay" />
+                                android:id="@+id/setStatusText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="5dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.05"
+                                android:textAllCaps="true"
+                                android:textColor="@color/elec_low"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                tools:text="Connected" />
                         </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/live_updates" />
+
                         <Switch
                             android:id="@+id/swLive"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
+                            style="@style/PinkSwitch" />
                     </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setCadenceRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_cadence" />
+
+                        <TextView
+                            android:id="@+id/setCadence"
+                            style="@style/SRowValue"
+                            tools:text="Every 10s (live)" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setConnectionRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_connection" />
+
+                        <TextView
+                            android:id="@+id/setConnection"
+                            style="@style/SRowValue"
+                            tools:text="Relay · energy.example" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setLastReadingRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_last_reading" />
+
+                        <TextView
+                            android:id="@+id/setLastReading"
+                            style="@style/SRowValue"
+                            tools:text="22:55" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/liveStatus"
+                        style="@style/SRowSub"
+                        android:layout_marginBottom="6dp"
+                        android:textColor="@color/elec_high"
+                        android:visibility="gone"
+                        tools:text="Problem: Too many requests" />
                 </LinearLayout>
 
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_connection" />
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingBottom="8dp">
 
-                <LinearLayout style="@style/Card">
+                    <TextView
+                        style="@style/Eyebrow"
+                        android:text="@string/set_meters" />
 
-                    <TextView style="@style/FieldLabel" android:text="@string/api_key" />
+                    <LinearLayout
+                        android:id="@+id/setTariffRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/tariff" />
+
+                        <TextView
+                            android:id="@+id/setTariff"
+                            style="@style/SRowValue"
+                            tools:text="Agile Octopus" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setMpanRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_mpan" />
+
+                        <TextView
+                            android:id="@+id/setMpan"
+                            style="@style/SRowValue"
+                            android:fontFamily="monospace"
+                            android:textStyle="normal"
+                            tools:text="20 •••• •••• 883" />
+                    </LinearLayout>
+
+                    <View
+                        android:id="@+id/setMprnDivider"
+                        style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setMprnRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_mprn" />
+
+                        <TextView
+                            android:id="@+id/setMprn"
+                            style="@style/SRowValue"
+                            android:fontFamily="monospace"
+                            android:textStyle="normal"
+                            tools:text="74 •••• 0394" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setStandingRow"
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/set_standing" />
+
+                        <TextView
+                            android:id="@+id/setStanding"
+                            style="@style/SRowValue"
+                            tools:text="48.2p/day (E) · 29.5p (G)" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/setMetersHelp"
+                        style="@style/SRowSub"
+                        android:text="@string/set_meters_help"
+                        android:layout_marginBottom="6dp"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    style="@style/HCard">
+
+                    <TextView
+                        style="@style/Eyebrow"
+                        android:text="@string/section_connection" />
+
+                    <TextView
+                        style="@style/FieldLabel"
+                        android:text="@string/api_key"
+                        android:layout_marginTop="14dp" />
+
                     <EditText
                         android:id="@+id/apiKey"
                         style="@style/InputField"
@@ -1198,6 +1878,7 @@
                         android:inputType="textPassword"
                         android:maxLines="1"
                         android:textSize="14sp" />
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -1231,8 +1912,9 @@
 
                     <TextView
                         style="@style/FieldLabel"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/relay_label" />
+                        android:text="@string/relay_label"
+                        android:layout_marginTop="14dp" />
+
                     <EditText
                         android:id="@+id/relayUrl"
                         style="@style/InputField"
@@ -1242,7 +1924,9 @@
                         android:inputType="textUri"
                         android:maxLines="1"
                         android:textSize="14sp" />
+
                     <TextView style="@style/FieldHelp" android:text="@string/relay_help" />
+
                     <TextView
                         android:id="@+id/makeRelay"
                         android:layout_width="wrap_content"
@@ -1256,8 +1940,9 @@
 
                     <TextView
                         style="@style/FieldLabel"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/account" />
+                        android:text="@string/account"
+                        android:layout_marginTop="14dp" />
+
                     <EditText
                         android:id="@+id/account"
                         style="@style/InputField"
@@ -1269,8 +1954,9 @@
 
                     <TextView
                         style="@style/FieldLabel"
-                        android:layout_marginTop="14dp"
-                        android:text="@string/interval" />
+                        android:text="@string/interval"
+                        android:layout_marginTop="14dp" />
+
                     <EditText
                         android:id="@+id/interval"
                         style="@style/InputField"
@@ -1278,35 +1964,102 @@
                         android:importantForAutofill="no"
                         android:inputType="number"
                         android:maxLines="1" />
+
                     <TextView style="@style/FieldHelp" android:text="@string/interval_help" />
 
                     <Button
                         android:id="@+id/save"
                         style="@style/PrimaryButton"
                         android:layout_width="match_parent"
-                        android:layout_height="48dp"
+                        android:layout_height="50dp"
                         android:layout_marginTop="16dp"
                         android:text="@string/save" />
                 </LinearLayout>
 
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_background" />
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp">
 
-                <LinearLayout style="@style/ListCard">
+                    <TextView
+                        style="@style/Eyebrow"
+                        android:text="@string/set_preferences"
+                        android:layout_marginTop="8dp" />
+
+                    <LinearLayout
+                        style="@style/SRow">
+
+                        <TextView
+                            style="@style/SRowLabel"
+                            android:text="@string/start_on_boot" />
+
+                        <Switch
+                            android:id="@+id/swBoot"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        style="@style/SRow">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/widget_opens_app"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/widget_opens_app_sub" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/swWidgetApp"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
 
                     <LinearLayout
                         android:id="@+id/rowBattery"
-                        style="@style/Row"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
                         android:clickable="true"
                         android:focusable="true">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/bg_battery" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/bg_battery"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
                             <TextView
                                 android:id="@+id/batteryState"
-                                style="@style/RowSubtitle"
+                                style="@style/SRowSub"
                                 tools:text="On" />
                         </LinearLayout>
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -1315,20 +2068,37 @@
                             android:tint="@color/text_muted" />
                     </LinearLayout>
 
-                    <View style="@style/RowDivider" />
+                    <View style="@style/SDivider" />
 
                     <LinearLayout
                         android:id="@+id/rowUnused"
-                        style="@style/Row"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
                         android:clickable="true"
                         android:focusable="true">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/bg_unused" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/bg_unused"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
                             <TextView
                                 android:id="@+id/unusedState"
-                                style="@style/RowSubtitle"
+                                style="@style/SRowSub"
                                 tools:text="On" />
                         </LinearLayout>
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -1338,54 +2108,45 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_general" />
+                <LinearLayout
+                    style="@style/HCard"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp">
 
-                <LinearLayout style="@style/ListCard">
-
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/start_on_boot" />
-                        </LinearLayout>
-                        <Switch
-                            android:id="@+id/swBoot"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
-
-                    <View style="@style/RowDivider" />
-
-                    <LinearLayout style="@style/Row">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/widget_opens_app" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/widget_opens_app_sub" />
-                        </LinearLayout>
-                        <Switch
-                            android:id="@+id/swWidgetApp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    style="@style/SectionTitle"
-                    android:text="@string/section_about" />
-
-                <LinearLayout style="@style/ListCard">
+                    <TextView
+                        style="@style/Eyebrow"
+                        android:text="@string/section_about"
+                        android:layout_marginTop="8dp" />
 
                     <LinearLayout
                         android:id="@+id/rowAbout"
-                        style="@style/Row"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
                         android:clickable="true"
                         android:focusable="true">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/about_row" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/about_row"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
                             <TextView
                                 android:id="@+id/aboutVersion"
-                                style="@style/RowSubtitle"
+                                style="@style/SRowSub"
                                 tools:text="Version 1.8.0" />
                         </LinearLayout>
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -1394,17 +2155,36 @@
                             android:tint="@color/text_muted" />
                     </LinearLayout>
 
-                    <View style="@style/RowDivider" />
+                    <View style="@style/SDivider" />
 
                     <LinearLayout
                         android:id="@+id/rowPrivacy"
-                        style="@style/Row"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
                         android:clickable="true"
                         android:focusable="true">
-                        <LinearLayout style="@style/RowText">
-                            <TextView style="@style/RowTitle" android:text="@string/about_privacy" />
-                            <TextView style="@style/RowSubtitle" android:text="@string/about_privacy_sub" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/about_privacy"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/about_privacy_sub" />
                         </LinearLayout>
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -1414,6 +2194,9 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp" />
             </LinearLayout>
         </ScrollView>
     </FrameLayout>

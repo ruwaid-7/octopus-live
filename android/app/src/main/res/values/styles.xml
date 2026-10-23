@@ -267,4 +267,110 @@
         <item name="android:textColor">@color/text_muted</item>
     </style>
 
+
+    <!-- ===== Card-and-row design (all tabs) ===== -->
+    <style name="HCard">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">10dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/bg_card18</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <style name="Eyebrow">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:letterSpacing">0.055</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TabHeader">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">54dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:letterSpacing">-0.02</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="SRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="SRowLabel">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_marginEnd">12dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="SRowTitle" parent="SRowLabel">
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="SRowSub">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:textSize">13sp</item>
+    </style>
+
+    <style name="SRowValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="SDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/divider_subtle</item>
+    </style>
+
+    <style name="StepBtn">
+        <item name="android:layout_width">34dp</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:background">@drawable/bg_step</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="StepValue" parent="SRowValue">
+        <item name="android:minWidth">76dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="PinkSwitch">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:thumb">@drawable/switch_thumb</item>
+        <item name="android:track">@drawable/switch_track</item>
+        <item name="android:thumbTint">@null</item>
+        <item name="android:trackTint">@null</item>
+        <item name="android:switchMinWidth">52dp</item>
+        <item name="android:showText">false</item>
+    </style>
 </resources>

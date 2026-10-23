@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Header pill when the reading is old -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/tint_amber" />
+    <corners android:radius="100dp" />
+    <stroke android:width="1dp" android:color="@color/elec_mid" />
+</shape>

@@ -36,14 +36,14 @@ class SlotBarsView @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (44 + 4 + 1 + 5 + 14).times(dp).toInt())
+        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (46 + 3 + 1 + 4 + 14).times(dp).toInt())
     }
 
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat()
         val gap = 2 * dp
         val barW = (w - gap * 47) / 48
-        val chartH = 44 * dp
+        val chartH = 46 * dp
         val base = chartH            // bars sit on this line; 4dp padding then the divider
         val peakKw = (kwh.maxOrNull() ?: 0.0) * 2
         val scaleKw = maxOf(3.4, peakKw)   // as in the design: 3.4 kW fills the chart unless the peak is higher
@@ -53,7 +53,7 @@ class SlotBarsView @JvmOverloads constructor(context: Context, attrs: AttributeS
             val h: Float
             if (kw == null) {
                 bar.color = future
-                h = chartH * 0.12f
+                h = chartH * 0.10f
             } else {
                 bar.color = if (kw < 0.5) low else if (kw < 2.0) mid else high
                 h = (chartH * (kw / scaleKw).toFloat()).coerceIn(chartH * 0.10f, chartH)
@@ -63,9 +63,9 @@ class SlotBarsView @JvmOverloads constructor(context: Context, attrs: AttributeS
             canvas.drawRoundRect(rect, r, r, bar)
             canvas.drawRect(x, base - minOf(h, r), x + barW, base, bar)   // square bottom corners
         }
-        val lineY = chartH + 4 * dp
+        val lineY = chartH + 3 * dp
         canvas.drawLine(0f, lineY, w, lineY, line)
-        val y = lineY + 5 * dp - axis.ascent()
+        val y = lineY + 4 * dp - axis.ascent()
         val labels = listOf("00:00", "06:00", "12:00", "18:00", "24:00")
         labels.forEachIndexed { i, s ->
             axis.textAlign = when (i) { 0 -> Paint.Align.LEFT; labels.size - 1 -> Paint.Align.RIGHT; else -> Paint.Align.CENTER }

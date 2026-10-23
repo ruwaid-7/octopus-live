@@ -184,10 +184,13 @@ class MainActivity : Activity() {
         dot.backgroundTintList = ColorStateList.valueOf(getColor(colour))
         statusText.text = label
         statusText.setTextColor(getColor(when (colour) {
-            R.color.elec_low -> R.color.text_secondary
+            R.color.elec_low -> R.color.text_primary
             R.color.nav_inactive -> R.color.text_muted
             else -> colour
         }))
+        // An old reading gets an amber outline and tint
+        findViewById<View>(R.id.homeStatus).setBackgroundResource(
+            if (colour == R.color.elec_mid) R.drawable.bg_status_delayed else R.drawable.bg_pill)
 
         // Set-up or paused prompt instead of the dashboard
         if (!prefs.isConfigured || (!prefs.running && r == null)) {
@@ -225,13 +228,23 @@ class MainActivity : Activity() {
         }
         setIfChanged(R.id.homeNow, num)
         setIfChanged(R.id.homeNowUnit, unit)
-        findViewById<GaugeBarView>(R.id.homeGauge).setWatts(watts)
+        findViewById<ArcGaugeView>(R.id.homeArc).setWatts(watts)
+        findViewById<TextView>(R.id.homeZone).apply {
+            val (zoneText, zoneColour) = when {
+                watts == null -> "" to R.color.text_muted
+                watts < 500 -> getString(R.string.home_zone_low) to R.color.elec_low
+                watts < 2000 -> getString(R.string.home_zone_mid) to R.color.elec_mid
+                else -> getString(R.string.home_zone_high) to R.color.elec_high
+            }
+            if (text.toString() != zoneText) text = zoneText
+            setTextColor(getColor(zoneColour))
+        }
         setIfChanged(R.id.homeNowSub, when {
             watts != null && ins?.priceNow != null -> "About ${money(watts / 1000.0 * ins.priceNow)} an hour"
             r != null -> "Meter reading at ${r.readAt}"
             else -> ""
         })
-        setIfChanged(R.id.homeCadence, getString(R.string.home_cadence, "${prefs.intervalSeconds} s"))
+        setIfChanged(R.id.homeCadence, getString(R.string.home_cadence, "${prefs.intervalSeconds} sec"))
 
         // Warning banners: what, then "since" on the right
         val gasOn = r?.gasTodayKwh != null && r.gasRunMinutes > 0
@@ -270,21 +283,14 @@ class MainActivity : Activity() {
         // 3. Today so far
         val total = listOfNotNull(ins?.elecCostToday, if (hasGas) ins?.gasCostToday else null).sum()
         setIfChanged(R.id.homeTodayTotal, if (ins?.elecCostToday != null) "${money(total * 100)} so far" else "")
-        setIfChanged(R.id.homeElecToday, listOfNotNull(
-            r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) },
-            ins?.elecCostToday?.let { money(it * 100) },
-        ).joinToString(" · ").ifEmpty { "—" })
+        ledger(R.id.homeElecToday, r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) } ?: "—",
+            ins?.elecCostToday?.let { money(it * 100) })
         if (hasGas && r != null) {
-            setIfChanged(R.id.homeGasToday, listOfNotNull(
-                String.format(Locale.UK, "%.1f kWh", r.gasTodayKwh),
-                ins?.gasCostToday?.let { money(it * 100) },
-            ).joinToString(" · "))
+            ledger(R.id.homeGasToday, String.format(Locale.UK, "%.1f kWh", r.gasTodayKwh),
+                ins?.gasCostToday?.let { money(it * 100) })
         }
         val slots = ins?.todaySlots.orEmpty()
         findViewById<SlotBarsView>(R.id.homeSlots).setSlots(slots)
-        setIfChanged(R.id.homePeak, slots.maxOrNull()?.takeIf { it > 0 }?.let {
-            getString(R.string.home_peak, String.format(Locale.UK, "%.1f", it * 2))
-        } ?: if (prefs.apiKey.isNullOrBlank()) costHint() else "")
 
         // 4. Price now (next price green with an arrow when it's lower) and always-on
         setIfChanged(R.id.homePrice, ins?.priceNow?.let { String.format(Locale.UK, "%.1fp", it) } ?: "—")
@@ -306,6 +312,21 @@ class MainActivity : Activity() {
     }
 
     private fun costHint(): String = if (prefs.apiKey.isNullOrBlank()) "Add API key for costs" else ""
+
+    /** "8.42 kWh · £2.10": the amount bold, the cost in the secondary colour. */
+    private fun ledger(id: Int, amount: String, cost: String?) {
+        val v = findViewById<TextView>(id)
+        val plain = amount + (cost?.let { " · $it" } ?: "")
+        if (v.text.toString() == plain) return
+        val sb = android.text.SpannableStringBuilder(amount)
+        sb.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, amount.length, 0)
+        if (cost != null) {
+            val start = sb.length
+            sb.append(" · ").append(cost)
+            sb.setSpan(android.text.style.ForegroundColorSpan(getColor(R.color.text_secondary)), start, sb.length, 0)
+        }
+        v.text = sb
+    }
 
     /** Only touches a TextView when its text really changes, so nothing flickers or re-lays out. */
     private fun setIfChanged(id: Int, value: String) {

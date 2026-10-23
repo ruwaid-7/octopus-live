@@ -52,6 +52,9 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         setUpNav()
+        findViewById<View>(R.id.homeMeter).setOnClickListener {
+            startActivity(Intent(this, MeterDisplayActivity::class.java))
+        }
         setUpAlerts()
         setUpSettings()
         tab = savedInstanceState?.getInt(K_TAB) ?: intent.getIntExtra(EXTRA_TAB, TAB_HOME)

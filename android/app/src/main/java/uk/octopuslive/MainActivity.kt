@@ -19,7 +19,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.ProgressBar
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -52,9 +51,6 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         setUpNav()
-        findViewById<View>(R.id.homeMeter).setOnClickListener {
-            startActivity(Intent(this, MeterDisplayActivity::class.java))
-        }
         setUpAlerts()
         setUpSettings()
         tab = savedInstanceState?.getInt(K_TAB) ?: intent.getIntExtra(EXTRA_TAB, TAB_HOME)
@@ -132,6 +128,9 @@ class MainActivity : Activity() {
     private val navIcons by lazy {
         listOf(R.id.navHomeIcon, R.id.navUsageIcon, R.id.navAlertsIcon, R.id.navSettingsIcon).map { findViewById<ImageView>(it) }
     }
+    private val navPills by lazy {
+        listOf(R.id.navHomePill, R.id.navUsagePill, R.id.navAlertsPill, R.id.navSettingsPill).map { findViewById<View>(it) }
+    }
     private val navLabels by lazy {
         listOf(R.id.navHomeLabel, R.id.navUsageLabel, R.id.navAlertsLabel, R.id.navSettingsLabel).map { findViewById<TextView>(it) }
     }
@@ -148,12 +147,15 @@ class MainActivity : Activity() {
             hideKeyboard()
         }
         tab = index
-        val active = ColorStateList.valueOf(getColor(R.color.text_primary))
+        // Selected tab: pink icon and label on a soft pink pill; the others muted
+        val active = ColorStateList.valueOf(getColor(R.color.brand_pink))
         val inactive = ColorStateList.valueOf(getColor(R.color.nav_inactive))
         pages.forEachIndexed { i, page -> page.visibility = if (i == index) View.VISIBLE else View.GONE }
         navIcons.forEachIndexed { i, icon -> icon.imageTintList = if (i == index) active else inactive }
+        navPills.forEachIndexed { i, pill -> pill.setBackgroundResource(if (i == index) R.drawable.bg_nav_active else 0) }
         navLabels.forEachIndexed { i, label ->
             label.setTextColor(if (i == index) active else inactive)
+            label.typeface = Typeface.create("sans-serif-medium", if (i == index) Typeface.BOLD else Typeface.NORMAL)
         }
     }
 
@@ -181,6 +183,11 @@ class MainActivity : Activity() {
         }
         dot.backgroundTintList = ColorStateList.valueOf(getColor(colour))
         statusText.text = label
+        statusText.setTextColor(getColor(when (colour) {
+            R.color.elec_low -> R.color.text_secondary
+            R.color.nav_inactive -> R.color.text_muted
+            else -> colour
+        }))
 
         // Set-up or paused prompt instead of the dashboard
         if (!prefs.isConfigured || (!prefs.running && r == null)) {
@@ -207,65 +214,90 @@ class MainActivity : Activity() {
         }
         dashboard.visibility = View.VISIBLE
 
-        // Hero: live watts
+        // 1. Electricity, live: number, unit, gauge, cost per hour
         val watts = r?.demandWatts
-        findViewById<TextView>(R.id.homeNow).text = watts?.let { LiveService.formatWatts(it) } ?: "—"
-        findViewById<TextView>(R.id.homeNowSub).text = when {
+        val live = colour == R.color.elec_low
+        findViewById<View>(R.id.homeLiveBadge).visibility = if (live) View.VISIBLE else View.INVISIBLE
+        val (num, unit) = when {
+            watts == null -> "—" to ""
+            watts < 1000 -> "$watts" to "W"
+            else -> String.format(Locale.UK, "%.2f", watts / 1000.0) to "kW"
+        }
+        setIfChanged(R.id.homeNow, num)
+        setIfChanged(R.id.homeNowUnit, unit)
+        findViewById<GaugeBarView>(R.id.homeGauge).setWatts(watts)
+        setIfChanged(R.id.homeNowSub, when {
             watts != null && ins?.priceNow != null -> "About ${money(watts / 1000.0 * ins.priceNow)} an hour"
             r != null -> "Meter reading at ${r.readAt}"
             else -> ""
-        }
-        findViewById<ProgressBar>(R.id.homeLevel).apply {
-            progress = ((watts ?: 0) / LEVEL_FULL_W * max).toInt().coerceIn(0, max)
-            progressTintList = ColorStateList.valueOf(getColor(levelColour(watts)))
-        }
+        })
+        setIfChanged(R.id.homeCadence, getString(R.string.home_cadence, "${prefs.intervalSeconds} s"))
 
-        // Banners
-        val gasOn = r?.gasTodayKwh != null && (r.gasRunMinutes) > 0
+        // Warning banners: what, then "since" on the right
+        val gasOn = r?.gasTodayKwh != null && r.gasRunMinutes > 0
         findViewById<View>(R.id.homeGasBanner).visibility = if (gasOn) View.VISIBLE else View.GONE
         if (gasOn && r != null) {
-            findViewById<TextView>(R.id.homeGasBannerText).text =
-                "Gas on for ${duration(r.gasRunMinutes)}" + (r.gasRunSince?.let { " · since $it" } ?: "")
+            setIfChanged(R.id.homeGasBannerText, "Gas on for ${duration(r.gasRunMinutes)}")
+            setIfChanged(R.id.homeGasBannerTime, r.gasRunSince?.let { getString(R.string.home_since, it) } ?: "")
         }
         val highSince = prefs.long(LiveService.K_HIGH_SINCE)
         val highMins = if (highSince > 0) (now - highSince) / 60_000 else 0
         val highOn = prefs.highAlert && watts != null && watts >= prefs.highKw * 1000 && highSince > 0 && highMins >= 1
         findViewById<View>(R.id.homeHighBanner).visibility = if (highOn) View.VISIBLE else View.GONE
         if (highOn) {
-            findViewById<TextView>(R.id.homeHighBannerText).text =
-                "Above ${trim(prefs.highKw.toDouble())} kW for ${duration(highMins.toInt())} · since ${Insights.formatTime(highSince)}"
+            setIfChanged(R.id.homeHighBannerText, "Above ${trim(prefs.highKw.toDouble())} kW for ${duration(highMins.toInt())}")
+            setIfChanged(R.id.homeHighBannerTime, getString(R.string.home_since, Insights.formatTime(highSince)))
         }
 
-        // Today tiles
-        findViewById<TextView>(R.id.homeElecKwh).text = r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) } ?: "—"
-        findViewById<TextView>(R.id.homeElecSub).text = ins?.elecCostToday?.let { money(it * 100) } ?: costHint()
-        val gasTile = findViewById<View>(R.id.homeGasTile)
-        if (r?.gasTodayKwh != null) {
-            gasTile.visibility = View.VISIBLE
-            findViewById<TextView>(R.id.homeGasKwh).text = String.format(Locale.UK, "%.2f kWh", r.gasTodayKwh)
-            findViewById<TextView>(R.id.homeGasSub).text = listOfNotNull(
+        // 2. Gas: average over the latest half-hour (arrives about an hour late)
+        val hasGas = r?.gasTodayKwh != null
+        findViewById<View>(R.id.homeGasCard).visibility = if (hasGas) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.homeGasTodayRow).visibility = if (hasGas) View.VISIBLE else View.GONE
+        if (hasGas && r != null) {
+            setIfChanged(R.id.homeGasAvgLabel, r.gasReadAt?.let { getString(R.string.home_gas_avg, it) } ?: getString(R.string.home_gas_avg_none))
+            setIfChanged(R.id.homeGasKw, r.gasKw?.let { String.format(Locale.UK, "%.1f", it) } ?: "0.0")
+            val on = r.gasRunMinutes > 0
+            val stateColour = getColor(if (on) R.color.gas_accent else R.color.text_muted)
+            findViewById<View>(R.id.homeGasStatePill).setBackgroundResource(if (on) R.drawable.bg_gas_on else R.drawable.bg_gas_off)
+            findViewById<View>(R.id.homeGasStateDot).backgroundTintList = ColorStateList.valueOf(stateColour)
+            findViewById<TextView>(R.id.homeGasStateText).apply {
+                setTextColor(stateColour)
+                val t = if (on) getString(R.string.home_gas_on_for, duration(r.gasRunMinutes)) else getString(R.string.home_gas_off)
+                if (text.toString() != t) text = t
+            }
+        }
+
+        // 3. Today so far
+        val total = listOfNotNull(ins?.elecCostToday, if (hasGas) ins?.gasCostToday else null).sum()
+        setIfChanged(R.id.homeTodayTotal, if (ins?.elecCostToday != null) "${money(total * 100)} so far" else "")
+        setIfChanged(R.id.homeElecToday, listOfNotNull(
+            r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) },
+            ins?.elecCostToday?.let { money(it * 100) },
+        ).joinToString(" · ").ifEmpty { "—" })
+        if (hasGas && r != null) {
+            setIfChanged(R.id.homeGasToday, listOfNotNull(
+                String.format(Locale.UK, "%.1f kWh", r.gasTodayKwh),
                 ins?.gasCostToday?.let { money(it * 100) },
-                r.gasReadAt?.let { "to $it" },
-            ).joinToString(" · ").ifEmpty { costHint() }
-        } else {
-            gasTile.visibility = View.GONE
+            ).joinToString(" · "))
         }
+        val slots = ins?.todaySlots.orEmpty()
+        findViewById<SlotBarsView>(R.id.homeSlots).setSlots(slots)
+        setIfChanged(R.id.homePeak, slots.maxOrNull()?.takeIf { it > 0 }?.let {
+            getString(R.string.home_peak, String.format(Locale.UK, "%.1f", it * 2))
+        } ?: if (prefs.apiKey.isNullOrBlank()) costHint() else "")
 
-        // Today chart
-        val total = listOfNotNull(ins?.elecCostToday, ins?.gasCostToday).sum()
-        findViewById<TextView>(R.id.homeTodayTotal).text = if (ins?.elecCostToday != null) "${money(total * 100)} so far" else ""
-        val labels = (0 until 48).map { if (it % 12 == 0) String.format(Locale.UK, "%02d:00", it / 2) else "" }
-        findViewById<BarChartView>(R.id.chartToday).setData(
-            listOf(ins?.todaySlots ?: emptyList()), listOf(getColor(R.color.brand_pink)), labels,
-            emptyText = if (prefs.apiKey.isNullOrBlank()) "Add your API key in Settings" else "No readings yet today",
-        )
-
-        // Price and always-on
-        findViewById<TextView>(R.id.homePrice).text = ins?.priceNow?.let { String.format(Locale.UK, "%.1fp", it) } ?: "—"
-        findViewById<TextView>(R.id.homePriceSub).text = if (ins?.priceNext != null && ins.priceNextAt != null) {
-            String.format(Locale.UK, "%.1fp from %s", ins.priceNext, Insights.formatTime(ins.priceNextAt))
-        } else "per kWh"
-        findViewById<TextView>(R.id.homeBase).text = ins?.baseW?.let { "$it W" } ?: "—"
+        // 4. Price now (next price green with an arrow when it's lower) and always-on
+        setIfChanged(R.id.homePrice, ins?.priceNow?.let { String.format(Locale.UK, "%.1fp", it) } ?: "—")
+        val next = if (ins?.priceNext != null && ins.priceNextAt != null)
+            getString(R.string.home_next_price, String.format(Locale.UK, "%.1fp", ins.priceNext), Insights.formatTime(ins.priceNextAt)) else null
+        val cheaper = ins?.priceNow != null && ins.priceNext != null && ins.priceNext < ins.priceNow
+        findViewById<View>(R.id.homePriceArrow).visibility = if (next != null && cheaper) View.VISIBLE else View.GONE
+        findViewById<TextView>(R.id.homePriceSub).apply {
+            setTextColor(getColor(if (cheaper) R.color.elec_low else R.color.text_muted))
+            val t = next ?: getString(R.string.md_per_kwh)
+            if (text.toString() != t) text = t
+        }
+        setIfChanged(R.id.homeBase, ins?.baseW?.let { "$it W" } ?: "—")
 
         findViewById<TextView>(R.id.homeError).apply {
             visibility = if (err != null && prefs.running) View.VISIBLE else View.GONE
@@ -274,6 +306,12 @@ class MainActivity : Activity() {
     }
 
     private fun costHint(): String = if (prefs.apiKey.isNullOrBlank()) "Add API key for costs" else ""
+
+    /** Only touches a TextView when its text really changes, so nothing flickers or re-lays out. */
+    private fun setIfChanged(id: Int, value: String) {
+        val v = findViewById<TextView>(id)
+        if (v.text.toString() != value) v.text = value
+    }
 
     // ================================================================= usage
 
@@ -639,12 +677,6 @@ class MainActivity : Activity() {
         else -> "${min / 60} h ${min % 60} min"
     }
 
-    private fun levelColour(w: Int?): Int = when {
-        w == null || w < 500 -> R.color.elec_low
-        w < 2000 -> R.color.elec_mid
-        else -> R.color.elec_high
-    }
-
     /** A friendly name for common Octopus tariff codes, e.g. E-1R-VAR-22-11-01-M -> Flexible Octopus. */
     private fun tariffName(code: String): String? {
         val c = code.uppercase(Locale.UK)
@@ -672,7 +704,6 @@ class MainActivity : Activity() {
         const val TAB_USAGE = 1
         const val TAB_ALERTS = 2
         const val TAB_SETTINGS = 3
-        private const val LEVEL_FULL_W = 3000.0   // the bar under the watts is full at 3 kW
         const val API_KEY_URL = "https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
         const val SOURCE_URL = "https://github.com/ruwaid-7/octopus-live"
     }

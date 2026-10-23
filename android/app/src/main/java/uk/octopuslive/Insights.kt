@@ -35,7 +35,13 @@ data class InsightsData(
     val priceNextAt: Long? = null,
     val elecCostToday: Double? = null,  // £
     val gasCostToday: Double? = null,
-    val todaySlots: List<Double> = emptyList(),   // kWh per half-hour since midnight
+    val todaySlots: List<Double> = emptyList(),   // kWh per half-hour since midnight, up to the current half-hour
+    val todayGasSlots: List<Double> = emptyList(),   // gas kWh per half-hour, up to the latest reading (about an hour late)
+    val todaySlotPence: List<Double?> = emptyList(), // electricity cost of each of todaySlots, in pence (null = price unknown)
+    val elecStanding: Double? = null,   // p/day
+    val gasStanding: Double? = null,    // p/day
+    val mpan: String? = null,
+    val mprn: String? = null,
     val baseW: Int? = null,
     val history: List<DayStats> = emptyList(),    // oldest first, up to 7 days, not including today
     val error: String? = null,
@@ -44,7 +50,10 @@ data class InsightsData(
         put("updated", updated); put("tariff", tariff)
         put("priceNow", priceNow); put("priceNext", priceNext); put("priceNextAt", priceNextAt)
         put("elecCostToday", elecCostToday); put("gasCostToday", gasCostToday)
-        put("todaySlots", JSONArray(todaySlots)); put("baseW", baseW); put("error", error)
+        put("todaySlots", JSONArray(todaySlots)); put("todayGasSlots", JSONArray(todayGasSlots))
+        put("todaySlotPence", JSONArray().apply { todaySlotPence.forEach { put(it ?: JSONObject.NULL) } })
+        put("elecStanding", elecStanding); put("gasStanding", gasStanding); put("mpan", mpan); put("mprn", mprn)
+        put("baseW", baseW); put("error", error)
         put("history", JSONArray().apply { history.forEach { put(dayToJson(it)) } })
     }.toString()
 
@@ -58,6 +67,12 @@ data class InsightsData(
                     priceNextAt = j.optNum("priceNextAt")?.toLong(),
                     elecCostToday = j.optNum("elecCostToday"), gasCostToday = j.optNum("gasCostToday"),
                     todaySlots = j.optJSONArray("todaySlots")?.let { a -> (0 until a.length()).map { a.optDouble(it, 0.0) } } ?: emptyList(),
+                    todayGasSlots = j.optJSONArray("todayGasSlots")?.let { a -> (0 until a.length()).map { a.optDouble(it, 0.0) } } ?: emptyList(),
+                    todaySlotPence = j.optJSONArray("todaySlotPence")?.let { a ->
+                        (0 until a.length()).map { if (a.isNull(it)) null else a.optDouble(it) }
+                    } ?: emptyList(),
+                    elecStanding = j.optNum("elecStanding"), gasStanding = j.optNum("gasStanding"),
+                    mpan = j.optStr("mpan"), mprn = j.optStr("mprn"),
                     baseW = j.optNum("baseW")?.toInt(),
                     history = j.optJSONArray("history").objects().map { dayFromJson(it) },
                     error = j.optStr("error"),
@@ -129,18 +144,24 @@ class Insights(context: Context) {
     // ---------------------------------------------------------------- tariff codes
 
     private fun ensureTariffs(token: String) {
-        if (prefs.str(K_ELEC_TARIFF) != null && System.currentTimeMillis() - prefs.long(K_TARIFF_AT) < TARIFF_EVERY_MS) return
+        if (prefs.str(K_ELEC_TARIFF) != null && prefs.str(K_MPAN) != null &&
+            System.currentTimeMillis() - prefs.long(K_TARIFF_AT) < TARIFF_EVERY_MS) return
         val account = prefs.accountNumber?.takeIf { it.isNotBlank() } ?: prefs.foundAccount ?: return
         val d = api.graphql(
             """query { account(accountNumber: "${api.clean(account)}") {
-              electricityAgreements(active: true) { meterPoint { direction agreements(includeInactive: true) { validFrom validTo tariff { ... on TariffType { productCode tariffCode } } } } }
-              gasAgreements(active: true) { meterPoint { agreements(includeInactive: true) { validFrom validTo tariff { tariffCode productCode } } } } } }""",
+              electricityAgreements(active: true) { meterPoint { mpan direction agreements(includeInactive: true) { validFrom validTo tariff { ... on TariffType { productCode tariffCode } } } } }
+              gasAgreements(active: true) { meterPoint { mprn agreements(includeInactive: true) { validFrom validTo tariff { tariffCode productCode } } } } } }""",
             token,
         )
         val acc = d.getJSONObject("account")
-        val elec = acc.optJSONArray("electricityAgreements").objects()
+        val elecPoints = acc.optJSONArray("electricityAgreements").objects()
             .mapNotNull { it.optJSONObject("meterPoint") }
             .filter { it.optString("direction") != "EXPORT" }
+        val gasPoints = acc.optJSONArray("gasAgreements").objects().mapNotNull { it.optJSONObject("meterPoint") }
+        // Meter numbers for Settings ("-" = none, so we don't ask again every time)
+        prefs.setStr(K_MPAN, elecPoints.firstNotNullOfOrNull { it.optString("mpan").takeIf { m -> m.isNotBlank() } } ?: "-")
+        prefs.setStr(K_MPRN, gasPoints.firstNotNullOfOrNull { it.optString("mprn").takeIf { m -> m.isNotBlank() } } ?: "-")
+        val elec = elecPoints
             .flatMap { it.optJSONArray("agreements").objects() }
             .let { currentAgreement(it) }
         val gas = acc.optJSONArray("gasAgreements").objects()
@@ -343,11 +364,25 @@ class Insights(context: Context) {
 
         val next = elecRates.firstOrNull { it.from > now && priceNow != null && Math.abs(it.p - priceNow) > 0.005 }
 
-        val slots = DoubleArray(48)
+        // Half-hours from midnight up to the current one (later ones haven't happened yet)
+        val nowSlot = ((now - dayStart) / (30 * 60_000L)).toInt().coerceIn(0, 47)
+        val slots = DoubleArray(nowSlot + 1)
+        val slotPence = arrayOfNulls<Double>(nowSlot + 1)
         for ((t, wh) in elecSlots) {
             val i = ((t - dayStart) / (30 * 60_000L)).toInt()
-            if (i in 0..47) slots[i] = wh / 1000.0
+            if (i in slots.indices) {
+                slots[i] = wh / 1000.0
+                slotPence[i] = rateAt(elecRates, t)?.let { wh / 1000.0 * it }
+            }
         }
+        // Gas: up to the latest half-hour Octopus has sent
+        val lastGas = gasSlots.maxOfOrNull { ((it.first - dayStart) / (30 * 60_000L)).toInt() }?.coerceIn(0, 47)
+        val gasArr = DoubleArray(if (hasGas && lastGas != null) lastGas + 1 else 0)
+        for ((t, wh) in gasSlots) {
+            val i = ((t - dayStart) / (30 * 60_000L)).toInt()
+            if (i in gasArr.indices) gasArr[i] = wh / 1000.0
+        }
+        val noon = dayStart + 12 * 3600_000L
         val completed = elecSlots.filter { it.first + 30 * 60_000L <= now }
 
         return InsightsData(
@@ -357,6 +392,12 @@ class Insights(context: Context) {
             priceNext = next?.p, priceNextAt = next?.from,
             elecCostToday = elecCost, gasCostToday = gasCost,
             todaySlots = slots.toList(),
+            todayGasSlots = gasArr.toList(),
+            todaySlotPence = slotPence.toList(),
+            elecStanding = rateAt(rates(K_ELEC_STANDING), noon),
+            gasStanding = if (hasGas) rateAt(rates(K_GAS_STANDING), noon) else null,
+            mpan = prefs.str(K_MPAN)?.takeIf { it != "-" },
+            mprn = prefs.str(K_MPRN)?.takeIf { it != "-" },
             baseW = baseload(completed),
             history = loadHistory(),
             error = error,
@@ -430,6 +471,8 @@ class Insights(context: Context) {
         private const val K_TODAY_AT = "ins_todayAt"
         private const val K_TODAY_ELEC = "ins_todayElec"
         private const val K_TODAY_GAS = "ins_todayGas"
+        private const val K_MPAN = "ins_mpan"
+        private const val K_MPRN = "ins_mprn"
         private const val K_HISTORY = "ins_history"
     }
 }

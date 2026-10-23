@@ -229,13 +229,13 @@ class LiveService : Service() {
     // ---------- gas and high-use warnings ----------
 
     /**
-     * Gas on for [GAS_ALERT_MINUTES] or more. With "keep warnings on screen" the notification stays
+     * Gas on for the chosen time (Prefs.gasAlertMinutes, 90 by default) or more. With "keep warnings on screen" the notification stays
      * (and is re-shown if swiped away) until the gas goes off or it's muted; otherwise it's sent
      * once per run and can be dismissed.
      */
     private fun checkGasAlert(r: Reading) {
         val nm = getSystemService(NotificationManager::class.java)
-        val on = prefs.gasAlert && r.gasTodayKwh != null && r.gasRunMinutes >= GAS_ALERT_MINUTES
+        val on = prefs.gasAlert && r.gasTodayKwh != null && r.gasRunMinutes >= prefs.gasAlertMinutes
         if (!on) {
             if (prefs.stickyWarnings) nm.cancel(GAS_NOTIF_ID)
             return
@@ -312,6 +312,7 @@ class LiveService : Service() {
             b.setAutoCancel(true)
         }
         getSystemService(NotificationManager::class.java).notify(id, b.build())
+        if (!quiet) AlertLog.add(this, id, title, text.substringBefore(". "))
     }
 
     // ---------- other warnings and notices ----------
@@ -329,6 +330,7 @@ class LiveService : Service() {
             .setGroup("$GROUP_PREFIX$id")
             .build()
         getSystemService(NotificationManager::class.java).notify(id, n)
+        AlertLog.add(this, id, title, text.substringBefore("\n"))
     }
 
     /** No new meter readings (or no contact at all) for 30 minutes. */

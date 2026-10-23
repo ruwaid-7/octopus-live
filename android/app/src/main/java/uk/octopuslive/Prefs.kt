@@ -137,6 +137,11 @@ class Prefs(context: Context) {
         get() = p.getBoolean("gasAlert", true)
         set(v) = p.edit().putBoolean("gasAlert", v).apply()
 
+    /** Warn when the gas has been on this long (minutes). */
+    var gasAlertMinutes: Int
+        get() = p.getInt("gasAlertMinutes", 90)
+        set(v) = p.edit().putInt("gasAlertMinutes", v).apply()
+
     var gasAlertSentFor: String?
         get() = p.getString("gasAlertSentFor", null)
         set(v) = p.edit().putString("gasAlertSentFor", v).apply()

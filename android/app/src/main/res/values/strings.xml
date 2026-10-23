@@ -188,16 +188,20 @@
     <string name="about_footer">Made by ruwaid-7 · MIT licence</string>
     <string name="md_per_kwh">per kWh</string>
     <!-- Home -->
-    <string name="home_live_badge">LIVE · HOME MINI</string>
+    <string name="home_live_badge">Home Mini · Live</string>
     <string name="home_today_so_far">Today so far</string>
-    <string name="home_chart_title">Electricity · half-hourly</string>
-    <string name="home_base_sub">Baseload · background</string>
+    <string name="home_chart_title">24h electricity</string>
+    <string name="home_base_sub">Baseload standby</string>
     <string name="home_gas_avg">30-min average · to %1$s</string>
     <string name="home_gas_avg_none">30-min average</string>
     <string name="home_gas_on_for">On for %1$s</string>
     <string name="home_gas_off">Off</string>
     <string name="home_since">since %1$s</string>
-    <string name="home_peak">Peak %1$s kW</string>
-    <string name="home_cadence">Updates every %1$s</string>
-    <string name="home_next_price">Next %1$s from %2$s</string>
+    <string name="home_cadence">Every %1$s</string>
+    <string name="home_next_price">%1$s from %2$s</string>
+    <string name="home_elec_now">Electricity · Now</string>
+    <string name="home_gas_half_hourly">Gas · Half-hourly</string>
+    <string name="home_zone_low">Low load · under 0.5 kW</string>
+    <string name="home_zone_mid">Moderate load · 0.5–2 kW</string>
+    <string name="home_zone_high">High load · over 2 kW</string>
 </resources>

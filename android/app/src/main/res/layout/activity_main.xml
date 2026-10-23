@@ -27,33 +27,48 @@
                 android:paddingTop="0dp"
                 android:paddingEnd="16dp">
 
-                <!-- Header: app name + live status (52dp) -->
+                <!-- Header (54dp): pink brand mark, app name, live status -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="52dp"
+                    android:layout_height="54dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:background="@drawable/bg_brand_mark">
+
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_gravity="center"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_bolt"
+                            android:tint="@color/brand_pink" />
+                    </FrameLayout>
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="9dp"
                         android:layout_weight="1"
                         android:fontFamily="sans-serif"
-                        android:letterSpacing="-0.015"
+                        android:letterSpacing="-0.02"
                         android:text="@string/app_name"
                         android:textColor="@color/text_primary"
-                        android:textSize="20sp"
+                        android:textSize="19sp"
                         android:textStyle="bold" />
 
                     <LinearLayout
                         android:id="@+id/homeStatus"
                         android:layout_width="wrap_content"
-                        android:layout_height="26dp"
+                        android:layout_height="28dp"
                         android:background="@drawable/bg_pill"
                         android:gravity="center_vertical"
                         android:orientation="horizontal"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp">
+                        android:paddingStart="11dp"
+                        android:paddingEnd="11dp">
 
                         <View
                             android:id="@+id/homeStatusDot"
@@ -68,8 +83,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
                             android:fontFamily="sans-serif-medium"
-                            android:textColor="@color/text_secondary"
+                            android:textColor="@color/text_primary"
                             android:textSize="12sp"
+                            android:textStyle="bold"
                             tools:text="Live · 22:55" />
                     </LinearLayout>
                 </LinearLayout>
@@ -111,23 +127,23 @@
                     android:id="@+id/homeDashboard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="2dp"
                     android:orientation="vertical">
 
-                    <!-- Warning banners (shown when needed) -->
+                    <!-- Warning banners (left accent rail), shown when needed -->
                     <LinearLayout
                         android:id="@+id/homeHighBanner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="6dp"
                         android:background="@drawable/bg_banner_elec"
                         android:gravity="center_vertical"
-                        android:minHeight="38dp"
+                        android:minHeight="36dp"
                         android:orientation="horizontal"
-                        android:paddingStart="12dp"
-                        android:paddingTop="8dp"
-                        android:paddingEnd="12dp"
-                        android:paddingBottom="8dp"
+                        android:paddingStart="14dp"
+                        android:paddingTop="7dp"
+                        android:paddingEnd="11dp"
+                        android:paddingBottom="7dp"
                         android:visibility="gone">
 
                         <ImageView
@@ -141,7 +157,7 @@
                             android:id="@+id/homeHighBannerText"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="7dp"
                             android:layout_weight="1"
                             android:fontFamily="sans-serif-medium"
                             android:textColor="@color/elec_high"
@@ -155,7 +171,7 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             tools:text="since 21:40" />
                     </LinearLayout>
 
@@ -163,15 +179,15 @@
                         android:id="@+id/homeGasBanner"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
+                        android:layout_marginBottom="6dp"
                         android:background="@drawable/bg_banner_gas2"
                         android:gravity="center_vertical"
-                        android:minHeight="38dp"
+                        android:minHeight="36dp"
                         android:orientation="horizontal"
-                        android:paddingStart="12dp"
-                        android:paddingTop="8dp"
-                        android:paddingEnd="12dp"
-                        android:paddingBottom="8dp"
+                        android:paddingStart="14dp"
+                        android:paddingTop="7dp"
+                        android:paddingEnd="11dp"
+                        android:paddingBottom="7dp"
                         android:visibility="gone">
 
                         <ImageView
@@ -185,7 +201,7 @@
                             android:id="@+id/homeGasBannerText"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
+                            android:layout_marginStart="7dp"
                             android:layout_weight="1"
                             android:fontFamily="sans-serif-medium"
                             android:textColor="@color/gas_accent"
@@ -199,15 +215,18 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="sans-serif-medium"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp"
+                            android:textSize="11sp"
                             tools:text="since 19:20" />
                     </LinearLayout>
 
-                    <!-- 1. Electricity, live -->
+                    <!-- 1. Electricity, live: 180° dial with the reading in the middle -->
                     <LinearLayout
                         style="@style/Card"
                         android:layout_marginTop="4dp"
-                        android:paddingTop="18dp">
+                        android:background="@drawable/bg_card18"
+                        android:gravity="center_horizontal"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="14dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -233,17 +252,17 @@
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
-                                android:text="@string/legend_elec" />
+                                android:text="@string/home_elec_now" />
 
                             <LinearLayout
                                 android:id="@+id/homeLiveBadge"
                                 android:layout_width="wrap_content"
-                                android:layout_height="20dp"
-                                android:background="@drawable/bg_badge_live"
+                                android:layout_height="22dp"
+                                android:background="@drawable/bg_live_pill"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingStart="7dp"
-                                android:paddingEnd="7dp">
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp">
 
                                 <View
                                     android:layout_width="5dp"
@@ -256,64 +275,87 @@
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="5dp"
                                     android:fontFamily="sans-serif-medium"
-                                    android:letterSpacing="0.03"
                                     android:text="@string/home_live_badge"
                                     android:textColor="@color/elec_low"
-                                    android:textSize="11sp"
-                                    android:textStyle="bold" />
+                                    android:textSize="11sp" />
                             </LinearLayout>
                         </LinearLayout>
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:baselineAligned="true"
-                            android:orientation="horizontal">
+                        <FrameLayout
+                            android:layout_width="264dp"
+                            android:layout_height="138dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginBottom="6dp">
 
-                            <TextView
-                                android:id="@+id/homeNow"
-                                android:layout_width="wrap_content"
-                                android:layout_height="48dp"
-                                android:fontFamily="sans-serif"
-                                android:fontFeatureSettings="tnum"
-                                android:includeFontPadding="false"
-                                android:letterSpacing="-0.027"
-                                android:textColor="@color/text_primary"
-                                android:textSize="44sp"
-                                android:textStyle="bold"
-                                tools:text="1.24" />
+                            <uk.octopuslive.ArcGaugeView
+                                android:id="@+id/homeArc"
+                                android:layout_width="264dp"
+                                android:layout_height="138dp" />
 
-                            <TextView
-                                android:id="@+id/homeNowUnit"
-                                android:layout_width="wrap_content"
+                            <LinearLayout
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="5dp"
-                                android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                tools:text="kW" />
-                        </LinearLayout>
+                                android:layout_gravity="bottom|center_horizontal"
+                                android:gravity="center_horizontal"
+                                android:orientation="vertical"
+                                android:paddingBottom="2dp">
 
-                        <uk.octopuslive.GaugeBarView
-                            android:id="@+id/homeGauge"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="14dp" />
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:baselineAligned="true"
+                                    android:orientation="horizontal">
 
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginTop="12dp"
-                            android:background="@color/divider_subtle" />
+                                    <TextView
+                                        android:id="@+id/homeNow"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:fontFamily="sans-serif"
+                                        android:fontFeatureSettings="tnum"
+                                        android:includeFontPadding="false"
+                                        android:letterSpacing="-0.03"
+                                        android:textColor="@color/text_primary"
+                                        android:textSize="46sp"
+                                        android:textStyle="bold"
+                                        tools:text="1.24" />
+
+                                    <TextView
+                                        android:id="@+id/homeNowUnit"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="4dp"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="20sp"
+                                        android:textStyle="bold"
+                                        tools:text="kW" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/homeZone"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="2dp"
+                                    android:fontFamily="sans-serif-medium"
+                                    android:letterSpacing="0.02"
+                                    android:textColor="@color/elec_mid"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    tools:text="Moderate load · 0.5–2 kW" />
+                            </LinearLayout>
+                        </FrameLayout>
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@drawable/bg_strip"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:paddingStart="12dp"
+                            android:paddingTop="9dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="9dp">
 
                             <TextView
                                 android:id="@+id/homeNowSub"
@@ -321,26 +363,28 @@
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/text_secondary"
+                                android:textColor="@color/text_primary"
                                 android:textSize="14sp"
+                                android:textStyle="bold"
                                 tools:text="About 31p an hour" />
 
                             <TextView
                                 android:id="@+id/homeCadence"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif"
+                                android:fontFamily="sans-serif-medium"
                                 android:textColor="@color/text_muted"
-                                android:textSize="12sp"
-                                tools:text="Updates every 15 s" />
+                                android:textSize="11sp"
+                                tools:text="Every 15 sec" />
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- 2. Gas, 30-minute average -->
+                    <!-- 2. Gas, half-hourly: 30-minute average, clearly delayed -->
                     <LinearLayout
                         android:id="@+id/homeGasCard"
                         style="@style/Card"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_card18"
                         android:paddingTop="14dp"
                         android:paddingBottom="14dp">
 
@@ -368,16 +412,16 @@
                                 android:textColor="@color/text_secondary"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
-                                android:text="@string/legend_gas" />
+                                android:text="@string/home_gas_half_hourly" />
 
                             <LinearLayout
                                 android:layout_width="wrap_content"
-                                android:layout_height="20dp"
+                                android:layout_height="22dp"
                                 android:background="@drawable/bg_badge_delayed"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingStart="7dp"
-                                android:paddingEnd="7dp">
+                                android:paddingStart="8dp"
+                                android:paddingEnd="8dp">
 
                                 <ImageView
                                     android:layout_width="11dp"
@@ -398,10 +442,16 @@
                             </LinearLayout>
                         </LinearLayout>
 
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="8dp"
+                            android:background="@color/divider_subtle" />
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="8dp"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
@@ -411,14 +461,13 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif"
                                 android:fontFeatureSettings="tnum"
-                                android:letterSpacing="-0.02"
+                                android:letterSpacing="-0.023"
                                 android:textColor="@color/text_primary"
                                 android:textSize="26sp"
                                 android:textStyle="bold"
                                 tools:text="8.4" />
 
                             <TextView
-                                android:id="@+id/homeGasKwUnit"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
@@ -426,20 +475,18 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:text="kW"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="15sp"
+                                android:textSize="14sp"
                                 android:textStyle="bold" />
 
                             <LinearLayout
                                 android:id="@+id/homeGasStatePill"
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_height="28dp"
                                 android:background="@drawable/bg_gas_on"
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal"
-                                android:paddingStart="9dp"
-                                android:paddingTop="4dp"
-                                android:paddingEnd="9dp"
-                                android:paddingBottom="4dp">
+                                android:paddingStart="10dp"
+                                android:paddingEnd="10dp">
 
                                 <View
                                     android:id="@+id/homeGasStateDot"
@@ -455,17 +502,18 @@
                                     android:layout_marginStart="6dp"
                                     android:fontFamily="sans-serif-medium"
                                     android:textColor="@color/gas_accent"
-                                    android:textSize="13sp"
+                                    android:textSize="12sp"
                                     android:textStyle="bold"
                                     tools:text="On for 1 h 30 min" />
                             </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- 3. Today so far -->
+                    <!-- 3. Today so far: a box per fuel, then the half-hour bars -->
                     <LinearLayout
                         style="@style/Card"
-                        android:layout_marginTop="12dp">
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_card18">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -481,7 +529,7 @@
                                 android:letterSpacing="0.055"
                                 android:textAllCaps="true"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="12sp"
+                                android:textSize="11sp"
                                 android:textStyle="bold"
                                 android:text="@string/home_today_so_far" />
 
@@ -491,7 +539,7 @@
                                 android:layout_height="wrap_content"
                                 android:fontFamily="sans-serif"
                                 android:fontFeatureSettings="tnum"
-                                android:letterSpacing="-0.015"
+                                android:letterSpacing="-0.017"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:textStyle="bold"
@@ -501,84 +549,116 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
-                            android:gravity="center_vertical"
+                            android:layout_marginTop="10dp"
+                            android:baselineAligned="false"
                             android:orientation="horizontal">
 
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/elec_mid" />
-
-                            <TextView
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="7dp"
                                 android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:text="@string/legend_elec"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="13sp" />
+                                android:background="@drawable/bg_ledger"
+                                android:orientation="vertical"
+                                android:paddingStart="10dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="8dp">
 
-                            <TextView
-                                android:id="@+id/homeElecToday"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif-medium"
-                                android:fontFeatureSettings="tnum"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                tools:text="8.42 kWh · £2.10" />
-                        </LinearLayout>
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
 
-                        <LinearLayout
-                            android:id="@+id/homeGasTodayRow"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                                    <View
+                                        android:layout_width="7dp"
+                                        android:layout_height="7dp"
+                                        android:background="@drawable/bg_swatch"
+                                        android:backgroundTint="@color/elec_mid" />
 
-                            <View
-                                android:layout_width="8dp"
-                                android:layout_height="8dp"
-                                android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/gas_accent" />
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:text="@string/legend_elec"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
 
-                            <TextView
+                                <TextView
+                                    android:id="@+id/homeElecToday"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:fontFamily="sans-serif"
+                                    android:fontFeatureSettings="tnum"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    tools:text="8.42 kWh · £2.10" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/homeGasTodayRow"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="7dp"
+                                android:layout_marginStart="8dp"
                                 android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:text="@string/legend_gas"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="13sp" />
+                                android:background="@drawable/bg_ledger"
+                                android:orientation="vertical"
+                                android:paddingStart="10dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="8dp">
 
-                            <TextView
-                                android:id="@+id/homeGasToday"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif-medium"
-                                android:fontFeatureSettings="tnum"
-                                android:textColor="@color/text_primary"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                tools:text="24.1 kWh · £1.45" />
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <View
+                                        android:layout_width="7dp"
+                                        android:layout_height="7dp"
+                                        android:background="@drawable/bg_swatch"
+                                        android:backgroundTint="@color/gas_accent" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:text="@string/legend_gas"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/homeGasToday"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:fontFamily="sans-serif"
+                                    android:fontFeatureSettings="tnum"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    tools:text="24.1 kWh · £1.45" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <View
                             android:layout_width="match_parent"
                             android:layout_height="1dp"
-                            android:layout_marginTop="14dp"
+                            android:layout_marginTop="12dp"
                             android:background="@color/divider_subtle" />
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="12dp"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center_vertical"
                             android:orientation="horizontal">
 
                             <TextView
@@ -590,28 +670,62 @@
                                 android:textColor="@color/text_muted"
                                 android:textSize="11sp" />
 
+                            <View
+                                android:layout_width="6dp"
+                                android:layout_height="6dp"
+                                android:layout_marginStart="0dp"
+                                android:background="@drawable/bg_swatch"
+                                android:backgroundTint="@color/elec_low" />
                             <TextView
-                                android:id="@+id/homePeak"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
                                 android:fontFamily="sans-serif-medium"
+                                android:text="&lt;0.5"
                                 android:textColor="@color/text_muted"
-                                android:textSize="11sp"
-                                tools:text="Peak 3.2 kW" />
+                                android:textSize="10sp" />
+                            <View
+                                android:layout_width="6dp"
+                                android:layout_height="6dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_swatch"
+                                android:backgroundTint="@color/elec_mid" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="0.5–2"
+                                android:textColor="@color/text_muted"
+                                android:textSize="10sp" />
+                            <View
+                                android:layout_width="6dp"
+                                android:layout_height="6dp"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/bg_swatch"
+                                android:backgroundTint="@color/elec_high" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:text="2 kW+"
+                                android:textColor="@color/text_muted"
+                                android:textSize="10sp" />
                         </LinearLayout>
 
                         <uk.octopuslive.SlotBarsView
                             android:id="@+id/homeSlots"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp" />
+                            android:layout_marginTop="6dp" />
                     </LinearLayout>
 
                     <!-- 4. Price now and always-on -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="10dp"
                         android:baselineAligned="false"
                         android:orientation="horizontal">
 
@@ -619,11 +733,11 @@
                             style="@style/Card"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
-                            android:layout_weight="1.25"
+                            android:layout_weight="1.28"
                             android:paddingStart="14dp"
-                            android:paddingTop="13dp"
+                            android:paddingTop="12dp"
                             android:paddingEnd="14dp"
-                            android:paddingBottom="13dp">
+                            android:paddingBottom="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -639,7 +753,7 @@
                             <LinearLayout
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
+                                android:layout_marginTop="4dp"
                                 android:baselineAligned="true"
                                 android:orientation="horizontal">
 
@@ -650,7 +764,7 @@
                                     android:fontFamily="sans-serif"
                                     android:fontFeatureSettings="tnum"
                                     android:textColor="@color/text_primary"
-                                    android:textSize="17sp"
+                                    android:textSize="18sp"
                                     android:textStyle="bold"
                                     tools:text="24.5p" />
 
@@ -686,8 +800,9 @@
                                     android:layout_height="wrap_content"
                                     android:fontFamily="sans-serif-medium"
                                     android:textColor="@color/elec_low"
-                                    android:textSize="12sp"
-                                    tools:text="Next 18.2p from 16:00" />
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    tools:text="18.2p from 16:00" />
                             </LinearLayout>
                         </LinearLayout>
 
@@ -696,11 +811,11 @@
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_marginStart="10dp"
-                            android:layout_weight="0.95"
+                            android:layout_weight="0.92"
                             android:paddingStart="14dp"
-                            android:paddingTop="13dp"
+                            android:paddingTop="12dp"
                             android:paddingEnd="14dp"
-                            android:paddingBottom="13dp">
+                            android:paddingBottom="12dp">
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -717,11 +832,11 @@
                                 android:id="@+id/homeBase"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
+                                android:layout_marginTop="4dp"
                                 android:fontFamily="sans-serif"
                                 android:fontFeatureSettings="tnum"
                                 android:textColor="@color/text_primary"
-                                android:textSize="17sp"
+                                android:textSize="18sp"
                                 android:textStyle="bold"
                                 tools:text="180 W" />
 
@@ -732,7 +847,7 @@
                                 android:fontFamily="sans-serif-medium"
                                 android:text="@string/home_base_sub"
                                 android:textColor="@color/text_muted"
-                                android:textSize="12sp" />
+                                android:textSize="11sp" />
                         </LinearLayout>
                     </LinearLayout>
 

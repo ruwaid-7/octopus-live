@@ -98,12 +98,17 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         OctopusWidget.updateAll(this)   // keep widgets in step with the installed version
+        resumed = true
         LiveService.listener = { _ -> runOnUiThread { renderAll() } }
         loadControls()
         renderAll()
     }
 
+    private var resumed = false
+
     override fun onPause() {
+        resumed = false
+        updateFlameAnimation()
         LiveService.listener = null
         super.onPause()
     }
@@ -166,6 +171,7 @@ class MainActivity : Activity() {
         pages.forEachIndexed { i, page -> page.visibility = if (i == index) View.VISIBLE else View.GONE }
         navIcons.forEachIndexed { i, icon -> icon.imageTintList = if (i == index) active else inactive }
         navPills.forEachIndexed { i, pill -> pill.setBackgroundResource(if (i == index) R.drawable.bg_nav_active else 0) }
+        updateFlameAnimation()
         navLabels.forEachIndexed { i, label ->
             label.setTextColor(if (i == index) active else inactive)
             label.typeface = Typeface.create("sans-serif-medium", if (i == index) Typeface.BOLD else Typeface.NORMAL)
@@ -246,16 +252,6 @@ class MainActivity : Activity() {
             else -> ""
         })
 
-        // High-use warning, centred under the dial
-        val highSince = prefs.long(LiveService.K_HIGH_SINCE)
-        val highMins = if (highSince > 0) (now - highSince) / 60_000 else 0
-        val highOn = prefs.highAlert && watts != null && watts >= prefs.highKw * 1000 && highSince > 0 && highMins >= 1
-        findViewById<View>(R.id.homeHighBanner).visibility = if (highOn) View.VISIBLE else View.GONE
-        if (highOn) {
-            setIfChanged(R.id.homeHighBannerText, "Above ${trim(prefs.highKw.toDouble())} kW for ${duration(highMins.toInt())}" +
-                " · since ${Insights.formatTime(highSince)}")
-        }
-
         // 2. Gas: average over the latest half-hour (arrives about an hour late)
         val hasGas = r?.gasTodayKwh != null
         findViewById<View>(R.id.homeGasCard).visibility = if (hasGas) View.VISIBLE else View.GONE
@@ -263,11 +259,8 @@ class MainActivity : Activity() {
         if (hasGas && r != null) {
             setIfChanged(R.id.homeGasAvgLabel, r.gasReadAt?.let { getString(R.string.home_gas_avg, it) } ?: getString(R.string.home_gas_avg_none))
             setIfChanged(R.id.homeGasKw, r.gasKw?.let { String.format(Locale.UK, "%.1f", it) } ?: "0.0")
-            // The flame is orange while the gas is on, grey when it's off
-            val on = r.gasRunMinutes > 0
-            findViewById<ImageView>(R.id.homeGasFlame).imageTintList =
-                ColorStateList.valueOf(getColor(if (on) R.color.gas_accent else R.color.switch_off))
-        }
+            setGasFlame(r.gasRunMinutes > 0)
+        } else setGasFlame(false)
 
         // Today so far (shown on Usage → Day)
         val total = listOfNotNull(ins?.elecCostToday, if (hasGas) ins?.gasCostToday else null).sum()
@@ -295,6 +288,50 @@ class MainActivity : Activity() {
         findViewById<TextView>(R.id.homeError).apply {
             visibility = if (err != null && prefs.running) View.VISIBLE else View.GONE
             text = "Couldn't update: $err"
+        }
+    }
+
+    // ---- Gas flame: flickers while the gas is on, an empty outline when it's off
+
+    private var gasOn = false
+    private var flameAnim: android.animation.ValueAnimator? = null
+
+    private fun setGasFlame(on: Boolean) {
+        val flame = findViewById<ImageView>(R.id.homeGasFlame)
+        if (on != gasOn || flame.tag == null) {
+            gasOn = on
+            flame.tag = on
+            flame.setImageResource(if (on) R.drawable.ic_flame else R.drawable.ic_flame_outline)
+            flame.imageTintList = ColorStateList.valueOf(getColor(if (on) R.color.gas_accent else R.color.text_muted))
+        }
+        updateFlameAnimation()
+    }
+
+    /** Runs only while the flame is on screen (Home tab, app open) and the gas is on. */
+    private fun updateFlameAnimation() {
+        val flame = findViewById<ImageView>(R.id.homeGasFlame)
+        val run = gasOn && resumed && tab == TAB_HOME
+        if (run && flameAnim == null) {
+            flame.post { flame.pivotX = flame.width / 2f; flame.pivotY = flame.height.toFloat() }
+            val start = android.os.SystemClock.uptimeMillis()
+            flameAnim = android.animation.ValueAnimator.ofFloat(0f, 1f).apply {
+                duration = 1000
+                repeatCount = android.animation.ValueAnimator.INFINITE
+                interpolator = android.view.animation.LinearInterpolator()
+                addUpdateListener {
+                    // A few out-of-step waves so it flickers like a real flame instead of pulsing
+                    val t = (android.os.SystemClock.uptimeMillis() - start) / 1000.0
+                    flame.scaleY = (1 + 0.07 * Math.sin(t * 7.1) + 0.03 * Math.sin(t * 13.3)).toFloat()
+                    flame.scaleX = (1 - 0.04 * Math.sin(t * 8.7 + 1)).toFloat()
+                    flame.rotation = (2.5 * Math.sin(t * 4.3)).toFloat()
+                    flame.alpha = (0.9 + 0.1 * Math.sin(t * 11.0)).toFloat()
+                }
+                start()
+            }
+        } else if (!run && flameAnim != null) {
+            flameAnim?.cancel()
+            flameAnim = null
+            flame.animate().scaleX(1f).scaleY(1f).rotation(0f).alpha(1f).setDuration(200).start()
         }
     }
 

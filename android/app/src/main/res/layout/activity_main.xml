@@ -212,39 +212,6 @@
                         </FrameLayout>
 
                         <LinearLayout
-                            android:id="@+id/homeHighBanner"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:background="@drawable/bg_high_pill"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:paddingStart="10dp"
-                            android:paddingTop="5dp"
-                            android:paddingEnd="12dp"
-                            android:paddingBottom="5dp"
-                            android:visibility="gone">
-
-                            <ImageView
-                                android:layout_width="13dp"
-                                android:layout_height="13dp"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_bolt"
-                                android:tint="@color/elec_high" />
-
-                            <TextView
-                                android:id="@+id/homeHighBannerText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:fontFamily="sans-serif-medium"
-                                android:textColor="@color/elec_high"
-                                android:textSize="12sp"
-                                android:textStyle="bold"
-                                tools:text="Above 3 kW for 50 min · since 21:40" />
-                        </LinearLayout>
-
-                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
@@ -1022,8 +989,8 @@
                         android:minHeight="48dp">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_bolt"
                             android:tint="@color/elec_high" />
@@ -1032,9 +999,7 @@
                             style="@style/SRowTitle"
                             android:layout_marginStart="12dp"
                             android:fontFamily="sans-serif-medium"
-                            android:text="@string/high_alert"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
+                            android:text="@string/high_alert" />
 
                         <Switch
                             android:id="@+id/swHigh"
@@ -1113,8 +1078,8 @@
                         android:minHeight="48dp">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_flame"
                             android:tint="@color/gas_accent" />
@@ -1123,9 +1088,7 @@
                             style="@style/SRowTitle"
                             android:layout_marginStart="12dp"
                             android:fontFamily="sans-serif-medium"
-                            android:text="@string/gas_alert"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
+                            android:text="@string/gas_alert" />
 
                         <Switch
                             android:id="@+id/swGas"
@@ -1183,8 +1146,8 @@
                         android:minHeight="48dp">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_chevron_down_small"
                             android:tint="@color/elec_low" />
@@ -1193,9 +1156,7 @@
                             style="@style/SRowTitle"
                             android:layout_marginStart="12dp"
                             android:fontFamily="sans-serif-medium"
-                            android:text="@string/cheap_alert"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
+                            android:text="@string/cheap_alert" />
 
                         <Switch
                             android:id="@+id/swCheap"
@@ -1247,8 +1208,8 @@
                         android:minHeight="48dp">
 
                         <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
                             android:contentDescription="@null"
                             android:src="@drawable/ic_nav_usage"
                             android:tint="@color/brand_pink" />
@@ -1257,9 +1218,7 @@
                             style="@style/SRowTitle"
                             android:layout_marginStart="12dp"
                             android:fontFamily="sans-serif-medium"
-                            android:text="@string/summary_alert"
-                            android:textSize="17sp"
-                            android:textStyle="bold" />
+                            android:text="@string/summary_alert" />
 
                         <Switch
                             android:id="@+id/swSummary"

@@ -67,7 +67,7 @@ class AboutActivity : Activity() {
             setPadding(px(14), px(14), px(14), px(14))
             background = GradientDrawable().apply { cornerRadius = 16 * dp; setColor(getColor(R.color.brand_pink)) }
         }, LinearLayout.LayoutParams(px(56), px(56)).apply { gravity = Gravity.CENTER_HORIZONTAL; topMargin = px(8) })
-        c.addView(text(getString(R.string.app_name), 22f, R.color.text_primary, medium = true).apply { gravity = Gravity.CENTER }, full(top = 14))
+        c.addView(TextView(this, null, 0, R.style.PageTitle).apply { text = getString(R.string.app_name); gravity = Gravity.CENTER }, full(top = 14))
         c.addView(text(getString(R.string.about_version, version), 14f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, full(top = 2))
         c.addView(text(getString(R.string.about_summary), 15f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, full(top = 14))
 

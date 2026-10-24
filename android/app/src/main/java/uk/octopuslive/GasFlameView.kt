@@ -34,7 +34,10 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val core = context.getColor(R.color.elec_mid)   // amber: the hot centre
     private val pale = 0xFFFFE08A.toInt()                     // pale yellow: hottest, at the base
     // Android 13+: real fire from a small shader; older phones draw flame tongues
-    private val fire: Any? = if (android.os.Build.VERSION.SDK_INT >= 33) FlameShader() else null
+    // (If the phone can't compile the shader, fall back to the tongues rather than crash.)
+    private var fire: Any? = if (android.os.Build.VERSION.SDK_INT >= 33) {
+        try { FlameShader() } catch (e: Throwable) { null }
+    } else null
     private val firePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val tongue = Path()
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -92,13 +95,17 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         if (on && fire != null && android.os.Build.VERSION.SDK_INT >= 33) {
             // Time wraps every 2 minutes so the noise keeps full precision
             val t = (((System.nanoTime() - started) / 1e9) % 120.0).toFloat()
-            val f = fire as FlameShader
-            f.update(dx, dy, 24 * s, t, pale, core, gas)
-            firePaint.shader = f.shader
-            canvas.save()
-            canvas.clipPath(scaled)
-            canvas.drawRect(dx, dy, dx + 24 * s, dy + 24 * s, firePaint)
-            canvas.restore()
+            try {
+                val f = fire as FlameShader
+                f.update(dx, dy, 24 * s, t, pale, core, gas)
+                firePaint.shader = f.shader
+                canvas.save()
+                canvas.clipPath(scaled)
+                canvas.drawRect(dx, dy, dx + 24 * s, dy + 24 * s, firePaint)
+                canvas.restore()
+            } catch (e: Throwable) {
+                fire = null   // use the tongues from the next frame
+            }
         } else if (on) {
             val t = ((System.nanoTime() - started) / 1e9).toFloat()
             canvas.save()

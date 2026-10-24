@@ -142,8 +142,8 @@ limited", raise the interval. Please don't set it lower than 60.
 ## Choose your setup
 
 **Most people don't need anything else:** the Android app (or the Rainmeter skin) talks to
-Octopus directly with just your API key. Add a relay only if you want several devices, 10-second
-updates, or Home Assistant.
+Octopus directly with just your API key. Add a relay only if you want several devices or Home
+Assistant.
 
 | Setup | Best for | What talks to Octopus |
 |---|---|---|
@@ -287,7 +287,9 @@ excellent.)
 ## How it works
 
 The Home Mini reads your smart meter about every 10 seconds and uploads the readings to Octopus.
-Octopus makes them available through its GraphQL API:
+Octopus makes them available through its GraphQL API, which allows about 100 requests an hour, so
+the app (or relay) gets a new reading about **once a minute**. The in-home display that came with
+your meter reads the meter directly, so it will usually be a minute or two ahead:
 
 1. Exchange the API key for a short-lived token (`obtainKrakenToken`) — cached ~50 minutes.
 2. Find the meter's device ID from the account (`account → electricityAgreements → meters`) — cached.

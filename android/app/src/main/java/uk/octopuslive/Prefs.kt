@@ -231,7 +231,7 @@ class Prefs(context: Context) {
 
     /** True when there's an API key or a home server to read from. */
     val isConfigured: Boolean
-        get() = !apiKey.isNullOrBlank() || !relayUrl.isNullOrBlank()
+        get() = !apiKey.isNullOrBlank() || !relayUrl.isNullOrBlank() || devMode   // test data needs no key
 
     fun clearCachedApiState() {
         p.edit().remove("token").remove("tokenExpires").remove("deviceId")

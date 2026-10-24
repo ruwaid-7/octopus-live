@@ -24,10 +24,6 @@ Readings, prices and costs come from Octopus and can be late, incomplete or diff
 
 Gas readings arrive about an hour late, so the gas warning can't detect a leak. If you smell gas in the UK, call the National Gas Emergency Service on 0800 111 999.
 
-## How it was made
-
-Octopus Live was built with help from Claude, an AI assistant, and is reviewed and tested by the developer.
-
 ## No warranty
 
 The app is provided "as is", without warranty of any kind. As far as the law allows, the developer isn't liable for any loss or damage from using it.

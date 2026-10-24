@@ -184,7 +184,7 @@
     <string name="about_licences">Open-source licences</string>
     <string name="about_licences_sub">The projects this app is built on</string>
     <string name="about_disclaimer">Disclaimer</string>
-    <string name="about_disclaimer_body">Octopus Live is an independent project. It isn\'t made, endorsed or supported by Octopus Energy. Octopus Energy and Octopus Home Mini are trademarks of Octopus Energy Group, used only to say what the app works with.\n\nReadings and costs are estimates from Octopus and can differ from your bill. The gas warning isn\'t a safety device: if you smell gas in the UK, call 0800 111 999.\n\nBuilt with help from Claude, an AI assistant, and reviewed and tested by the developer.</string>
+    <string name="about_disclaimer_body">Octopus Live is an independent project. It isn\'t made, endorsed or supported by Octopus Energy. Octopus Energy and Octopus Home Mini are trademarks of Octopus Energy Group, used only to say what the app works with.\n\nReadings and costs are estimates from Octopus and can differ from your bill. The gas warning isn\'t a safety device: if you smell gas in the UK, call 0800 111 999.</string>
     <string name="about_footer">Made by ruwaid-7 · MIT licence</string>
     <string name="md_per_kwh">per kWh</string>
     <!-- Home -->

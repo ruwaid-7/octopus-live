@@ -12,10 +12,6 @@ Octopus Home Mini you already have.
 
 > **Unofficial.** This project is not made, endorsed or supported by Octopus Energy. It uses the
 > public [Octopus Energy API](https://developer.octopus.energy/) with your own API key.
->
-> **Built with AI help.** Much of the code was written with [Claude](https://claude.ai), Anthropic's
-> AI assistant. The design, testing and decisions are mine. Everything is open source, so you can
-> read exactly what it does before you install it.
 
 **Gas:** if you have a smart gas meter, both apps also show today's gas usage in kWh and a **gas
 bar** next to the electricity bar. Gas meters only send a reading every 30 minutes, so the gas bar

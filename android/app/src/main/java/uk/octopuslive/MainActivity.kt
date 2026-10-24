@@ -291,27 +291,19 @@ class MainActivity : Activity() {
         }
     }
 
-    // ---- Gas flame (design by Gemini): a gently moving flame while the gas is on, an outline when it's off
+    // ---- Gas flame: an outline, filled with moving "gas" while the gas is on
 
     private var gasOn = false
 
     private fun setGasFlame(on: Boolean) {
-        val flame = findViewById<ImageView>(R.id.homeGasFlame)
-        if (on != gasOn || flame.tag == null) {
-            gasOn = on
-            flame.tag = on
-            flame.setImageResource(if (on) R.drawable.avd_gas_flame_live else R.drawable.ic_gas_flame_off)
-            flame.imageTintList = ColorStateList.valueOf(getColor(if (on) R.color.gas_accent else R.color.text_muted))
-        }
+        gasOn = on
+        findViewById<GasFlameView>(R.id.homeGasFlame).on = on
         updateFlameAnimation()
     }
 
-    /** Animates only while the flame is on screen (Home tab, app open) and the gas is on. */
+    /** Moves only while the flame is on screen (Home tab, app open) and the gas is on. */
     private fun updateFlameAnimation() {
-        val avd = findViewById<ImageView>(R.id.homeGasFlame).drawable as? android.graphics.drawable.Animatable ?: return
-        val run = gasOn && resumed && tab == TAB_HOME
-        if (run && !avd.isRunning) avd.start()
-        else if (!run && avd.isRunning) avd.stop()
+        findViewById<GasFlameView>(R.id.homeGasFlame).running = gasOn && resumed && tab == TAB_HOME
     }
 
     private fun costHint(): String = if (prefs.apiKey.isNullOrBlank()) "Add API key for costs" else ""

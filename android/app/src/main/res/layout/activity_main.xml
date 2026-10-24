@@ -250,14 +250,11 @@
                             style="@style/Eyebrow"
                             android:text="@string/legend_gas" />
 
-                        <ImageView
+                        <uk.octopuslive.GasFlameView
                             android:id="@+id/homeGasFlame"
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:layout_marginTop="12dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_flame"
-                            android:tint="@color/gas_accent" />
+                            android:layout_width="72dp"
+                            android:layout_height="72dp"
+                            android:layout_marginTop="10dp" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"

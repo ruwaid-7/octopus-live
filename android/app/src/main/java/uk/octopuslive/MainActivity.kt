@@ -291,48 +291,27 @@ class MainActivity : Activity() {
         }
     }
 
-    // ---- Gas flame: flickers while the gas is on, an empty outline when it's off
+    // ---- Gas flame (design by Gemini): a gently moving flame while the gas is on, an outline when it's off
 
     private var gasOn = false
-    private var flameAnim: android.animation.ValueAnimator? = null
 
     private fun setGasFlame(on: Boolean) {
         val flame = findViewById<ImageView>(R.id.homeGasFlame)
         if (on != gasOn || flame.tag == null) {
             gasOn = on
             flame.tag = on
-            flame.setImageResource(if (on) R.drawable.ic_flame else R.drawable.ic_flame_outline)
+            flame.setImageResource(if (on) R.drawable.avd_gas_flame_live else R.drawable.ic_gas_flame_off)
             flame.imageTintList = ColorStateList.valueOf(getColor(if (on) R.color.gas_accent else R.color.text_muted))
         }
         updateFlameAnimation()
     }
 
-    /** Runs only while the flame is on screen (Home tab, app open) and the gas is on. */
+    /** Animates only while the flame is on screen (Home tab, app open) and the gas is on. */
     private fun updateFlameAnimation() {
-        val flame = findViewById<ImageView>(R.id.homeGasFlame)
+        val avd = findViewById<ImageView>(R.id.homeGasFlame).drawable as? android.graphics.drawable.Animatable ?: return
         val run = gasOn && resumed && tab == TAB_HOME
-        if (run && flameAnim == null) {
-            flame.post { flame.pivotX = flame.width / 2f; flame.pivotY = flame.height.toFloat() }
-            val start = android.os.SystemClock.uptimeMillis()
-            flameAnim = android.animation.ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = 1000
-                repeatCount = android.animation.ValueAnimator.INFINITE
-                interpolator = android.view.animation.LinearInterpolator()
-                addUpdateListener {
-                    // A few out-of-step waves so it flickers like a real flame instead of pulsing
-                    val t = (android.os.SystemClock.uptimeMillis() - start) / 1000.0
-                    flame.scaleY = (1 + 0.07 * Math.sin(t * 7.1) + 0.03 * Math.sin(t * 13.3)).toFloat()
-                    flame.scaleX = (1 - 0.04 * Math.sin(t * 8.7 + 1)).toFloat()
-                    flame.rotation = (2.5 * Math.sin(t * 4.3)).toFloat()
-                    flame.alpha = (0.9 + 0.1 * Math.sin(t * 11.0)).toFloat()
-                }
-                start()
-            }
-        } else if (!run && flameAnim != null) {
-            flameAnim?.cancel()
-            flameAnim = null
-            flame.animate().scaleX(1f).scaleY(1f).rotation(0f).alpha(1f).setDuration(200).start()
-        }
+        if (run && !avd.isRunning) avd.start()
+        else if (!run && avd.isRunning) avd.stop()
     }
 
     private fun costHint(): String = if (prefs.apiKey.isNullOrBlank()) "Add API key for costs" else ""

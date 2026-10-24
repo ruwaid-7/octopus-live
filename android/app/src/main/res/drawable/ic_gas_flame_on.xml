@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Gas on: outer plume (28% opacity) and solid inner core. Single colour, tinted in code. Design by Gemini. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Outer plume: pivots from the burner base -->
+    <group
+        android:name="outer_group"
+        android:pivotX="12.0"
+        android:pivotY="21.5">
+        <path
+            android:name="outer_path"
+            android:fillAlpha="0.28"
+            android:fillColor="#FF000000"
+            android:pathData="M 12.0,21.5 C 8.0,21.5 5.5,18.4 5.5,14.2 C 5.5,9.6 9.8,5.8 12.2,2.2 C 13.0,5.2 13.8,6.8 13.4,8.6 C 14.8,7.5 15.6,6.1 15.8,4.8 C 17.6,7.6 18.5,10.9 18.5,14.2 C 18.5,18.4 16.0,21.5 12.0,21.5 Z" />
+    </group>
+    <!-- Inner core -->
+    <group
+        android:name="inner_group"
+        android:pivotX="12.0"
+        android:pivotY="21.0">
+        <path
+            android:name="inner_path"
+            android:fillAlpha="1.0"
+            android:fillColor="#FF000000"
+            android:pathData="M 12.0,21.0 C 9.6,21.0 8.2,19.0 8.2,16.2 C 8.2,13.2 10.4,10.8 12.1,8.2 C 13.6,10.8 15.8,13.2 15.8,16.2 C 15.8,19.0 14.4,21.0 12.0,21.0 Z" />
+    </group>
+</vector>

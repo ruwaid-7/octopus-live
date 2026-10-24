@@ -36,7 +36,25 @@ class OctopusApi(context: Context) {
 
     private val prefs = Prefs(context)
 
-    fun fetch(): Reading {
+    fun fetch(): Reading = try {
+        fetchAny()
+    } catch (e: Exception) {
+        // "Unable to resolve host …" and friends: the phone can't reach the internet at all
+        if (isOffline(e)) throw ApiException("No internet connection. It will update when you're back online.")
+        throw e
+    }
+
+    private fun isOffline(e: Throwable?): Boolean {
+        var t = e
+        while (t != null) {
+            if (t is java.net.UnknownHostException || t is java.net.ConnectException ||
+                t is java.net.NoRouteToHostException || t is java.net.SocketTimeoutException) return true
+            t = t.cause
+        }
+        return false
+    }
+
+    private fun fetchAny(): Reading {
         val relay = prefs.relayUrl?.trim().orEmpty()
         if (relay.isNotEmpty()) {
             try {

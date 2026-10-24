@@ -102,6 +102,22 @@ class LiveService : Service() {
             registerReceiver(screenReceiver, filter)
         }
         screenOn = (getSystemService(POWER_SERVICE) as PowerManager).isInteractive
+        try {
+            getSystemService(android.net.ConnectivityManager::class.java).registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {}
+    }
+
+    /** Internet back (e.g. Wi-Fi reconnected): if the last update failed, try again now instead of waiting. */
+    private val networkCallback = object : android.net.ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: android.net.Network) {
+            main.post {
+                if (lastError != null && prefs.running) {
+                    failures = 0
+                    if (!screenOn) acquireWakeLock()
+                    schedule(2)
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -143,6 +159,7 @@ class LiveService : Service() {
 
     override fun onDestroy() {
         try { unregisterReceiver(screenReceiver) } catch (e: Exception) {}
+        try { getSystemService(android.net.ConnectivityManager::class.java).unregisterNetworkCallback(networkCallback) } catch (e: Exception) {}
         cancelBackground()
         releaseWakeLock()
         executor.shutdownNow()

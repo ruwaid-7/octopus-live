@@ -1723,10 +1723,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_cadence" />
 
                         <TextView
                             android:id="@+id/setCadence"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             tools:text="Every 10s (live)" />
                     </LinearLayout>
@@ -1739,10 +1744,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_connection" />
 
                         <TextView
                             android:id="@+id/setConnection"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             tools:text="Relay · energy.example" />
                     </LinearLayout>
@@ -1755,10 +1765,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_last_reading" />
 
                         <TextView
                             android:id="@+id/setLastReading"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             tools:text="22:55" />
                     </LinearLayout>
@@ -1786,10 +1801,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/tariff" />
 
                         <TextView
                             android:id="@+id/setTariff"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             tools:text="Agile Octopus" />
                     </LinearLayout>
@@ -1802,10 +1822,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_mpan" />
 
                         <TextView
                             android:id="@+id/setMpan"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             android:fontFamily="monospace"
                             android:textStyle="normal"
@@ -1822,10 +1847,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_mprn" />
 
                         <TextView
                             android:id="@+id/setMprn"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             android:fontFamily="monospace"
                             android:textStyle="normal"
@@ -1840,10 +1870,15 @@
 
                         <TextView
                             style="@style/SRowLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_weight="0"
                             android:text="@string/set_standing" />
 
                         <TextView
                             android:id="@+id/setStanding"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="end"
                             style="@style/SRowValue"
                             tools:text="48.2p/day (E) · 29.5p (G)" />
                     </LinearLayout>

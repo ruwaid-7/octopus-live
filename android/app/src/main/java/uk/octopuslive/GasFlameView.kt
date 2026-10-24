@@ -11,8 +11,8 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * The gas card's flame. Off: a thin grey outline. On: an orange outline filled with orange
- * "gas" whose level rises and falls smoothly around the middle, with a gentle ripple on top.
+ * The gas card's flame. Off: a thin grey outline. On: an orange outline with flickering
+ * flame tongues inside (orange, with an amber core) that dance around the middle height.
  * Animates only while [running] is true (gas on and Home on screen).
  */
 class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -31,6 +31,8 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val dp = resources.displayMetrics.density
     private val gas = context.getColor(R.color.gas_accent)
     private val muted = context.getColor(R.color.text_muted)
+    private val core = context.getColor(R.color.elec_mid)   // amber: the hot centre
+    private val tongue = Path()
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
@@ -38,7 +40,6 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val flame = Path()
-    private val liquid = Path()
     private val scaled = Path()
     private val m = Matrix()
     private var started = System.nanoTime()
@@ -55,6 +56,26 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         flame.close()
     }
 
+    /**
+     * One flame tongue: base [halfWidth] each side of [cx] at the bottom of the outline, a pointed
+     * tip at about [height] of the outline's height that flickers (uneven, quick changes) and sways.
+     */
+    private fun tongue(canvas: Canvas, cx: Float, halfWidth: Float, height: Float, t: Float, seed: Float) {
+        val bottom = 21.5f; val top = 2.2f
+        val flicker = 0.07f * sin(t * 9.1f + seed) + 0.05f * sin(t * 13.7f + seed * 2) + 0.04f * sin(t * 5.3f + seed * 3)
+        val tipY = bottom - (bottom - top) * (height + flicker)
+        val sway = 0.6f * sin(t * 3.7f + seed) + 0.3f * sin(t * 7.9f + seed * 1.5f)
+        val tipX = cx + sway
+        val shoulder = tipY + (bottom - tipY) * 0.45f
+        tongue.reset()
+        tongue.moveTo(cx - halfWidth, bottom + 1f)
+        tongue.cubicTo(cx - halfWidth * 1.05f, shoulder, tipX - halfWidth * 0.25f, tipY + (bottom - tipY) * 0.25f, tipX, tipY)
+        tongue.cubicTo(tipX + halfWidth * 0.25f, tipY + (bottom - tipY) * 0.25f, cx + halfWidth * 1.05f, shoulder, cx + halfWidth, bottom + 1f)
+        tongue.close()
+        tongue.transform(m)
+        canvas.drawPath(tongue, fill)
+    }
+
     override fun onDraw(canvas: Canvas) {
         val s = min(width, height) / 24f
         val dx = (width - 24 * s) / 2f
@@ -65,30 +86,19 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         flame.transform(m, scaled)
 
         if (on) {
-            val t = (System.nanoTime() - started) / 1e9
-            // Level (share of the flame's height, from the bottom): drifts between about 40% and 62%
-            val level = 0.51 + 0.09 * sin(t * 2 * Math.PI / 3.2) + 0.02 * sin(t * 2 * Math.PI / 1.3)
-            val top = 2.2f; val bottom = 21.5f
-            val surface = bottom - (bottom - top) * level.toFloat()
-            // A gentle ripple across the surface
-            liquid.reset()
-            liquid.moveTo(0f, 24f)
-            liquid.lineTo(0f, surface)
-            var x = 0f
-            while (x <= 24f) {
-                val y = surface + 0.45f * sin(x * 0.55 + t * 3.1).toFloat() + 0.2f * sin(x * 1.3 - t * 2.3).toFloat()
-                liquid.lineTo(x, y)
-                x += 0.5f
-            }
-            liquid.lineTo(24f, 24f)
-            liquid.close()
-            liquid.transform(m)
-
+            val t = ((System.nanoTime() - started) / 1e9).toFloat()
             canvas.save()
             canvas.clipPath(scaled)
+            // Three flickering tongues of flame rising from the base (tallest in the middle),
+            // then a lighter, hotter core in front. Heights hover around the middle of the outline.
             fill.color = gas
-            fill.alpha = 230
-            canvas.drawPath(liquid, fill)
+            fill.alpha = 235
+            tongue(canvas, 9.6f, 3.4f, 0.40f, t, 0.0f)
+            tongue(canvas, 14.4f, 3.4f, 0.44f, t, 1.7f)
+            tongue(canvas, 12.0f, 5.2f, 0.60f, t, 3.1f)
+            fill.color = core
+            fill.alpha = 215
+            tongue(canvas, 12.0f, 2.6f, 0.34f, t, 4.4f)
             canvas.restore()
         }
 

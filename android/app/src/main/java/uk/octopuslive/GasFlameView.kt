@@ -1,18 +1,29 @@
 package uk.octopuslive
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
+import kotlin.math.abs
+import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The gas card's flame. Off: a thin grey outline. On: an orange outline with fire inside,
- * licking upward to around the middle (a small shader on Android 13+, flame tongues before that).
+ * The gas card's flame. Off: a thin grey outline. On: an orange outline with fire inside.
+ *
+ * The fire is the standard real-time technique: value noise scrolling upward, multiplied by a
+ * height falloff that's tallest in the middle, then a colour ramp (pale yellow base -> amber ->
+ * orange tips). It's worked out in a small 48 x 48 image about 30 times a second and drawn
+ * smoothed and clipped to the outline, so it looks the same on every phone.
  * Animates only while [running] is true (gas on and Home on screen).
  */
 class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -25,34 +36,34 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         set(v) {
             if (field == v) return
             field = v
-            if (v) { started = System.nanoTime(); postInvalidateOnAnimation() }
+            if (v) postInvalidateOnAnimation()
         }
 
-    private val dp = resources.displayMetrics.density
     private val gas = context.getColor(R.color.gas_accent)
     private val muted = context.getColor(R.color.text_muted)
-    private val core = context.getColor(R.color.elec_mid)   // amber: the hot centre
-    private val pale = 0xFFFFE08A.toInt()                     // pale yellow: hottest, at the base
-    // Android 13+: real fire from a small shader; older phones draw flame tongues
-    // (If the phone can't compile the shader, fall back to the tongues rather than crash.)
-    private var fire: Any? = if (android.os.Build.VERSION.SDK_INT >= 33) {
-        try { FlameShader() } catch (e: Throwable) { null }
-    } else null
-    private val firePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val tongue = Path()
+    private val amber = context.getColor(R.color.elec_mid)
+    private val pale = 0xFFFFE08A.toInt()
+
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    private val firePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
     private val flame = Path()
     private val scaled = Path()
     private val m = Matrix()
-    private var started = System.nanoTime()
+    private val start = System.nanoTime()
+
+    private val n = 48
+    private val bitmap = Bitmap.createBitmap(n, n, Bitmap.Config.ARGB_8888)
+    private val pixels = IntArray(n * n)
+    private var lastFrame = 0L
+    private val src = Rect(0, 0, n, n)
+    private val dst = RectF()
 
     init {
-        // The flame outline (24 x 24 design units), as in the gas-off icon
+        // The flame outline (24 x 24 design units)
         flame.moveTo(12.0f, 21.5f)
         flame.cubicTo(8.0f, 21.5f, 5.5f, 18.4f, 5.5f, 14.2f)
         flame.cubicTo(5.5f, 9.6f, 9.8f, 5.8f, 12.2f, 2.2f)
@@ -61,26 +72,6 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         flame.cubicTo(17.6f, 7.6f, 18.5f, 10.9f, 18.5f, 14.2f)
         flame.cubicTo(18.5f, 18.4f, 16.0f, 21.5f, 12.0f, 21.5f)
         flame.close()
-    }
-
-    /**
-     * One flame tongue: base [halfWidth] each side of [cx] at the bottom of the outline, a pointed
-     * tip at about [height] of the outline's height that flickers (uneven, quick changes) and sways.
-     */
-    private fun tongue(canvas: Canvas, cx: Float, halfWidth: Float, height: Float, t: Float, seed: Float) {
-        val bottom = 21.5f; val top = 2.2f
-        val flicker = 0.07f * sin(t * 9.1f + seed) + 0.05f * sin(t * 13.7f + seed * 2) + 0.04f * sin(t * 5.3f + seed * 3)
-        val tipY = bottom - (bottom - top) * (height + flicker)
-        val sway = 0.6f * sin(t * 3.7f + seed) + 0.3f * sin(t * 7.9f + seed * 1.5f)
-        val tipX = cx + sway
-        val shoulder = tipY + (bottom - tipY) * 0.45f
-        tongue.reset()
-        tongue.moveTo(cx - halfWidth, bottom + 1f)
-        tongue.cubicTo(cx - halfWidth * 1.05f, shoulder, tipX - halfWidth * 0.25f, tipY + (bottom - tipY) * 0.25f, tipX, tipY)
-        tongue.cubicTo(tipX + halfWidth * 0.25f, tipY + (bottom - tipY) * 0.25f, cx + halfWidth * 1.05f, shoulder, cx + halfWidth, bottom + 1f)
-        tongue.close()
-        tongue.transform(m)
-        canvas.drawPath(tongue, fill)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -92,34 +83,16 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         scaled.reset()
         flame.transform(m, scaled)
 
-        if (on && fire != null && android.os.Build.VERSION.SDK_INT >= 33) {
-            // Time wraps every 2 minutes so the noise keeps full precision
-            val t = (((System.nanoTime() - started) / 1e9) % 120.0).toFloat()
-            try {
-                val f = fire as FlameShader
-                f.update(dx, dy, 24 * s, t, pale, core, gas)
-                firePaint.shader = f.shader
-                canvas.save()
-                canvas.clipPath(scaled)
-                canvas.drawRect(dx, dy, dx + 24 * s, dy + 24 * s, firePaint)
-                canvas.restore()
-            } catch (e: Throwable) {
-                fire = null   // use the tongues from the next frame
+        if (on) {
+            val now = System.nanoTime()
+            if (now - lastFrame > 30_000_000L || lastFrame == 0L) {   // ~30 frames a second
+                lastFrame = now
+                renderFire(((now - start) / 1e9 % 1000.0).toFloat())
             }
-        } else if (on) {
-            val t = ((System.nanoTime() - started) / 1e9).toFloat()
             canvas.save()
             canvas.clipPath(scaled)
-            // Three flickering tongues of flame rising from the base (tallest in the middle),
-            // then a lighter, hotter core in front. Heights hover around the middle of the outline.
-            fill.color = gas
-            fill.alpha = 235
-            tongue(canvas, 9.6f, 3.4f, 0.40f, t, 0.0f)
-            tongue(canvas, 14.4f, 3.4f, 0.44f, t, 1.7f)
-            tongue(canvas, 12.0f, 5.2f, 0.60f, t, 3.1f)
-            fill.color = core
-            fill.alpha = 215
-            tongue(canvas, 12.0f, 2.6f, 0.34f, t, 4.4f)
+            dst.set(dx, dy, dx + 24 * s, dy + 24 * s)
+            canvas.drawBitmap(bitmap, src, dst, firePaint)
             canvas.restore()
         }
 
@@ -128,5 +101,69 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         canvas.drawPath(scaled, outline)
 
         if (on && running) postInvalidateOnAnimation()
+    }
+
+    // ---------------------------------------------------------------- the fire
+
+    private fun renderFire(t: Float) {
+        val sway = 0.05f * sin(t * 2.1f) + 0.03f * sin(t * 5.3f)
+        val lift = 0.04f * sin(t * 7.7f)
+        for (py in 0 until n) {
+            val y = 1f - (py + 0.5f) / n
+            val fy = ((y - 0.10f) / 0.80f).coerceIn(0f, 1f)
+            for (px in 0 until n) {
+                val x = (px + 0.5f) / n - 0.5f
+                val xs = x + sway * fy
+                // Tall in the middle, short at the sides
+                val h = 0.66f * (1f - min(abs(xs) * 2.3f, 1f).pow(1.6f)) + lift
+                // Noise stretched upward and scrolling up: licking tongues
+                val nz = 0.6f * fbm(xs * 7f, fy * 2.2f - t * 2.2f) + 0.4f * fbm(xs * 14f + 5f, fy * 4.5f - t * 3.6f)
+                val f = 1f - fy / max(h, 0.05f) - (nz - 0.45f) * (0.35f + fy * 1.6f)
+                val a = (f / 0.08f).coerceIn(0f, 1f)
+                pixels[py * n + px] = if (a <= 0f) 0 else {
+                    val k1 = ((f - 0.12f) / 0.25f).coerceIn(0f, 1f)
+                    val k2 = ((f - 0.42f) / 0.25f).coerceIn(0f, 1f)
+                    val c = blend(blend(gas, amber, k1), pale, k2)
+                    ((a * 255).toInt() shl 24) or (c and 0xFFFFFF)
+                }
+            }
+        }
+        bitmap.setPixels(pixels, 0, n, 0, 0, n, n)
+    }
+
+    private fun fbm(x0: Float, y0: Float): Float {
+        var x = x0; var y = y0
+        var v = 0f; var amp = 0.5f
+        repeat(4) {
+            v += amp * noise(x, y)
+            x = x * 2.03f + 1.7f
+            y = y * 2.03f + 9.2f
+            amp *= 0.5f
+        }
+        return v
+    }
+
+    private fun noise(x: Float, y: Float): Float {
+        val ix = floor(x); val iy = floor(y)
+        val fx = x - ix; val fy = y - iy
+        val ux = fx * fx * (3 - 2 * fx); val uy = fy * fy * (3 - 2 * fy)
+        val i = ix.toInt(); val j = iy.toInt()
+        val a = hash(i, j); val b = hash(i + 1, j); val c = hash(i, j + 1); val d = hash(i + 1, j + 1)
+        return (a + (b - a) * ux) + ((c + (d - c) * ux) - (a + (b - a) * ux)) * uy
+    }
+
+    /** A fast, repeatable pseudo-random value in 0..1 for a grid point. */
+    private fun hash(i: Int, j: Int): Float {
+        var h = i * 374761393 + j * 668265263
+        h = (h xor (h ushr 13)) * 1274126177
+        h = h xor (h ushr 16)
+        return (h and 0xFFFFFF) / 16777215f
+    }
+
+    private fun blend(c1: Int, c2: Int, k: Float): Int {
+        val r = ((c1 shr 16 and 255) + ((c2 shr 16 and 255) - (c1 shr 16 and 255)) * k).toInt()
+        val g = ((c1 shr 8 and 255) + ((c2 shr 8 and 255) - (c1 shr 8 and 255)) * k).toInt()
+        val b = ((c1 and 255) + ((c2 and 255) - (c1 and 255)) * k).toInt()
+        return (r shl 16) or (g shl 8) or b
     }
 }

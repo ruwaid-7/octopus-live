@@ -125,11 +125,17 @@ object DevData {
             val weekend = date.dayOfWeek.value >= 6
             val elec = (if (weekend) 9.0 else 6.0) + rnd.nextGaussian() * 1.8
             val gas = 10.0 + rnd.nextDouble() * 10 + (if (weekend) 4.0 else 0.0)
+            val e = max(1.5, elec)
+            val shape = (0 until 48).map { profile(it) * (0.8 + rnd.nextDouble() * 0.4) }
+            val gasShape = (0 until 48).map { i -> if (i in 12..17 || i in 34..44) 1.5 + rnd.nextDouble() else 0.02 }
+            val recent = d <= Insights.SLOT_DAYS
             a.put(InsightsData.dayToJson(DayStats(
                 date = date.toString(),
-                elecKwh = max(1.5, elec), gasKwh = gas,
-                elecCost = max(1.5, elec) * 0.256 + 0.609, gasCost = gas * 0.063 + 0.288,
+                elecKwh = e, gasKwh = gas,
+                elecCost = e * 0.256 + 0.609, gasCost = gas * 0.063 + 0.288,
                 baseW = 80 + rnd.nextInt(80), fetchedAt = System.currentTimeMillis(),
+                elecSlots = if (recent) shape.map { it / shape.sum() * e } else emptyList(),
+                gasSlots = if (recent) gasShape.map { it / gasShape.sum() * gas } else emptyList(),
             )))
         }
         Prefs(c).setStr(HISTORY, a.toString())

@@ -117,8 +117,8 @@ class DevActivity : Activity() {
         // History, notifications, other screens
         val more = card(c, "History and notifications")
         val h = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        h.addView(button("Fill 7 days", false) { DevData.fillHistory(this, 7); apply() }, LinearLayout.LayoutParams(0, px(44), 1f))
-        h.addView(button("Fill 30 days", false) { DevData.fillHistory(this, 30); apply() },
+        h.addView(button("Fill 1 month", false) { DevData.fillHistory(this, 31); apply() }, LinearLayout.LayoutParams(0, px(44), 1f))
+        h.addView(button("Fill 3 months", false) { DevData.fillHistory(this, Insights.HISTORY_DAYS); apply() },
             LinearLayout.LayoutParams(0, px(44), 1f).apply { marginStart = px(8) })
         more.addView(h, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = px(8) })
         more.addView(TextView(this, null, 0, R.style.FieldLabel).apply { text = "Send a notification now" },

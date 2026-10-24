@@ -241,4 +241,13 @@
     <string name="set_prefs_sub">Startup, widget and battery</string>
     <string name="set_dev">Developer: test data</string>
     <string name="set_dev_sub">Try the screens with any values</string>
+    <string name="home_last_reading">Last reading %1$s</string>
+    <string name="home_no_new_reading">No new reading since %1$s</string>
+    <string name="usage_prev">Earlier</string>
+    <string name="usage_next">Later</string>
+    <string name="usage_day_total">Day total</string>
+    <string name="usage_range_total">Total</string>
+    <string name="usage_no_day">No readings for this day yet. History fills in over a few hours.</string>
+    <string name="usage_no_halfhours">Half-hour detail is kept for the last month.</string>
+    <string name="usage_no_period">No readings for this period yet</string>
 </resources>

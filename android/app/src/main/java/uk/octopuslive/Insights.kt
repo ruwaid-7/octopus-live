@@ -24,6 +24,8 @@ data class DayStats(
     val gasCost: Double?,
     val baseW: Int?,           // lowest half-hour average power ("always on")
     val fetchedAt: Long,
+    val elecSlots: List<Double> = emptyList(),   // kWh per half-hour (kept for the last SLOT_DAYS days)
+    val gasSlots: List<Double> = emptyList(),
 )
 
 /** Everything the app shows beyond the live reading. */
@@ -83,12 +85,16 @@ data class InsightsData(
         fun dayToJson(d: DayStats) = JSONObject().apply {
             put("date", d.date); put("elecKwh", d.elecKwh); put("gasKwh", d.gasKwh)
             put("elecCost", d.elecCost); put("gasCost", d.gasCost); put("baseW", d.baseW); put("fetchedAt", d.fetchedAt)
+            if (d.elecSlots.isNotEmpty()) put("elecSlots", JSONArray().apply { d.elecSlots.forEach { put(Math.round(it * 1000) / 1000.0) } })
+            if (d.gasSlots.isNotEmpty()) put("gasSlots", JSONArray().apply { d.gasSlots.forEach { put(Math.round(it * 1000) / 1000.0) } })
         }
 
         fun dayFromJson(j: JSONObject) = DayStats(
             date = j.optString("date"), elecKwh = j.optDouble("elecKwh", 0.0),
             gasKwh = j.optNum("gasKwh"), elecCost = j.optNum("elecCost"), gasCost = j.optNum("gasCost"),
             baseW = j.optNum("baseW")?.toInt(), fetchedAt = j.optLong("fetchedAt"),
+            elecSlots = j.optJSONArray("elecSlots")?.let { a -> (0 until a.length()).map { a.optDouble(it, 0.0) } } ?: emptyList(),
+            gasSlots = j.optJSONArray("gasSlots")?.let { a -> (0 until a.length()).map { a.optDouble(it, 0.0) } } ?: emptyList(),
         )
 
         private fun JSONObject.optNum(k: String): Double? =
@@ -204,11 +210,11 @@ class Insights(context: Context) {
         // Agile and similar publish tomorrow's prices around 16:00: fetch again soon after that
         val publish = today.atTime(16, 15).atZone(zone).toInstant().toEpochMilli()
         val missedPublish = System.currentTimeMillis() >= publish && prefs.long(K_RATES_AT) < publish
-        val fresh = prefs.str(K_RATES_DAY) == today.toString() && prefs.long(K_RATES_SPAN) == HISTORY_DAYS + 1L &&
+        val fresh = prefs.str(K_RATES_DAY) == today.toString() && prefs.long(K_RATES_SPAN) == RATES_DAYS.toLong() &&
             System.currentTimeMillis() - prefs.long(K_RATES_AT) < RATES_EVERY_MS && !missedPublish
         if (fresh) return
 
-        val from = today.minusDays(HISTORY_DAYS + 1L).atStartOfDay(zone)   // prices for every day in the history
+        val from = today.minusDays(RATES_DAYS.toLong()).atStartOfDay(zone)   // older days fetch their own prices
         val to = today.plusDays(2).atStartOfDay(zone)
         val base = "https://api.octopus.energy/v1/products/${enc(elecProduct)}/electricity-tariffs/${enc(elecTariff)}"
         prefs.setStr(K_ELEC_RATES, ratesToJson(fetchRates("$base/standard-unit-rates/", from, to)))
@@ -222,8 +228,27 @@ class Insights(context: Context) {
             prefs.setStr(K_GAS_STANDING, ratesToJson(fetchRates("$g/standing-charges/", from, to)))
         }
         prefs.setStr(K_RATES_DAY, today.toString())
-        prefs.setLong(K_RATES_SPAN, HISTORY_DAYS + 1L)
+        prefs.setLong(K_RATES_SPAN, RATES_DAYS.toLong())
         prefs.setLong(K_RATES_AT, System.currentTimeMillis())
+    }
+
+    /** kWh per half-hour of a day, from (start time, Wh) pairs. 46/50 slots on clock-change days. */
+    private fun daySlots(list: List<Pair<Long, Double>>, start: ZonedDateTime, end: ZonedDateTime): List<Double> {
+        val s = start.toInstant().toEpochMilli()
+        val count = ((end.toInstant().toEpochMilli() - s) / 1_800_000L).toInt()
+        val out = DoubleArray(count)
+        for ((t, wh) in list) {
+            val i = ((t - s) / 1_800_000L).toInt()
+            if (i in out.indices) out[i] = wh / 1000.0
+        }
+        return out.toList()
+    }
+
+    /** Base URL of the current tariff's public price list, or null if not known yet. */
+    private fun tariffUrl(productKey: String, tariffKey: String, fuel: String): String? {
+        val product = prefs.str(productKey) ?: return null
+        val tariff = prefs.str(tariffKey) ?: return null
+        return "https://api.octopus.energy/v1/products/${enc(product)}/$fuel-tariffs/${enc(tariff)}/"
     }
 
     private fun fetchRates(url: String, from: ZonedDateTime, to: ZonedDateTime): List<Rate> {
@@ -295,6 +320,8 @@ class Insights(context: Context) {
             // Saved without a cost, but its prices are known now (e.g. the price window grew)
             val noon = day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
             if (rec.elecKwh > 0 && rec.elecCost == null && rateAt(elecRates, noon) != null) return@firstOrNull true
+            // Saved before half-hours were kept: fetch again so the day chart works
+            if (rec.elecKwh > 0 && rec.elecSlots.isEmpty() && day >= today.minusDays(SLOT_DAYS.toLong())) return@firstOrNull true
             // Gas arrives about an hour late: refresh a day once, after 03:00 the next morning
             val complete = day.plusDays(1).atStartOfDay(zone).plusHours(3).toInstant().toEpochMilli()
             rec.fetchedAt < complete && System.currentTimeMillis() >= complete
@@ -308,6 +335,17 @@ class Insights(context: Context) {
         val gas = gasId?.let { id -> api.halfHourly(token, id, start, end).filter { it.first < end.toInstant().toEpochMilli() } }
 
         val dayStart = start.toInstant().toEpochMilli()
+        val noon = dayStart + 12 * 3600_000L
+        // Prices: the stored ones cover about a month; for older days fetch that day's prices
+        var eUnit = rates(K_ELEC_RATES); var eStanding = rates(K_ELEC_STANDING)
+        var gUnit = rates(K_GAS_RATES); var gStanding = rates(K_GAS_STANDING)
+        if (rateAt(eUnit, noon) == null) tariffUrl(K_ELEC_PRODUCT, K_ELEC_TARIFF, "electricity")?.let { u ->
+            try { eUnit = fetchRates("${u}standard-unit-rates/", start, end); eStanding = fetchRates("${u}standing-charges/", start, end) } catch (e: Exception) {}
+        }
+        if (gas != null && rateAt(gUnit, noon) == null) tariffUrl(K_GAS_PRODUCT, K_GAS_TARIFF, "gas")?.let { u ->
+            try { gUnit = fetchRates("${u}standard-unit-rates/", start, end); gStanding = fetchRates("${u}standing-charges/", start, end) } catch (e: Exception) {}
+        }
+        val recent = missing >= today.minusDays(SLOT_DAYS.toLong())
         // No readings at all (e.g. before the Home Mini was set up): remember the day so it isn't
         // fetched again, but with no usage or cost, so it doesn't count as a real day.
         val noData = elec.isEmpty()
@@ -315,13 +353,18 @@ class Insights(context: Context) {
             date = missing.toString(),
             elecKwh = elec.sumOf { it.second } / 1000.0,
             gasKwh = gas?.takeIf { it.isNotEmpty() }?.let { g -> g.sumOf { it.second } / 1000.0 },
-            elecCost = if (noData) null else cost(elec, rates(K_ELEC_RATES), rates(K_ELEC_STANDING), dayStart),
-            gasCost = gas?.takeIf { it.isNotEmpty() }?.let { cost(it, rates(K_GAS_RATES), rates(K_GAS_STANDING), dayStart) },
+            elecCost = if (noData) null else cost(elec, eUnit, eStanding, dayStart),
+            gasCost = gas?.takeIf { it.isNotEmpty() }?.let { cost(it, gUnit, gStanding, dayStart) },
             // Only a (nearly) full day gives a fair "always-on" figure; a part day may have no night-time
             baseW = if (elec.size >= FULL_DAY_SLOTS) baseload(elec) else null,
             fetchedAt = System.currentTimeMillis(),
+            elecSlots = if (recent) daySlots(elec, start, end) else emptyList(),
+            gasSlots = if (recent && gas != null) daySlots(gas, start, end) else emptyList(),
         )
         val keep = today.minusDays(HISTORY_DAYS.toLong()).toString()
+        // Half-hours only for the last SLOT_DAYS days, to keep the stored history small
+        val slotsFrom = today.minusDays(SLOT_DAYS.toLong()).toString()
+        history.replaceAll { _, d -> if (d.date < slotsFrom && d.elecSlots.isNotEmpty()) d.copy(elecSlots = emptyList(), gasSlots = emptyList()) else d }
         val list = history.values.filter { it.date >= keep && it.date < today.toString() }.sortedBy { it.date }
         prefs.setStr(K_HISTORY, JSONArray().apply { list.forEach { put(InsightsData.dayToJson(it)) } }.toString())
     }
@@ -462,7 +505,9 @@ class Insights(context: Context) {
             Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 
         private const val MIN_GAP_MS = 60_000L
-        const val HISTORY_DAYS = 30
+        const val HISTORY_DAYS = 92   // daily totals: about 3 months, for the Month view
+        const val SLOT_DAYS = 31      // half-hours kept for the day charts
+        private const val RATES_DAYS = 32
         private const val BACKFILL_EVERY_MS = 5 * 60_000L
         private const val K_BACKFILL_AT = "ins_backfillAt"
         private const val K_RATES_SPAN = "ins_ratesSpan"

@@ -255,22 +255,11 @@ class MainActivity : Activity() {
         // 2. Gas: average over the latest half-hour (arrives about an hour late)
         val hasGas = r?.gasTodayKwh != null
         findViewById<View>(R.id.homeGasCard).visibility = if (hasGas) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.homeGasTodayRow).visibility = if (hasGas) View.VISIBLE else View.GONE
         if (hasGas && r != null) {
             setIfChanged(R.id.homeGasAvgLabel, r.gasReadAt?.let { getString(R.string.home_gas_avg, it) } ?: getString(R.string.home_gas_avg_none))
             setIfChanged(R.id.homeGasKw, r.gasKw?.let { String.format(Locale.UK, "%.1f", it) } ?: "0.0")
             setGasFlame(r.gasRunMinutes > 0)
         } else setGasFlame(false)
-
-        // Today so far (shown on Usage → Day)
-        val total = listOfNotNull(ins?.elecCostToday, if (hasGas) ins?.gasCostToday else null).sum()
-        setIfChanged(R.id.homeTodayTotal, if (ins?.elecCostToday != null) "${money(total * 100)} so far" else "")
-        ledger(R.id.homeElecToday, r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) } ?: "—",
-            ins?.elecCostToday?.let { money(it * 100) })
-        if (hasGas && r != null) {
-            ledger(R.id.homeGasToday, String.format(Locale.UK, "%.1f kWh", r.gasTodayKwh),
-                ins?.gasCostToday?.let { money(it * 100) })
-        }
 
         // 4. Price now (next price green with an arrow when it's lower) and always-on
         setIfChanged(R.id.homePrice, ins?.priceNow?.let { String.format(Locale.UK, "%.1fp", it) } ?: "—")
@@ -285,9 +274,19 @@ class MainActivity : Activity() {
         }
         setIfChanged(R.id.homeBase, ins?.baseW?.let { "$it W" } ?: "—")
 
+        // Status line at the bottom: when the last reading came in, or what's wrong
         findViewById<TextView>(R.id.homeError).apply {
-            visibility = if (err != null && prefs.running) View.VISIBLE else View.GONE
-            text = "Couldn't update: $err"
+            val delayed = r?.readAtMs != null && now - r.readAtMs > LiveService.OFFLINE_MS
+            val (msg, c) = when {
+                !prefs.running -> getString(R.string.paused_title) to R.color.text_muted
+                err != null -> "Couldn't update: $err" to R.color.elec_high
+                r == null -> getString(R.string.connecting) to R.color.text_muted
+                delayed -> getString(R.string.home_no_new_reading, r.readAt) to R.color.elec_mid
+                else -> getString(R.string.home_last_reading, r.readAt) to R.color.text_muted
+            }
+            visibility = View.VISIBLE
+            if (text.toString() != msg) text = msg
+            setTextColor(getColor(c))
         }
     }
 
@@ -331,27 +330,101 @@ class MainActivity : Activity() {
 
     // ================================================================= usage
 
+    /** Which day / week / month is shown: 0 = the current one, 1 = the one before, and so on. */
+    private var usageOffset = 0
+
     private fun setUpUsage() {
         findViewById<SlotBarsView>(R.id.usageSlots).chartDp = 96f
         findViewById<View>(R.id.usageElec).setOnClickListener { prefs.setStr(K_USAGE_GAS, "0"); renderUsage() }
         findViewById<View>(R.id.usageGas).setOnClickListener { prefs.setStr(K_USAGE_GAS, "1"); renderUsage() }
         listOf(R.id.usagePeriodDay, R.id.usagePeriodWeek, R.id.usagePeriodMonth).forEachIndexed { i, id ->
-            findViewById<View>(id).setOnClickListener { prefs.setLong(K_USAGE_PERIOD, i.toLong()); renderUsage() }
+            findViewById<View>(id).setOnClickListener {
+                prefs.setLong(K_USAGE_PERIOD, i.toLong()); usageOffset = 0; renderUsage()
+            }
         }
+        findViewById<View>(R.id.usagePrev).setOnClickListener { stepUsage(+1) }
+        findViewById<View>(R.id.usageNext).setOnClickListener { stepUsage(-1) }
+        // Swipe left/right anywhere on the page: right = earlier, left = later
+        usageSwipe = android.view.GestureDetector(this, object : android.view.GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: android.view.MotionEvent) = true
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, vx: Float, vy: Float): Boolean {
+                if (e1 == null) return false
+                val dx = e2.x - e1.x
+                if (Math.abs(dx) < 60 * resources.displayMetrics.density || Math.abs(dx) < Math.abs(e2.y - e1.y) * 1.5f) return false
+                stepUsage(if (dx > 0) +1 else -1)
+                return true
+            }
+        })
+    }
+
+    private var usageSwipe: android.view.GestureDetector? = null
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        if (tab == TAB_USAGE) usageSwipe?.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
+
+    private fun stepUsage(by: Int) {
+        val next = usageOffset + by
+        if (next < 0 || next > maxUsageOffset()) return
+        usageOffset = next
+        // Slide in from the side we're going to
+        val content = findViewById<View>(R.id.usageContent)
+        val w = content.width.toFloat().coerceAtLeast(1f)
+        content.animate().cancel()
+        content.translationX = if (by > 0) -w * 0.25f else w * 0.25f
+        content.alpha = 0.3f
+        renderUsage()
+        content.animate().translationX(0f).alpha(1f).setDuration(220).start()
+    }
+
+    /** How far back there is history to show (about 3 months). */
+    private fun maxUsageOffset(): Int {
+        val oldest = LocalDate.now().minusDays(Insights.HISTORY_DAYS.toLong())
+        val today = LocalDate.now()
+        return when (prefs.long(K_USAGE_PERIOD).toInt()) {
+            1 -> (java.time.temporal.ChronoUnit.WEEKS.between(weekStart(oldest), weekStart(today))).toInt()
+            2 -> (java.time.temporal.ChronoUnit.MONTHS.between(oldest.withDayOfMonth(1), today.withDayOfMonth(1))).toInt()
+            else -> Insights.HISTORY_DAYS
+        }
+    }
+
+    private fun weekStart(d: LocalDate) = d.minusDays((d.dayOfWeek.value - 1).toLong())
+
+    /** One day's figures: today from the live reading, earlier days from the history. */
+    private class DayFigures(
+        val elecKwh: Double, val gasKwh: Double?, val elecCost: Double?, val gasCost: Double?,
+        val elecSlots: List<Double>, val gasSlots: List<Double>, val slotPence: List<Double?>,
+    )
+
+    private fun dayFigures(day: LocalDate, d: InsightsData, r: Reading?): DayFigures? {
+        if (day == LocalDate.now()) {
+            return DayFigures(
+                elecKwh = r?.todayKwh ?: d.todaySlots.sum(),
+                gasKwh = r?.gasTodayKwh ?: d.todayGasSlots.takeIf { it.isNotEmpty() }?.sum(),
+                elecCost = d.elecCostToday, gasCost = d.gasCostToday,
+                elecSlots = d.todaySlots, gasSlots = d.todayGasSlots, slotPence = d.todaySlotPence,
+            )
+        }
+        val h = d.history.firstOrNull { it.date == day.toString() } ?: return null
+        if (h.elecKwh <= 0) return null
+        return DayFigures(h.elecKwh, h.gasKwh, h.elecCost, h.gasCost, h.elecSlots, h.gasSlots, emptyList())
     }
 
     private fun renderUsage() {
         val message = findViewById<TextView>(R.id.usageMessage)
         val content = findViewById<View>(R.id.usageContent)
         val d = Insights(this).load()
-        if (prefs.apiKey.isNullOrBlank() || d == null) {
+        if (prefs.apiKey.isNullOrBlank() && !prefs.devMode || d == null) {
             message.visibility = View.VISIBLE
-            message.setText(if (prefs.apiKey.isNullOrBlank()) R.string.insights_need_key else R.string.insights_waiting)
+            message.setText(if (prefs.apiKey.isNullOrBlank() && !prefs.devMode) R.string.insights_need_key else R.string.insights_waiting)
             content.visibility = View.GONE
+            findViewById<View>(R.id.usageNav).visibility = View.GONE
             return
         }
         message.visibility = View.GONE
         content.visibility = View.VISIBLE
+        findViewById<View>(R.id.usageNav).visibility = View.VISIBLE
         val r = prefs.loadReading()
 
         // Day | Week | Month
@@ -363,95 +436,150 @@ class MainActivity : Activity() {
                 typeface = Typeface.create("sans-serif-medium", if (i == period) Typeface.BOLD else Typeface.NORMAL)
             }
         }
+        usageOffset = usageOffset.coerceIn(0, maxUsageOffset())
+        findViewById<View>(R.id.usagePrev).alpha = if (usageOffset < maxUsageOffset()) 1f else 0.25f
+        findViewById<View>(R.id.usageNext).alpha = if (usageOffset > 0) 1f else 0.25f
         findViewById<View>(R.id.usageDayBox).visibility = if (period == 0) View.VISIBLE else View.GONE
         findViewById<View>(R.id.usageRangeBox).visibility = if (period == 0) View.GONE else View.VISIBLE
+        if (period == 0) renderUsageDay(d, r) else renderUsageRange(d, r, period)
+    }
 
-        // ---- 1. Today's half-hours (Electricity | Gas)
-        val gasAvailable = r?.gasTodayKwh != null || d.todayGasSlots.isNotEmpty()
-        val showGas = gasAvailable && prefs.str(K_USAGE_GAS) == "1"
-        findViewById<View>(R.id.usageSwitch).visibility = if (gasAvailable) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.usageChartTitle).visibility = if (gasAvailable) View.GONE else View.VISIBLE
+    // ---------------------------------------------------------------- one day
+
+    private fun renderUsageDay(d: InsightsData, r: Reading?) {
+        val day = LocalDate.now().minusDays(usageOffset.toLong())
+        setIfChanged(R.id.usageLabel, when (usageOffset) {
+            0 -> "Today"
+            1 -> "Yesterday"
+            else -> day.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.UK))
+        })
+        setIfChanged(R.id.usageDate, day.format(DateTimeFormatter.ofPattern("d MMM", Locale.UK)))
+        val f = dayFigures(day, d, r)
+        val hasGasMeter = r?.gasTodayKwh != null || d.todayGasSlots.isNotEmpty() || d.history.any { it.gasKwh != null }
+
+        // Totals card
+        setIfChanged(R.id.usageDayTitle, getString(if (usageOffset == 0) R.string.home_today_so_far else R.string.usage_day_total))
+        val total = listOfNotNull(f?.elecCost, f?.gasCost).sum()
+        setIfChanged(R.id.homeTodayTotal, when {
+            f == null -> "—"
+            f.elecCost == null -> ""
+            usageOffset == 0 -> "${money(total * 100)} so far"
+            else -> money(total * 100)
+        })
+        ledger(R.id.homeElecToday, f?.let { String.format(Locale.UK, "%.2f kWh", it.elecKwh) } ?: "—", f?.elecCost?.let { money(it * 100) })
+        findViewById<View>(R.id.homeGasTodayRow).visibility = if (hasGasMeter) View.VISIBLE else View.GONE
+        if (hasGasMeter) ledger(R.id.homeGasToday, f?.gasKwh?.let { String.format(Locale.UK, "%.1f kWh", it) } ?: "—", f?.gasCost?.let { money(it * 100) })
+
+        // Half-hour chart (Electricity | Gas)
+        val showGas = hasGasMeter && prefs.str(K_USAGE_GAS) == "1"
+        findViewById<View>(R.id.usageSwitch).visibility = if (hasGasMeter) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.usageChartTitle).visibility = if (hasGasMeter) View.GONE else View.VISIBLE
         styleSegment(R.id.usageElec, !showGas)
         styleSegment(R.id.usageGas, showGas)
-        setIfChanged(R.id.usageDate, "Today · " + LocalDate.now().format(DateTimeFormatter.ofPattern("d MMM", Locale.UK)))
-        val slots = if (showGas) d.todayGasSlots else d.todaySlots
+        val slots = if (showGas) f?.gasSlots.orEmpty() else f?.elecSlots.orEmpty()
         findViewById<SlotBarsView>(R.id.usageSlots).setSlots(slots, gas = showGas)
 
-        // Peak half-hour
         val peak = slots.indices.maxByOrNull { slots[it] }?.takeIf { slots[it] > 0 }
-        findViewById<View>(R.id.usagePeakRow).visibility = if (peak != null || showGas) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.usagePeakRow).visibility = View.VISIBLE
         if (peak != null) {
             setIfChanged(R.id.usagePeakTime, getString(R.string.usage_peak, slotTime(peak), slotTime(peak + 1)))
             val kwh = slots[peak]
-            val pence = if (showGas) null else d.todaySlotPence.getOrNull(peak)
+            val pence = if (showGas) null else f?.slotPence?.getOrNull(peak)
             setIfChanged(R.id.usagePeakDetail, listOfNotNull(
                 String.format(Locale.UK, "%.2f kW avg", kwh * 2),
                 String.format(Locale.UK, "%.2f kWh", kwh),
                 pence?.let { money(it) },
             ).joinToString(" · "))
-        } else if (showGas) {
+        } else {
             setIfChanged(R.id.usagePeakTime, "")
-            setIfChanged(R.id.usagePeakDetail, getString(R.string.usage_no_gas_yet))
+            setIfChanged(R.id.usagePeakDetail, getString(when {
+                f == null -> R.string.usage_no_day
+                showGas && usageOffset == 0 -> R.string.usage_no_gas_yet
+                else -> R.string.usage_no_halfhours
+            }))
         }
 
-        // Total, cost (incl. standing charge) and average unit rate
-        val total = if (showGas) r?.gasTodayKwh ?: slots.sum() else r?.todayKwh ?: slots.sum()
-        val cost = if (showGas) d.gasCostToday else d.elecCostToday
+        val totalKwh = (if (showGas) f?.gasKwh else f?.elecKwh) ?: 0.0
+        val cost = if (showGas) f?.gasCost else f?.elecCost
         val standing = if (showGas) d.gasStanding else d.elecStanding
-        setIfChanged(R.id.usageTotal, String.format(Locale.UK, if (showGas) "%.1f kWh" else "%.2f kWh", total))
+        setIfChanged(R.id.usageTotal, if (f == null) "—" else String.format(Locale.UK, if (showGas) "%.1f kWh" else "%.2f kWh", totalKwh))
         setIfChanged(R.id.usageCost, cost?.let { money(it * 100) } ?: "—")
-        setIfChanged(R.id.usageAvg, if (cost != null && total > 0.05)
-            String.format(Locale.UK, "%.1fp/kWh", (cost * 100 - (standing ?: 0.0)).coerceAtLeast(0.0) / total) else "—")
+        setIfChanged(R.id.usageAvg, if (cost != null && totalKwh > 0.05)
+            String.format(Locale.UK, "%.1fp/kWh", (cost * 100 - (standing ?: 0.0)).coerceAtLeast(0.0) / totalKwh) else "—")
+    }
 
-        // ---- Week / Month: daily totals (only days with readings, not before the Home Mini was set up)
-        val span = if (period == 2) Insights.HISTORY_DAYS else 7
-        setIfChanged(R.id.usageRangeTitle, getString(if (period == 2) R.string.usage_last_month else R.string.usage_last_week))
-        val firstDay = LocalDate.now().minusDays(span.toLong()).toString()
-        val inRange = d.history.filter { it.date >= firstDay }
-        val known = inRange.filter { it.elecKwh > 0 }
-        val hasGas = inRange.any { it.gasKwh != null }
-        val weekCost = known.sumOf { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
-        setIfChanged(R.id.usageWeekCost, if (known.isEmpty()) "—" else money(weekCost * 100))
-        setIfChanged(R.id.usageWeekSub, if (known.isEmpty()) "Collecting your first full day" else buildString {
+    // ---------------------------------------------------------------- a week or a month
+
+    private fun renderUsageRange(d: InsightsData, r: Reading?, period: Int) {
+        val today = LocalDate.now()
+        val first: LocalDate
+        val last: LocalDate
+        if (period == 1) {
+            first = weekStart(today).minusWeeks(usageOffset.toLong())
+            last = first.plusDays(6)
+            setIfChanged(R.id.usageLabel, when (usageOffset) {
+                0 -> "This week"
+                1 -> "Last week"
+                else -> first.format(DateTimeFormatter.ofPattern("d MMM", Locale.UK)) + " – " +
+                    last.format(DateTimeFormatter.ofPattern("d MMM", Locale.UK))
+            })
+        } else {
+            first = today.withDayOfMonth(1).minusMonths(usageOffset.toLong())
+            last = first.plusMonths(1).minusDays(1)
+            setIfChanged(R.id.usageLabel, first.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.UK)))
+        }
+        val days = generateSequence(first) { it.plusDays(1) }.takeWhile { !it.isAfter(last) }.toList()
+        val figures = days.map { if (it.isAfter(today)) null else dayFigures(it, d, r) }
+        val known = figures.filterNotNull()
+        val hasGas = known.any { it.gasKwh != null }
+
+        setIfChanged(R.id.usageRangeTitle, getString(R.string.usage_range_total))
+        val cost = known.sumOf { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
+        setIfChanged(R.id.usageWeekCost, if (known.isEmpty()) "—" else money(cost * 100))
+        setIfChanged(R.id.usageWeekSub, if (known.isEmpty()) getString(R.string.usage_no_period) else buildString {
             append(String.format(Locale.UK, "Electricity %.1f kWh", known.sumOf { it.elecKwh }))
             if (hasGas) append(String.format(Locale.UK, " · Gas %.1f kWh", known.sumOf { it.gasKwh ?: 0.0 }))
-            if (known.size < span) append(" · ${known.size} ${if (known.size == 1) "day" else "days"}")
+            append(" · ${known.size} ${if (known.size == 1) "day" else "days"}")
         })
-        val days = (span downTo 1).map { LocalDate.now().minusDays(it.toLong()) }
-        val byDate = inRange.associateBy { it.date }
-        val elec = days.map { byDate[it.toString()]?.elecKwh ?: 0.0 }
-        val gas = days.map { byDate[it.toString()]?.gasKwh ?: 0.0 }
-        val dayLabels = if (span == 7) days.map { it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.UK) }
-            else days.mapIndexed { i, day -> if ((span - 1 - i) % 5 == 0) day.dayOfMonth.toString() else "" }
+        val elec = figures.map { it?.elecKwh ?: 0.0 }
+        val gas = figures.map { it?.gasKwh ?: 0.0 }
+        val labels = if (period == 1) days.map { it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.UK) }
+            else days.map { if (it.dayOfMonth == 1 || it.dayOfMonth % 5 == 0) it.dayOfMonth.toString() else "" }
         val elecColour = getColor(R.color.elec_low)
         val gasColour = getColor(R.color.gas_accent)
         findViewById<BarChartView>(R.id.chartWeek).setData(
             if (hasGas) listOf(elec, gas) else listOf(elec),
             if (hasGas) listOf(elecColour, gasColour) else listOf(elecColour),
-            dayLabels, highlightIndex = span - 1,
-            emptyText = if (span == 7) "Collecting the last 7 days…" else "Collecting the last 30 days… (fills in over a few hours)",
+            labels, highlightIndex = days.indexOf(today), emptyText = getString(R.string.usage_no_period),
         )
         findViewById<View>(R.id.legendGas).visibility = if (hasGas) View.VISIBLE else View.GONE
         findViewById<View>(R.id.legendGasDot).visibility = if (hasGas) View.VISIBLE else View.GONE
 
+        // Day by day, newest first; tap a day to open it
         val list = findViewById<LinearLayout>(R.id.usageDays)
         list.removeAllViews()
-        val rows = known.sortedByDescending { it.date }
-        if (rows.isEmpty()) {
-            list.addView(listRow("No full days yet", "Check back tomorrow", ""))
-        } else {
-            rows.forEachIndexed { i, day ->
-                if (i > 0) list.addView(rowDivider())
-                val date = LocalDate.parse(day.date).format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.UK))
-                val sub = buildString {
-                    append(String.format(Locale.UK, "%.1f kWh electricity", day.elecKwh))
-                    day.gasKwh?.let { append(String.format(Locale.UK, " · %.1f kWh gas", it)) }
-                }
-                val dayCost = (day.elecCost ?: 0.0) + (day.gasCost ?: 0.0)
-                list.addView(listRow(date, sub, if (dayCost > 0) money(dayCost * 100) else ""))
+        val rows = days.zip(figures).filter { it.second != null }.reversed()
+        if (rows.isEmpty()) list.addView(listRow(getString(R.string.usage_no_period), null, ""))
+        rows.forEachIndexed { i, (day, f) ->
+            if (i > 0) list.addView(rowDivider())
+            f!!
+            val title = if (day == today) "Today" else day.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.UK))
+            val sub = buildString {
+                append(String.format(Locale.UK, "%.1f kWh electricity", f.elecKwh))
+                f.gasKwh?.let { append(String.format(Locale.UK, " · %.1f kWh gas", it)) }
             }
+            val dayCost = (f.elecCost ?: 0.0) + (f.gasCost ?: 0.0)
+            list.addView(listRow(title, sub, if (dayCost > 0) money(dayCost * 100) else "").apply {
+                setBackgroundResource(R.drawable.bg_row)
+                setOnClickListener {
+                    prefs.setLong(K_USAGE_PERIOD, 0)
+                    usageOffset = java.time.temporal.ChronoUnit.DAYS.between(day, today).toInt()
+                    renderUsage()
+                    findViewById<View>(R.id.pageUsage).scrollTo(0, 0)
+                }
+            })
         }
-        findViewById<View>(R.id.usageNote).visibility = if (known.size < span) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.usageNote).visibility = if (known.size < days.count { !it.isAfter(today) }) View.VISIBLE else View.GONE
     }
 
     /** "21:30" for half-hour number [i] (48 = "24:00"). */

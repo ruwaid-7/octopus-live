@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview only: the Home dial (same geometry as ArcGaugeView) with a sample marker -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="264dp"
+    android:height="138dp"
+    android:viewportWidth="264"
+    android:viewportHeight="138">
+    <path android:pathData="M36.00,118.00 A96,96 0 0,1 43.31,81.26" android:strokeColor="@color/elec_low" android:strokeWidth="10" />
+    <path android:pathData="M46.09,75.17 A96,96 0 0,1 128.65,22.06" android:strokeColor="@color/elec_mid" android:strokeWidth="10" />
+    <path android:pathData="M135.35,22.06 A96,96 0 0,1 228.00,118.00" android:strokeColor="@color/elec_high" android:strokeWidth="10" />
+    <path android:pathData="M210.21,75.77 a8,8 0 1,0 16,0 a8,8 0 1,0 -16,0" android:fillColor="@color/text_primary" />
+    <path android:pathData="M211.71,75.77 a6.5,6.5 0 1,0 13,0 a6.5,6.5 0 1,0 -13,0" android:strokeColor="@color/card_surface" android:strokeWidth="3" />
+</vector>

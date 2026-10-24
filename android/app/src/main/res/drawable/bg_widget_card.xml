@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Widget background: the app's card surface and outline (light and dark), widget-sized corners -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <!-- Deep Octopus Navy surface with subtle transparency -->
-    <solid android:color="@color/octopus_surface_dark" />
-
-    <!-- Modern Android widget rounded corners (compatible across API levels) -->
-    <corners android:radius="22dp" />
-
-    <!-- Subtle 1dp inner highlight border so it pops on both pitch-black and white wallpapers -->
+    <solid android:color="@color/card_surface" />
+    <corners android:radius="20dp" />
     <stroke
         android:width="1dp"
-        android:color="@color/octopus_card_stroke" />
+        android:color="@color/card_stroke" />
 </shape>

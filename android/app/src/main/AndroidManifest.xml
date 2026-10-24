@@ -54,15 +54,65 @@
                 android:value="Live home electricity monitor shown in an ongoing notification" />
         </service>
 
+        <!-- Home-screen widgets (drawing and refreshing shared in Widgets.kt) -->
         <receiver
             android:name=".OctopusWidget"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/widget_label_live">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/octopus_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".DialWidget"
+            android:exported="false"
+            android:label="@string/widget_label_dial">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_dial_info" />
+        </receiver>
+
+        <receiver
+            android:name=".EnergyWidget"
+            android:exported="false"
+            android:label="@string/widget_label_energy">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_energy_info" />
+        </receiver>
+
+        <receiver
+            android:name=".CostWidget"
+            android:exported="false"
+            android:label="@string/widget_label_cost">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_cost_info" />
+        </receiver>
+
+        <receiver
+            android:name=".ChartWidget"
+            android:exported="false"
+            android:label="@string/widget_label_chart">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_chart_info" />
         </receiver>
 
         <service

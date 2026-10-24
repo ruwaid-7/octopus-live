@@ -35,22 +35,6 @@
     <color name="btn_secondary_bg_pressed">#FFE4E4E9</color>
     <color name="btn_secondary_stroke">#FFE0E0E6</color>
     <color name="btn_secondary_text">#FF111114</color>
-
-    <!-- ========================================================== -->
-    <!-- Widget Colors (Preserved from Home Screen Widget)          -->
-    <!-- ========================================================== -->
-    <color name="octopus_surface_dark">#F210002B</color>
-    <color name="octopus_surface_pill">#FF1D0B40</color>
-    <color name="octopus_card_stroke">#33FFFFFF</color>
-    <color name="octopus_pill_stroke">#1AFFFFFF</color>
-    <color name="octopus_progress_track">#38FFFFFF</color>
-    <color name="octopus_accent_pink">#FFF050F8</color>
-    <color name="octopus_text_primary">#FFFFFFFF</color>
-    <color name="octopus_text_secondary">#FFB8B2C8</color>
-    <color name="power_Low_Green">#FF00E676</color>
-    <color name="power_Normal_Amber">#FFFFB300</color>
-    <color name="power_High_Red">#FFFF5252</color>
-    <color name="gas_orange">#FFFF8A3D</color>
     <!-- Launcher icon -->
     <color name="launcher_bg">#FFE8478B</color>
 

@@ -102,6 +102,15 @@
     <string name="info_channel_description">Yesterday\'s use and cost, and cheap-electricity tips</string>
     <string name="widget_description">Live electricity demand and today\'s usage</string>
     <string name="widget_footer_placeholder">Tap to load</string>
+    <string name="widget_label_live">Live usage</string>
+    <string name="widget_label_dial">Live dial</string>
+    <string name="widget_desc_dial">The Home dial with live electricity and the cost per hour</string>
+    <string name="widget_label_energy">Electricity and gas</string>
+    <string name="widget_desc_energy">Electricity and gas right now, side by side</string>
+    <string name="widget_label_cost">Cost and price</string>
+    <string name="widget_desc_cost">Today\'s cost so far, and the electricity price now and next</string>
+    <string name="widget_label_chart">Today\'s chart</string>
+    <string name="widget_desc_chart">Today\'s half-hours as a bar chart, with the peak</string>
     <string name="tile_label">Live electricity</string>
     <string name="quiet_channel_name">Ongoing warnings</string>
     <string name="quiet_channel_description">Warnings that stay on screen until usage drops (no sound)</string>

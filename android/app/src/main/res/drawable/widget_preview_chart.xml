@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget picker preview only: today's half-hour bars with a sample evening peak -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="64dp"
+    android:viewportWidth="288"
+    android:viewportHeight="64">
+    <path android:pathData="M0.00,54.00 h4.04 v6.00 h-4.04 z M6.04,54.00 h4.04 v6.00 h-4.04 z M12.08,54.00 h4.04 v6.00 h-4.04 z M18.12,54.00 h4.04 v6.00 h-4.04 z M24.17,54.00 h4.04 v6.00 h-4.04 z M30.21,54.00 h4.04 v6.00 h-4.04 z M36.25,54.00 h4.04 v6.00 h-4.04 z M42.29,54.00 h4.04 v6.00 h-4.04 z M48.33,54.00 h4.04 v6.00 h-4.04 z M54.38,54.00 h4.04 v6.00 h-4.04 z M60.42,54.00 h4.04 v6.00 h-4.04 z M66.46,54.00 h4.04 v6.00 h-4.04 z M102.71,53.82 h4.04 v6.18 h-4.04 z M108.75,53.82 h4.04 v6.18 h-4.04 z M114.79,53.82 h4.04 v6.18 h-4.04 z M120.83,53.82 h4.04 v6.18 h-4.04 z M126.88,53.82 h4.04 v6.18 h-4.04 z M132.92,53.82 h4.04 v6.18 h-4.04 z M138.96,53.82 h4.04 v6.18 h-4.04 z M169.17,52.94 h4.04 v7.06 h-4.04 z M175.21,53.82 h4.04 v6.18 h-4.04 z M181.25,54.00 h4.04 v6.00 h-4.04 z M187.29,52.94 h4.04 v7.06 h-4.04 z" android:fillColor="@color/elec_low" />
+    <path android:pathData="M72.50,49.41 h4.04 v10.59 h-4.04 z M78.54,40.59 h4.04 v19.41 h-4.04 z M84.58,37.06 h4.04 v22.94 h-4.04 z M90.62,42.35 h4.04 v17.65 h-4.04 z M96.67,47.65 h4.04 v12.35 h-4.04 z M145.00,45.88 h4.04 v14.12 h-4.04 z M151.04,44.12 h4.04 v15.88 h-4.04 z M157.08,45.00 h4.04 v15.00 h-4.04 z M163.12,51.18 h4.04 v8.82 h-4.04 z M193.33,47.65 h4.04 v12.35 h-4.04 z M199.38,38.82 h4.04 v21.18 h-4.04 z M205.42,30.00 h4.04 v30.00 h-4.04 z" android:fillColor="@color/elec_mid" />
+    <path android:pathData="M211.46,21.18 h4.04 v38.82 h-4.04 z M217.50,14.12 h4.04 v45.88 h-4.04 z M223.54,12.35 h4.04 v47.65 h-4.04 z M229.58,12.35 h4.04 v47.65 h-4.04 z M235.62,14.12 h4.04 v45.88 h-4.04 z" android:fillColor="@color/elec_high" />
+    <path android:pathData="M241.67,54.00 h4.04 v6.00 h-4.04 z M247.71,54.00 h4.04 v6.00 h-4.04 z M253.75,54.00 h4.04 v6.00 h-4.04 z M259.79,54.00 h4.04 v6.00 h-4.04 z M265.83,54.00 h4.04 v6.00 h-4.04 z M271.88,54.00 h4.04 v6.00 h-4.04 z M277.92,54.00 h4.04 v6.00 h-4.04 z M283.96,54.00 h4.04 v6.00 h-4.04 z" android:fillColor="@color/divider_subtle" />
+    <path android:pathData="M0,63 h288" android:strokeColor="@color/divider_subtle" android:strokeWidth="1" />
+</vector>

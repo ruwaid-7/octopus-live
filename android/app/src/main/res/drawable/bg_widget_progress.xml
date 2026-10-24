@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Electricity bar: green to amber to red (the app's levels) on a faint track -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Unfilled Track -->
     <item android:id="@android:id/background">
         <shape android:shape="rectangle">
             <corners android:radius="3dp" />
-            <solid android:color="@color/octopus_progress_track" />
+            <solid android:color="@color/divider_subtle" />
         </shape>
     </item>
-
-    <!-- Filled Progress (Smooth Gradient from Low -> Medium -> High demand) -->
     <item android:id="@android:id/progress">
         <scale android:scaleWidth="100%">
             <shape android:shape="rectangle">
                 <corners android:radius="3dp" />
                 <gradient
                     android:angle="0"
-                    android:centerColor="@color/power_Normal_Amber"
-                    android:endColor="@color/power_High_Red"
-                    android:startColor="@color/power_Low_Green"
+                    android:centerColor="@color/elec_mid"
+                    android:endColor="@color/elec_high"
+                    android:startColor="@color/elec_low"
                     android:type="linear" />
             </shape>
         </scale>

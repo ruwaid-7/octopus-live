@@ -34,7 +34,7 @@
         android:letterSpacing="0.01"
         android:maxLines="1"
         android:text="@string/widget_footer_placeholder"
-        android:textColor="@color/octopus_text_secondary"
+        android:textColor="@color/text_muted"
         android:textSize="11sp"
         tools:text="● Live · meter 18:05" />
 
@@ -49,7 +49,7 @@
         android:includeFontPadding="false"
         android:maxLines="1"
         android:text=""
-        android:textColor="@color/gas_orange"
+        android:textColor="@color/gas_accent"
         android:textSize="11sp"
         android:visibility="gone"
         tools:text="Gas 3.75 kWh"
@@ -79,7 +79,7 @@
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:text="ELEC"
-                android:textColor="@color/octopus_text_secondary"
+                android:textColor="@color/text_secondary"
                 android:textSize="7sp"
                 tools:ignore="SmallSp" />
 
@@ -112,7 +112,7 @@
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:text="GAS"
-                android:textColor="@color/gas_orange"
+                android:textColor="@color/gas_accent"
                 android:textSize="7sp"
                 tools:ignore="SmallSp" />
 
@@ -157,7 +157,7 @@
                 android:letterSpacing="0.08"
                 android:maxLines="1"
                 android:text="OCTOPUS LIVE"
-                android:textColor="@color/octopus_accent_pink"
+                android:textColor="@color/brand_pink"
                 android:textSize="9sp"
                 tools:ignore="SmallSp" />
 
@@ -176,7 +176,7 @@
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:text="850 W"
-                android:textColor="@color/power_Normal_Amber"
+                android:textColor="@color/elec_mid"
                 android:textSize="26sp" />
         </LinearLayout>
 
@@ -201,7 +201,7 @@
                 android:maxLines="1"
                 android:layout_marginEnd="5dp"
                 android:text="TODAY"
-                android:textColor="@color/octopus_text_secondary"
+                android:textColor="@color/text_secondary"
                 android:textSize="8sp"
                 tools:ignore="SmallSp" />
 
@@ -214,7 +214,7 @@
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:text="5.23 kWh"
-                android:textColor="@color/octopus_text_primary"
+                android:textColor="@color/text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
 

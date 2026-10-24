@@ -43,7 +43,7 @@ data class InsightsData(
     val mpan: String? = null,
     val mprn: String? = null,
     val baseW: Int? = null,
-    val history: List<DayStats> = emptyList(),    // oldest first, up to 7 days, not including today
+    val history: List<DayStats> = emptyList(),    // oldest first, up to HISTORY_DAYS days, not including today
     val error: String? = null,
 ) {
     fun toJson(): String = JSONObject().apply {
@@ -201,11 +201,11 @@ class Insights(context: Context) {
         // Agile and similar publish tomorrow's prices around 16:00: fetch again soon after that
         val publish = today.atTime(16, 15).atZone(zone).toInstant().toEpochMilli()
         val missedPublish = System.currentTimeMillis() >= publish && prefs.long(K_RATES_AT) < publish
-        val fresh = prefs.str(K_RATES_DAY) == today.toString() &&
+        val fresh = prefs.str(K_RATES_DAY) == today.toString() && prefs.long(K_RATES_SPAN) == HISTORY_DAYS + 1L &&
             System.currentTimeMillis() - prefs.long(K_RATES_AT) < RATES_EVERY_MS && !missedPublish
         if (fresh) return
 
-        val from = today.minusDays(8).atStartOfDay(zone)
+        val from = today.minusDays(HISTORY_DAYS + 1L).atStartOfDay(zone)   // prices for every day in the history
         val to = today.plusDays(2).atStartOfDay(zone)
         val base = "https://api.octopus.energy/v1/products/${enc(elecProduct)}/electricity-tariffs/${enc(elecTariff)}"
         prefs.setStr(K_ELEC_RATES, ratesToJson(fetchRates("$base/standard-unit-rates/", from, to)))
@@ -219,6 +219,7 @@ class Insights(context: Context) {
             prefs.setStr(K_GAS_STANDING, ratesToJson(fetchRates("$g/standing-charges/", from, to)))
         }
         prefs.setStr(K_RATES_DAY, today.toString())
+        prefs.setLong(K_RATES_SPAN, HISTORY_DAYS + 1L)
         prefs.setLong(K_RATES_AT, System.currentTimeMillis())
     }
 
@@ -268,9 +269,15 @@ class Insights(context: Context) {
 
     // ---------------------------------------------------------------- history
 
-    /** Fills the last 7 days, one day per call; re-fetches yesterday once its late gas readings are in. */
+    /**
+     * Fills the last [HISTORY_DAYS] days, newest first, one day at a time and at most every
+     * [BACKFILL_EVERY_MS] (2 requests a go), so with a relay polling once a minute the account stays
+     * well under Octopus's ~100 requests an hour. Re-fetches yesterday once its late gas readings
+     * are in, and any day that was saved before its prices were known.
+     */
     private fun backfillOneDay(token: String) {
         val elecId = prefs.deviceId ?: return
+        if (System.currentTimeMillis() - prefs.long(K_BACKFILL_AT) < BACKFILL_EVERY_MS) return
         // History saved by older versions counted empty days and part-day always-on; start it afresh
         if (prefs.str(K_HISTORY_VER) != HISTORY_VER) {
             prefs.setStr(K_HISTORY, null)
@@ -279,13 +286,18 @@ class Insights(context: Context) {
         val today = LocalDate.now(zone)
         val history = loadHistory().associateBy { it.date }.toMutableMap()
 
-        val missing = (1..7).map { today.minusDays(it.toLong()) }.firstOrNull { day ->
+        val elecRates = rates(K_ELEC_RATES)
+        val missing = (1..HISTORY_DAYS).map { today.minusDays(it.toLong()) }.firstOrNull { day ->
             val rec = history[day.toString()] ?: return@firstOrNull true
+            // Saved without a cost, but its prices are known now (e.g. the price window grew)
+            val noon = day.atTime(12, 0).atZone(zone).toInstant().toEpochMilli()
+            if (rec.elecKwh > 0 && rec.elecCost == null && rateAt(elecRates, noon) != null) return@firstOrNull true
             // Gas arrives about an hour late: refresh a day once, after 03:00 the next morning
             val complete = day.plusDays(1).atStartOfDay(zone).plusHours(3).toInstant().toEpochMilli()
             rec.fetchedAt < complete && System.currentTimeMillis() >= complete
         } ?: return
 
+        prefs.setLong(K_BACKFILL_AT, System.currentTimeMillis())
         val start = missing.atStartOfDay(zone)
         val end = missing.plusDays(1).atStartOfDay(zone)
         val elec = api.halfHourly(token, elecId, start, end).filter { it.first < end.toInstant().toEpochMilli() }
@@ -306,7 +318,7 @@ class Insights(context: Context) {
             baseW = if (elec.size >= FULL_DAY_SLOTS) baseload(elec) else null,
             fetchedAt = System.currentTimeMillis(),
         )
-        val keep = today.minusDays(7).toString()
+        val keep = today.minusDays(HISTORY_DAYS.toLong()).toString()
         val list = history.values.filter { it.date >= keep && it.date < today.toString() }.sortedBy { it.date }
         prefs.setStr(K_HISTORY, JSONArray().apply { list.forEach { put(InsightsData.dayToJson(it)) } }.toString())
     }
@@ -447,6 +459,10 @@ class Insights(context: Context) {
             Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 
         private const val MIN_GAP_MS = 60_000L
+        const val HISTORY_DAYS = 30
+        private const val BACKFILL_EVERY_MS = 5 * 60_000L
+        private const val K_BACKFILL_AT = "ins_backfillAt"
+        private const val K_RATES_SPAN = "ins_ratesSpan"
         private const val HISTORY_VER = "2"
         private const val K_HISTORY_VER = "ins_historyVer"
         private const val FULL_DAY_SLOTS = 44   // of 48 half-hours (allows for a few gaps)

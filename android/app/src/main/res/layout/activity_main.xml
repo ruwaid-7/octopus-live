@@ -62,6 +62,7 @@
 
                     <LinearLayout
                         android:id="@+id/homeStatus"
+                        android:visibility="gone"
                         android:layout_width="wrap_content"
                         android:layout_height="28dp"
                         android:background="@drawable/bg_pill"
@@ -130,95 +131,6 @@
                     android:layout_marginTop="2dp"
                     android:orientation="vertical">
 
-                    <!-- Warning banners (left accent rail), shown when needed -->
-                    <LinearLayout
-                        android:id="@+id/homeHighBanner"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"
-                        android:background="@drawable/bg_banner_elec"
-                        android:gravity="center_vertical"
-                        android:minHeight="36dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="14dp"
-                        android:paddingTop="7dp"
-                        android:paddingEnd="11dp"
-                        android:paddingBottom="7dp"
-                        android:visibility="gone">
-
-                        <ImageView
-                            android:layout_width="14dp"
-                            android:layout_height="14dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_bolt"
-                            android:tint="@color/elec_high" />
-
-                        <TextView
-                            android:id="@+id/homeHighBannerText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="7dp"
-                            android:layout_weight="1"
-                            android:fontFamily="sans-serif-medium"
-                            android:textColor="@color/elec_high"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            tools:text="Above 3 kW for 50 min" />
-
-                        <TextView
-                            android:id="@+id/homeHighBannerTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-medium"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp"
-                            tools:text="since 21:40" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/homeGasBanner"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"
-                        android:background="@drawable/bg_banner_gas2"
-                        android:gravity="center_vertical"
-                        android:minHeight="36dp"
-                        android:orientation="horizontal"
-                        android:paddingStart="14dp"
-                        android:paddingTop="7dp"
-                        android:paddingEnd="11dp"
-                        android:paddingBottom="7dp"
-                        android:visibility="gone">
-
-                        <ImageView
-                            android:layout_width="14dp"
-                            android:layout_height="14dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_flame"
-                            android:tint="@color/gas_accent" />
-
-                        <TextView
-                            android:id="@+id/homeGasBannerText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="7dp"
-                            android:layout_weight="1"
-                            android:fontFamily="sans-serif-medium"
-                            android:textColor="@color/gas_accent"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            tools:text="Gas on for 2 h 10 min" />
-
-                        <TextView
-                            android:id="@+id/homeGasBannerTime"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="sans-serif-medium"
-                            android:textColor="@color/text_secondary"
-                            android:textSize="11sp"
-                            tools:text="since 19:20" />
-                    </LinearLayout>
-
                     <!-- 1. Electricity, live: 180° dial with the reading in the middle -->
                     <LinearLayout
                         style="@style/Card"
@@ -229,7 +141,7 @@
                         android:paddingBottom="14dp">
 
                         <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
@@ -242,43 +154,9 @@
                                 android:tint="@color/elec_mid" />
 
                             <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
+                                style="@style/Eyebrow"
                                 android:layout_marginStart="6dp"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:letterSpacing="0.055"
-                                android:textAllCaps="true"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:text="@string/home_elec_now" />
-
-                            <LinearLayout
-                                android:id="@+id/homeLiveBadge"
-                                android:layout_width="wrap_content"
-                                android:layout_height="22dp"
-                                android:background="@drawable/bg_live_pill"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp">
-
-                                <View
-                                    android:layout_width="5dp"
-                                    android:layout_height="5dp"
-                                    android:background="@drawable/bg_dot"
-                                    android:backgroundTint="@color/elec_low" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="5dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:text="@string/home_live_badge"
-                                    android:textColor="@color/elec_low"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
+                                android:text="@string/legend_elec" />
                         </LinearLayout>
 
                         <FrameLayout
@@ -334,6 +212,39 @@
                         </FrameLayout>
 
                         <LinearLayout
+                            android:id="@+id/homeHighBanner"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:background="@drawable/bg_high_pill"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingStart="10dp"
+                            android:paddingTop="5dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="5dp"
+                            android:visibility="gone">
+
+                            <ImageView
+                                android:layout_width="13dp"
+                                android:layout_height="13dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_bolt"
+                                android:tint="@color/elec_high" />
+
+                            <TextView
+                                android:id="@+id/homeHighBannerText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="6dp"
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/elec_high"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                tools:text="Above 3 kW for 50 min · since 21:40" />
+                        </LinearLayout>
+
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
@@ -358,80 +269,34 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- 2. Gas, half-hourly: 30-minute average, clearly delayed -->
+                    <!-- 2. Gas: like the in-home display - title, big flame, 30-minute average -->
                     <LinearLayout
                         android:id="@+id/homeGasCard"
                         style="@style/Card"
                         android:layout_marginTop="10dp"
                         android:background="@drawable/bg_card18"
-                        android:paddingTop="14dp"
-                        android:paddingBottom="14dp">
+                        android:gravity="center_horizontal"
+                        android:paddingTop="16dp"
+                        android:paddingBottom="16dp">
+
+                        <TextView
+                            style="@style/Eyebrow"
+                            android:text="@string/legend_gas" />
+
+                        <ImageView
+                            android:id="@+id/homeGasFlame"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp"
+                            android:layout_marginTop="12dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_flame"
+                            android:tint="@color/gas_accent" />
 
                         <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
-
-                            <ImageView
-                                android:layout_width="13dp"
-                                android:layout_height="13dp"
-                                android:contentDescription="@null"
-                                android:src="@drawable/ic_flame"
-                                android:tint="@color/gas_accent" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="6dp"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:letterSpacing="0.055"
-                                android:textAllCaps="true"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:text="@string/legend_gas" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="22dp"
-                                android:background="@drawable/bg_badge_delayed"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal"
-                                android:paddingStart="8dp"
-                                android:paddingEnd="8dp">
-
-                                <ImageView
-                                    android:layout_width="11dp"
-                                    android:layout_height="11dp"
-                                    android:contentDescription="@null"
-                                    android:src="@drawable/ic_clock_small"
-                                    android:tint="@color/text_muted" />
-
-                                <TextView
-                                    android:id="@+id/homeGasAvgLabel"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="4dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="11sp"
-                                    tools:text="30-min average · to 21:30" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginTop="8dp"
-                            android:background="@color/divider_subtle" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="8dp"
-                            android:gravity="center_vertical"
+                            android:baselineAligned="true"
                             android:orientation="horizontal">
 
                             <TextView
@@ -442,309 +307,48 @@
                                 android:fontFeatureSettings="tnum"
                                 android:letterSpacing="-0.023"
                                 android:textColor="@color/text_primary"
-                                android:textSize="26sp"
+                                android:textSize="32sp"
                                 android:textStyle="bold"
-                                tools:text="8.4" />
+                                tools:text="2.3" />
 
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
-                                android:layout_weight="1"
                                 android:fontFamily="sans-serif-medium"
                                 android:text="kW"
                                 android:textColor="@color/text_secondary"
-                                android:textSize="14sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
-
-                            <LinearLayout
-                                android:id="@+id/homeGasStatePill"
-                                android:layout_width="wrap_content"
-                                android:layout_height="28dp"
-                                android:background="@drawable/bg_gas_on"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal"
-                                android:paddingStart="10dp"
-                                android:paddingEnd="10dp">
-
-                                <View
-                                    android:id="@+id/homeGasStateDot"
-                                    android:layout_width="6dp"
-                                    android:layout_height="6dp"
-                                    android:background="@drawable/bg_dot"
-                                    android:backgroundTint="@color/gas_accent" />
-
-                                <TextView
-                                    android:id="@+id/homeGasStateText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="6dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:textColor="@color/gas_accent"
-                                    android:textSize="12sp"
-                                    android:textStyle="bold"
-                                    tools:text="On for 1 h 30 min" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- 3. Today so far: a box per fuel, then the half-hour bars -->
-                    <LinearLayout
-                        style="@style/Card"
-                        android:layout_marginTop="10dp"
-                        android:background="@drawable/bg_card18">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:baselineAligned="true"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:fontFamily="sans-serif-medium"
-                                android:letterSpacing="0.055"
-                                android:textAllCaps="true"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="11sp"
-                                android:textStyle="bold"
-                                android:text="@string/home_today_so_far" />
-
-                            <TextView
-                                android:id="@+id/homeTodayTotal"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="sans-serif"
-                                android:fontFeatureSettings="tnum"
-                                android:letterSpacing="-0.017"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                tools:text="£3.55 so far" />
                         </LinearLayout>
 
                         <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
+                            android:layout_width="wrap_content"
+                            android:layout_height="22dp"
                             android:layout_marginTop="10dp"
-                            android:baselineAligned="false"
-                            android:orientation="horizontal">
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:background="@drawable/bg_ledger"
-                                android:orientation="vertical"
-                                android:paddingStart="10dp"
-                                android:paddingTop="8dp"
-                                android:paddingEnd="10dp"
-                                android:paddingBottom="8dp">
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <View
-                                        android:layout_width="7dp"
-                                        android:layout_height="7dp"
-                                        android:background="@drawable/bg_swatch"
-                                        android:backgroundTint="@color/elec_mid" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="6dp"
-                                        android:fontFamily="sans-serif-medium"
-                                        android:text="@string/legend_elec"
-                                        android:textColor="@color/text_secondary"
-                                        android:textSize="11sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <TextView
-                                    android:id="@+id/homeElecToday"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="3dp"
-                                    android:fontFamily="sans-serif"
-                                    android:fontFeatureSettings="tnum"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    tools:text="8.42 kWh · £2.10" />
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:id="@+id/homeGasTodayRow"
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="8dp"
-                                android:layout_weight="1"
-                                android:background="@drawable/bg_ledger"
-                                android:orientation="vertical"
-                                android:paddingStart="10dp"
-                                android:paddingTop="8dp"
-                                android:paddingEnd="10dp"
-                                android:paddingBottom="8dp">
-
-                                <LinearLayout
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal">
-
-                                    <View
-                                        android:layout_width="7dp"
-                                        android:layout_height="7dp"
-                                        android:background="@drawable/bg_swatch"
-                                        android:backgroundTint="@color/gas_accent" />
-
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:layout_marginStart="6dp"
-                                        android:fontFamily="sans-serif-medium"
-                                        android:text="@string/legend_gas"
-                                        android:textColor="@color/text_secondary"
-                                        android:textSize="11sp"
-                                        android:textStyle="bold" />
-                                </LinearLayout>
-
-                                <TextView
-                                    android:id="@+id/homeGasToday"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="3dp"
-                                    android:fontFamily="sans-serif"
-                                    android:fontFeatureSettings="tnum"
-                                    android:textColor="@color/text_primary"
-                                    android:textSize="13sp"
-                                    tools:text="24.1 kWh · £1.45" />
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="1dp"
-                            android:layout_marginTop="12dp"
-                            android:background="@color/divider_subtle" />
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_badge_delayed"
                             android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="horizontal"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp">
 
-                            <!-- Electricity | Gas switch (gas only if there's a gas meter) -->
-                            <LinearLayout
-                                android:id="@+id/homeChartSwitch"
-                                android:layout_width="wrap_content"
-                                android:layout_height="24dp"
-                                android:background="@drawable/bg_badge_delayed"
-                                android:orientation="horizontal"
-                                android:padding="2dp">
-
-                                <TextView
-                                    android:id="@+id/homeChartElec"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="match_parent"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:gravity="center"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="10dp"
-                                    android:text="@string/legend_elec"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="11sp" />
-
-                                <TextView
-                                    android:id="@+id/homeChartGas"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="match_parent"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:gravity="center"
-                                    android:paddingStart="10dp"
-                                    android:paddingEnd="10dp"
-                                    android:text="@string/legend_gas"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
-
-                            <View
-                                android:layout_width="0dp"
-                                android:layout_height="1dp"
-                                android:layout_weight="1" />
-
-                            <LinearLayout
-                                android:id="@+id/homeChartLegend"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:gravity="center_vertical"
-                                android:orientation="horizontal">
-                                <View
-                                    android:layout_width="6dp"
-                                    android:layout_height="6dp"
-                                    android:layout_marginStart="0dp"
-                                    android:background="@drawable/bg_swatch"
-                                    android:backgroundTint="@color/elec_low" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="4dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:text="&lt;0.5"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="10sp" />
-                                <View
-                                    android:layout_width="6dp"
-                                    android:layout_height="6dp"
-                                    android:layout_marginStart="8dp"
-                                    android:background="@drawable/bg_swatch"
-                                    android:backgroundTint="@color/elec_mid" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="4dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:text="0.5–2"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="10sp" />
-                                <View
-                                    android:layout_width="6dp"
-                                    android:layout_height="6dp"
-                                    android:layout_marginStart="8dp"
-                                    android:background="@drawable/bg_swatch"
-                                    android:backgroundTint="@color/elec_high" />
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginStart="4dp"
-                                    android:fontFamily="sans-serif-medium"
-                                    android:text="2 kW+"
-                                    android:textColor="@color/text_muted"
-                                    android:textSize="10sp" />
-                            </LinearLayout>
+                            <ImageView
+                                android:layout_width="11dp"
+                                android:layout_height="11dp"
+                                android:contentDescription="@null"
+                                android:src="@drawable/ic_clock_small"
+                                android:tint="@color/text_muted" />
 
                             <TextView
-                                android:id="@+id/homeChartNote"
+                                android:id="@+id/homeGasAvgLabel"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:layout_marginStart="4dp"
                                 android:fontFamily="sans-serif-medium"
                                 android:textColor="@color/text_muted"
-                                android:textSize="10sp"
-                                android:visibility="gone"
-                                tools:text="Half-hours to 22:30" />
+                                android:textSize="11sp"
+                                tools:text="30-min average · to 15:00" />
                         </LinearLayout>
-
-                        <uk.octopuslive.SlotBarsView
-                            android:id="@+id/homeSlots"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp" />
                     </LinearLayout>
 
                     <!-- 4. Price now and always-on -->
@@ -905,6 +509,49 @@
                     style="@style/TabHeader"
                     android:text="@string/tab_usage" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/bg_period"
+                    android:orientation="horizontal"
+                    android:padding="3dp">
+
+                    <TextView
+                            android:id="@+id/usagePeriodDay"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center"
+                            android:text="@string/usage_day_tab"
+                            android:textColor="@color/text_muted"
+                            android:textSize="14sp" />
+
+                    <TextView
+                            android:id="@+id/usagePeriodWeek"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center"
+                            android:text="@string/usage_week_tab"
+                            android:textColor="@color/text_muted"
+                            android:textSize="14sp" />
+
+                    <TextView
+                            android:id="@+id/usagePeriodMonth"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:fontFamily="sans-serif-medium"
+                            android:gravity="center"
+                            android:text="@string/usage_month_tab"
+                            android:textColor="@color/text_muted"
+                            android:textSize="14sp" />
+                </LinearLayout>
+
+
                 <TextView
                     android:id="@+id/usageMessage"
                     style="@style/SRowSub"
@@ -917,6 +564,152 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/usageDayBox"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                    <!-- Today so far: total and a box per fuel -->
+                    <LinearLayout
+                        style="@style/Card"
+                        android:layout_marginTop="2dp"
+                        android:background="@drawable/bg_card18">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:baselineAligned="true"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="sans-serif-medium"
+                                android:letterSpacing="0.055"
+                                android:textAllCaps="true"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:text="@string/home_today_so_far" />
+
+                            <TextView
+                                android:id="@+id/homeTodayTotal"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif"
+                                android:fontFeatureSettings="tnum"
+                                android:letterSpacing="-0.017"
+                                android:textColor="@color/text_primary"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                tools:text="£3.55 so far" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_ledger"
+                                android:orientation="vertical"
+                                android:paddingStart="10dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="8dp">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <View
+                                        android:layout_width="7dp"
+                                        android:layout_height="7dp"
+                                        android:background="@drawable/bg_swatch"
+                                        android:backgroundTint="@color/elec_low" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:text="@string/legend_elec"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/homeElecToday"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:fontFamily="sans-serif"
+                                    android:fontFeatureSettings="tnum"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    tools:text="8.42 kWh · £2.10" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:id="@+id/homeGasTodayRow"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:layout_weight="1"
+                                android:background="@drawable/bg_ledger"
+                                android:orientation="vertical"
+                                android:paddingStart="10dp"
+                                android:paddingTop="8dp"
+                                android:paddingEnd="10dp"
+                                android:paddingBottom="8dp">
+
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center_vertical"
+                                    android:orientation="horizontal">
+
+                                    <View
+                                        android:layout_width="7dp"
+                                        android:layout_height="7dp"
+                                        android:background="@drawable/bg_swatch"
+                                        android:backgroundTint="@color/gas_accent" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginStart="6dp"
+                                        android:fontFamily="sans-serif-medium"
+                                        android:text="@string/legend_gas"
+                                        android:textColor="@color/text_secondary"
+                                        android:textSize="11sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+
+                                <TextView
+                                    android:id="@+id/homeGasToday"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginTop="3dp"
+                                    android:fontFamily="sans-serif"
+                                    android:fontFeatureSettings="tnum"
+                                    android:textColor="@color/text_primary"
+                                    android:textSize="13sp"
+                                    tools:text="24.1 kWh · £1.45" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
 
                     <LinearLayout
                         style="@style/HCard"
@@ -1102,23 +895,10 @@
                         </LinearLayout>
                     </LinearLayout>
 
-                    <LinearLayout
-                        style="@style/HCard"
-                        android:paddingBottom="8dp">
-
-                        <TextView
-                            style="@style/Eyebrow"
-                            android:text="@string/usage_breakdown" />
-
-                        <LinearLayout
-                            android:id="@+id/usageBreakdown"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:orientation="vertical" />
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/usageRangeBox"
                         style="@style/HCard">
 
                         <LinearLayout
@@ -1129,7 +909,8 @@
 
                             <TextView
                                 style="@style/Eyebrow"
-                                android:text="@string/this_week"
+                                android:id="@+id/usageRangeTitle"
+                                    android:text="@string/this_week"
                                 android:layout_width="0dp"
                                 android:layout_weight="1" />
 
@@ -1163,7 +944,7 @@
                                 android:layout_width="7dp"
                                 android:layout_height="7dp"
                                 android:background="@drawable/bg_swatch"
-                                android:backgroundTint="@color/brand_pink" />
+                                android:backgroundTint="@color/elec_low" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -1209,35 +990,7 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
-                    <LinearLayout
-                        style="@style/HCard">
-
-                        <TextView
-                            style="@style/Eyebrow"
-                            android:text="@string/tariff" />
-
-                        <TextView
-                            android:id="@+id/usageTariff"
-                            style="@style/SRowValue"
-                            android:layout_marginTop="8dp"
-                            android:textSize="17sp"
-                            tools:text="Agile Octopus" />
-
-                        <TextView
-                            android:id="@+id/usageTariffCode"
-                            style="@style/SRowSub"
-                            android:fontFamily="monospace"
-                            android:textSize="12sp"
-                            tools:text="E-1R-AGILE-24-10-01-C" />
-
-                        <TextView
-                            android:id="@+id/usageTariffDetail"
-                            style="@style/SRowSub"
-                            android:layout_marginTop="8dp"
-                            android:lineSpacingExtra="3dp"
-                            android:textColor="@color/text_secondary"
-                            tools:text="25.6p/kWh now" />
-                    </LinearLayout>
+                    
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
@@ -1650,11 +1403,199 @@
                 android:paddingTop="0dp"
                 android:paddingEnd="16dp">
 
-                <TextView
-                    style="@style/TabHeader"
-                    android:text="@string/tab_settings" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/settingsBack"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="-8dp"
+                        android:layout_marginEnd="4dp"
+                        android:background="@drawable/bg_row"
+                        android:contentDescription="@string/ob_back"
+                        android:padding="8dp"
+                        android:src="@drawable/ic_back"
+                        android:tint="@color/text_primary"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/settingsTitle"
+                        style="@style/TabHeader"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:text="@string/tab_settings" />
+                </LinearLayout>
+
+                <!-- Menu: each section opens on its own -->
+                <LinearLayout
+                    android:id="@+id/setMenu"
+                    style="@style/HCard"
+                    android:layout_marginTop="2dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp">
+
+                    <LinearLayout
+                        android:id="@+id/setOpenMini"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0"
+                                android:text="@string/set_home_mini" />
+
+                            <TextView
+                                android:id="@+id/setOpenMiniSub"
+                                style="@style/SRowSub"
+                                tools:text="Connected · relay" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setOpenMeters"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0"
+                                android:text="@string/set_meters" />
+
+                            <TextView
+                                android:id="@+id/setOpenMetersSub"
+                                style="@style/SRowSub"
+                                tools:text="Flexible Octopus" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setOpenConnection"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0"
+                                android:text="@string/section_connection" />
+
+                            <TextView
+                                android:id="@+id/setOpenConnectionSub"
+                                style="@style/SRowSub"
+                                tools:text="API key, relay and refresh" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
+                        android:id="@+id/setOpenPrefs"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0"
+                                android:text="@string/set_preferences" />
+
+                            <TextView
+                                android:id="@+id/setOpenPrefsSub"
+                                style="@style/SRowSub"
+                                tools:text="Startup, widget and battery" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/setCardMini"
+                    android:visibility="gone"
                     style="@style/HCard"
                     android:layout_marginTop="2dp"
                     android:paddingBottom="8dp">
@@ -1788,10 +1729,13 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/setCardMeters"
+                    android:visibility="gone"
                     style="@style/HCard"
                     android:paddingBottom="8dp">
 
                     <TextView
+                        android:visibility="gone"
                         style="@style/Eyebrow"
                         android:text="@string/set_meters" />
 
@@ -1813,6 +1757,18 @@
                             style="@style/SRowValue"
                             tools:text="Agile Octopus" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/setTariffCode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="-10dp"
+                        android:layout_marginBottom="10dp"
+                        android:fontFamily="monospace"
+                        android:gravity="end"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp"
+                        tools:text="E-1R-VAR-22-11-01-M" />
 
                     <View style="@style/SDivider" />
 
@@ -1892,9 +1848,12 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/setCardConnection"
+                    android:visibility="gone"
                     style="@style/HCard">
 
                     <TextView
+                        android:visibility="gone"
                         style="@style/Eyebrow"
                         android:text="@string/section_connection" />
 
@@ -2012,11 +1971,14 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/setCardPrefs"
+                    android:visibility="gone"
                     style="@style/HCard"
                     android:paddingTop="8dp"
                     android:paddingBottom="4dp">
 
                     <TextView
+                        android:visibility="gone"
                         style="@style/Eyebrow"
                         android:text="@string/set_preferences"
                         android:layout_marginTop="8dp" />
@@ -2144,6 +2106,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/setCardAbout"
                     style="@style/HCard"
                     android:paddingTop="8dp"
                     android:paddingBottom="4dp">

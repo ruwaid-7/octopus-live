@@ -232,4 +232,11 @@
     <string name="set_standing">Standing charge</string>
     <string name="set_meters_help">Tap a meter number to show it in full.</string>
     <string name="set_preferences">Preferences</string>
+    <string name="usage_day_tab">Day</string>
+    <string name="usage_week_tab">Week</string>
+    <string name="usage_month_tab">Month</string>
+    <string name="usage_last_week">Last 7 days</string>
+    <string name="usage_last_month">Last 30 days</string>
+    <string name="set_connection_sub">API key, relay and refresh</string>
+    <string name="set_prefs_sub">Startup, widget and battery</string>
 </resources>

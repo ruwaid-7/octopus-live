@@ -50,7 +50,6 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         setUpNav()
-        setUpHome()
         setUpAlerts()
         setUpUsage()
         setUpSettings()
@@ -109,9 +108,13 @@ class MainActivity : Activity() {
         super.onPause()
     }
 
-    @Deprecated("Back goes to Home first")
+    @Deprecated("Back closes a Settings section, then goes to Home")
     override fun onBackPressed() {
-        if (tab != TAB_HOME) showTab(TAB_HOME) else @Suppress("DEPRECATION") super.onBackPressed()
+        when {
+            tab == TAB_SETTINGS && settingsSection >= 0 -> showSettingsSection(-1)
+            tab != TAB_HOME -> showTab(TAB_HOME)
+            else -> @Suppress("DEPRECATION") super.onBackPressed()
+        }
     }
 
     private fun renderAll() {
@@ -136,11 +139,6 @@ class MainActivity : Activity() {
         listOf(R.id.navHomeLabel, R.id.navUsageLabel, R.id.navAlertsLabel, R.id.navSettingsLabel).map { findViewById<TextView>(it) }
     }
 
-    private fun setUpHome() {
-        findViewById<View>(R.id.homeChartElec).setOnClickListener { prefs.setStr(K_CHART_GAS, "0"); renderHome() }
-        findViewById<View>(R.id.homeChartGas).setOnClickListener { prefs.setStr(K_CHART_GAS, "1"); renderHome() }
-    }
-
     /** A segment of a small switch: raised and dark when selected, muted otherwise. */
     private fun styleSegment(id: Int, on: Boolean) {
         findViewById<TextView>(id).apply {
@@ -160,6 +158,7 @@ class MainActivity : Activity() {
         if (tab != index) {
             hideKeyboard()
         }
+        if (index == TAB_SETTINGS && (tab == TAB_SETTINGS || tab != index)) showSettingsSection(-1)
         tab = index
         // Selected tab: pink icon and label on a soft pink pill; the others muted
         val active = ColorStateList.valueOf(getColor(R.color.brand_pink))
@@ -233,8 +232,6 @@ class MainActivity : Activity() {
 
         // 1. Electricity, live: number, unit, gauge, cost per hour
         val watts = r?.demandWatts
-        val live = colour == R.color.elec_low
-        findViewById<View>(R.id.homeLiveBadge).visibility = if (live) View.VISIBLE else View.INVISIBLE
         val (num, unit) = when {
             watts == null -> "—" to ""
             watts < 1000 -> "$watts" to "W"
@@ -249,20 +246,14 @@ class MainActivity : Activity() {
             else -> ""
         })
 
-        // Warning banners: what, then "since" on the right
-        val gasOn = r?.gasTodayKwh != null && r.gasRunMinutes > 0
-        findViewById<View>(R.id.homeGasBanner).visibility = if (gasOn) View.VISIBLE else View.GONE
-        if (gasOn && r != null) {
-            setIfChanged(R.id.homeGasBannerText, "Gas on for ${duration(r.gasRunMinutes)}")
-            setIfChanged(R.id.homeGasBannerTime, r.gasRunSince?.let { getString(R.string.home_since, it) } ?: "")
-        }
+        // High-use warning, centred under the dial
         val highSince = prefs.long(LiveService.K_HIGH_SINCE)
         val highMins = if (highSince > 0) (now - highSince) / 60_000 else 0
         val highOn = prefs.highAlert && watts != null && watts >= prefs.highKw * 1000 && highSince > 0 && highMins >= 1
         findViewById<View>(R.id.homeHighBanner).visibility = if (highOn) View.VISIBLE else View.GONE
         if (highOn) {
-            setIfChanged(R.id.homeHighBannerText, "Above ${trim(prefs.highKw.toDouble())} kW for ${duration(highMins.toInt())}")
-            setIfChanged(R.id.homeHighBannerTime, getString(R.string.home_since, Insights.formatTime(highSince)))
+            setIfChanged(R.id.homeHighBannerText, "Above ${trim(prefs.highKw.toDouble())} kW for ${duration(highMins.toInt())}" +
+                " · since ${Insights.formatTime(highSince)}")
         }
 
         // 2. Gas: average over the latest half-hour (arrives about an hour late)
@@ -272,18 +263,13 @@ class MainActivity : Activity() {
         if (hasGas && r != null) {
             setIfChanged(R.id.homeGasAvgLabel, r.gasReadAt?.let { getString(R.string.home_gas_avg, it) } ?: getString(R.string.home_gas_avg_none))
             setIfChanged(R.id.homeGasKw, r.gasKw?.let { String.format(Locale.UK, "%.1f", it) } ?: "0.0")
+            // The flame is orange while the gas is on, grey when it's off
             val on = r.gasRunMinutes > 0
-            val stateColour = getColor(if (on) R.color.gas_accent else R.color.text_muted)
-            findViewById<View>(R.id.homeGasStatePill).setBackgroundResource(if (on) R.drawable.bg_gas_on else R.drawable.bg_gas_off)
-            findViewById<View>(R.id.homeGasStateDot).backgroundTintList = ColorStateList.valueOf(stateColour)
-            findViewById<TextView>(R.id.homeGasStateText).apply {
-                setTextColor(stateColour)
-                val t = if (on) getString(R.string.home_gas_on_for, duration(r.gasRunMinutes)) else getString(R.string.home_gas_off)
-                if (text.toString() != t) text = t
-            }
+            findViewById<ImageView>(R.id.homeGasFlame).imageTintList =
+                ColorStateList.valueOf(getColor(if (on) R.color.gas_accent else R.color.switch_off))
         }
 
-        // 3. Today so far
+        // Today so far (shown on Usage → Day)
         val total = listOfNotNull(ins?.elecCostToday, if (hasGas) ins?.gasCostToday else null).sum()
         setIfChanged(R.id.homeTodayTotal, if (ins?.elecCostToday != null) "${money(total * 100)} so far" else "")
         ledger(R.id.homeElecToday, r?.let { String.format(Locale.UK, "%.2f kWh", it.todayKwh) } ?: "—",
@@ -292,21 +278,6 @@ class MainActivity : Activity() {
             ledger(R.id.homeGasToday, String.format(Locale.UK, "%.1f kWh", r.gasTodayKwh),
                 ins?.gasCostToday?.let { money(it * 100) })
         }
-        // Electricity | Gas chart (the switch only appears with a gas meter)
-        val showGas = hasGas && prefs.str(K_CHART_GAS) == "1"
-        findViewById<View>(R.id.homeChartSwitch).visibility = if (hasGas) View.VISIBLE else View.GONE
-        styleSegment(R.id.homeChartElec, !showGas)
-        styleSegment(R.id.homeChartGas, showGas)
-        findViewById<View>(R.id.homeChartLegend).visibility = if (showGas) View.GONE else View.VISIBLE
-        findViewById<TextView>(R.id.homeChartNote).apply {
-            visibility = if (showGas) View.VISIBLE else View.GONE
-            val gasSlots = ins?.todayGasSlots.orEmpty()
-            val t = if (gasSlots.isEmpty()) getString(R.string.home_gas_chart_none)
-                else getString(R.string.home_gas_chart_note, String.format(Locale.UK, "%02d:%02d", gasSlots.size / 2, if (gasSlots.size % 2 == 0) 0 else 30))
-            if (text.toString() != t) text = t
-        }
-        findViewById<SlotBarsView>(R.id.homeSlots).setSlots(
-            if (showGas) ins?.todayGasSlots.orEmpty() else ins?.todaySlots.orEmpty(), gas = showGas)
 
         // 4. Price now (next price green with an arrow when it's lower) and always-on
         setIfChanged(R.id.homePrice, ins?.priceNow?.let { String.format(Locale.UK, "%.1fp", it) } ?: "—")
@@ -356,6 +327,9 @@ class MainActivity : Activity() {
         findViewById<SlotBarsView>(R.id.usageSlots).chartDp = 96f
         findViewById<View>(R.id.usageElec).setOnClickListener { prefs.setStr(K_USAGE_GAS, "0"); renderUsage() }
         findViewById<View>(R.id.usageGas).setOnClickListener { prefs.setStr(K_USAGE_GAS, "1"); renderUsage() }
+        listOf(R.id.usagePeriodDay, R.id.usagePeriodWeek, R.id.usagePeriodMonth).forEachIndexed { i, id ->
+            findViewById<View>(id).setOnClickListener { prefs.setLong(K_USAGE_PERIOD, i.toLong()); renderUsage() }
+        }
     }
 
     private fun renderUsage() {
@@ -371,6 +345,18 @@ class MainActivity : Activity() {
         message.visibility = View.GONE
         content.visibility = View.VISIBLE
         val r = prefs.loadReading()
+
+        // Day | Week | Month
+        val period = prefs.long(K_USAGE_PERIOD).toInt().coerceIn(0, 2)
+        listOf(R.id.usagePeriodDay, R.id.usagePeriodWeek, R.id.usagePeriodMonth).forEachIndexed { i, id ->
+            findViewById<TextView>(id).apply {
+                setBackgroundResource(if (i == period) R.drawable.bg_segment_on_lg else 0)
+                setTextColor(getColor(if (i == period) R.color.brand_pink else R.color.text_muted))
+                typeface = Typeface.create("sans-serif-medium", if (i == period) Typeface.BOLD else Typeface.NORMAL)
+            }
+        }
+        findViewById<View>(R.id.usageDayBox).visibility = if (period == 0) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.usageRangeBox).visibility = if (period == 0) View.GONE else View.VISIBLE
 
         // ---- 1. Today's half-hours (Electricity | Gas)
         val gasAvailable = r?.gasTodayKwh != null || d.todayGasSlots.isNotEmpty()
@@ -409,50 +395,33 @@ class MainActivity : Activity() {
         setIfChanged(R.id.usageAvg, if (cost != null && total > 0.05)
             String.format(Locale.UK, "%.1fp/kWh", (cost * 100 - (standing ?: 0.0)).coerceAtLeast(0.0) / total) else "—")
 
-        // ---- 2. Time of day (electricity costs per half-hour; gas shows kWh)
-        val periods = listOf(
-            Triple(R.string.usage_night, 0 until 14, R.color.elec_low),
-            Triple(R.string.usage_day, 14 until 32, R.color.elec_mid),
-            Triple(R.string.usage_peak_period, 32 until 38, R.color.elec_high),
-            Triple(R.string.usage_evening, 38 until 48, R.color.evening),
-        )
-        val breakdown = findViewById<LinearLayout>(R.id.usageBreakdown)
-        breakdown.removeAllViews()
-        periods.forEachIndexed { i, (label, range, colour) ->
-            if (i > 0) breakdown.addView(rowDivider())
-            val inRange = range.filter { it < slots.size }
-            val kwh = inRange.sumOf { slots[it] }
-            val pence = if (showGas || inRange.isEmpty()) null
-                else inRange.map { d.todaySlotPence.getOrNull(it) }.let { p -> if (p.any { it == null }) null else p.sumOf { it ?: 0.0 } }
-            val value = when {
-                inRange.isEmpty() -> "—"
-                pence != null -> String.format(Locale.UK, "%.2f kWh · %s", kwh, money(pence))
-                else -> String.format(Locale.UK, "%.2f kWh", kwh)
-            }
-            breakdown.addView(listRow(getString(label), null, value, swatch = colour))
-        }
-
-        // ---- 3. Last 7 days (only days with readings, not days before the Home Mini was set up)
-        val known = d.history.filter { it.elecKwh > 0 }
-        val hasGas = d.history.any { it.gasKwh != null }
+        // ---- Week / Month: daily totals (only days with readings, not before the Home Mini was set up)
+        val span = if (period == 2) Insights.HISTORY_DAYS else 7
+        setIfChanged(R.id.usageRangeTitle, getString(if (period == 2) R.string.usage_last_month else R.string.usage_last_week))
+        val firstDay = LocalDate.now().minusDays(span.toLong()).toString()
+        val inRange = d.history.filter { it.date >= firstDay }
+        val known = inRange.filter { it.elecKwh > 0 }
+        val hasGas = inRange.any { it.gasKwh != null }
         val weekCost = known.sumOf { (it.elecCost ?: 0.0) + (it.gasCost ?: 0.0) }
         setIfChanged(R.id.usageWeekCost, if (known.isEmpty()) "—" else money(weekCost * 100))
         setIfChanged(R.id.usageWeekSub, if (known.isEmpty()) "Collecting your first full day" else buildString {
             append(String.format(Locale.UK, "Electricity %.1f kWh", known.sumOf { it.elecKwh }))
             if (hasGas) append(String.format(Locale.UK, " · Gas %.1f kWh", known.sumOf { it.gasKwh ?: 0.0 }))
-            if (known.size < 7) append(" · ${known.size} ${if (known.size == 1) "day" else "days"}")
+            if (known.size < span) append(" · ${known.size} ${if (known.size == 1) "day" else "days"}")
         })
-        val days = (7 downTo 1).map { LocalDate.now().minusDays(it.toLong()) }
-        val byDate = d.history.associateBy { it.date }
+        val days = (span downTo 1).map { LocalDate.now().minusDays(it.toLong()) }
+        val byDate = inRange.associateBy { it.date }
         val elec = days.map { byDate[it.toString()]?.elecKwh ?: 0.0 }
         val gas = days.map { byDate[it.toString()]?.gasKwh ?: 0.0 }
-        val dayLabels = days.map { it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.UK) }
-        val pink = getColor(R.color.brand_pink)
+        val dayLabels = if (span == 7) days.map { it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.UK) }
+            else days.mapIndexed { i, day -> if ((span - 1 - i) % 5 == 0) day.dayOfMonth.toString() else "" }
+        val elecColour = getColor(R.color.elec_low)
         val gasColour = getColor(R.color.gas_accent)
         findViewById<BarChartView>(R.id.chartWeek).setData(
             if (hasGas) listOf(elec, gas) else listOf(elec),
-            if (hasGas) listOf(pink, gasColour) else listOf(pink),
-            dayLabels, highlightIndex = 6, emptyText = "Collecting the last 7 days…",
+            if (hasGas) listOf(elecColour, gasColour) else listOf(elecColour),
+            dayLabels, highlightIndex = span - 1,
+            emptyText = if (span == 7) "Collecting the last 7 days…" else "Collecting the last 30 days… (fills in over a few hours)",
         )
         findViewById<View>(R.id.legendGas).visibility = if (hasGas) View.VISIBLE else View.GONE
         findViewById<View>(R.id.legendGasDot).visibility = if (hasGas) View.VISIBLE else View.GONE
@@ -474,32 +443,7 @@ class MainActivity : Activity() {
                 list.addView(listRow(date, sub, if (dayCost > 0) money(dayCost * 100) else ""))
             }
         }
-        findViewById<View>(R.id.usageNote).visibility = if (known.size < 7) View.VISIBLE else View.GONE
-
-        // ---- 4. Tariff
-        val code = d.tariff
-        setIfChanged(R.id.usageTariff, code?.let { tariffName(it) ?: "Your tariff" } ?: "Looking up your tariff…")
-        findViewById<TextView>(R.id.usageTariffCode).apply {
-            text = code.orEmpty()
-            visibility = if (code == null) View.GONE else View.VISIBLE
-        }
-        val details = mutableListOf<String>()
-        d.priceNow?.let { p ->
-            var line = String.format(Locale.UK, "%.1fp/kWh now", p)
-            if (d.priceNext != null && d.priceNextAt != null) {
-                line += String.format(Locale.UK, ", %.1fp from %s", d.priceNext, Insights.formatTime(d.priceNextAt))
-            }
-            details += line
-        }
-        if (d.elecCostToday == null && code != null) details += "Costs aren't available for this tariff yet (e.g. Economy 7)."
-        known.mapNotNull { it.baseW }.minOrNull()?.let {
-            details += String.format(Locale.UK, "Always on: %d W, about %.0f kWh a year", it, it * 24 * 365 / 1000.0)
-        }
-        d.error?.let { details += "Last update problem: $it" }
-        findViewById<TextView>(R.id.usageTariffDetail).apply {
-            text = details.joinToString("\n")
-            visibility = if (details.isEmpty()) View.GONE else View.VISIBLE
-        }
+        findViewById<View>(R.id.usageNote).visibility = if (known.size < span) View.VISIBLE else View.GONE
     }
 
     /** "21:30" for half-hour number [i] (48 = "24:00"). */
@@ -700,6 +644,11 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
         findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
+        // Menu: each section opens on its own; back returns to the menu
+        settingsSections.forEachIndexed { i, (row, _, _) ->
+            findViewById<View>(row).setOnClickListener { showSettingsSection(i) }
+        }
+        findViewById<View>(R.id.settingsBack).setOnClickListener { showSettingsSection(-1) }
         findViewById<View>(R.id.setMpanRow).setOnClickListener { showMeters = !showMeters; renderSettingsStatus() }
         findViewById<View>(R.id.setMprnRow).setOnClickListener { showMeters = !showMeters; renderSettingsStatus() }
         findViewById<View>(R.id.rowAbout).setOnClickListener { AboutActivity.start(this) }
@@ -729,6 +678,29 @@ class MainActivity : Activity() {
         loading = false
     }
 
+    /** Menu row, its section card, the section title. */
+    private val settingsSections = listOf(
+        Triple(R.id.setOpenMini, R.id.setCardMini, R.string.set_home_mini),
+        Triple(R.id.setOpenMeters, R.id.setCardMeters, R.string.set_meters),
+        Triple(R.id.setOpenConnection, R.id.setCardConnection, R.string.section_connection),
+        Triple(R.id.setOpenPrefs, R.id.setCardPrefs, R.string.set_preferences),
+    )
+    private var settingsSection = -1   // -1 = the menu
+
+    private fun showSettingsSection(i: Int) {
+        if (settingsSection != i) hideKeyboard()
+        settingsSection = i
+        val menu = i < 0
+        findViewById<View>(R.id.setMenu).visibility = if (menu) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.setCardAbout).visibility = if (menu) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.settingsBack).visibility = if (menu) View.GONE else View.VISIBLE
+        settingsSections.forEachIndexed { k, (_, card, _) ->
+            findViewById<View>(card).visibility = if (k == i) View.VISIBLE else View.GONE
+        }
+        findViewById<TextView>(R.id.settingsTitle).setText(if (menu) R.string.tab_settings else settingsSections[i].third)
+        findViewById<View>(R.id.pageSettings).scrollTo(0, 0)
+    }
+
     private var showMeters = false   // meter numbers are masked until tapped, so they stay out of screenshots
 
     private fun renderSettingsStatus() {
@@ -755,6 +727,7 @@ class MainActivity : Activity() {
         }
         findViewById<View>(R.id.setStatusDot).backgroundTintList = ColorStateList.valueOf(c)
         findViewById<TextView>(R.id.setStatusText).apply { text = badge; setTextColor(c) }
+        setIfChanged(R.id.setOpenMiniSub, badge + if (prefs.relayUrl.isNullOrBlank()) " · direct" else " · relay")
         val relay = prefs.relayUrl?.takeIf { it.isNotBlank() }
         // Octopus allows ~100 requests an hour, so new readings come about once a minute at best
         setIfChanged(R.id.setCadence, if (relay != null) "About every minute" else "Every ${prefs.intervalSeconds}s")
@@ -768,6 +741,15 @@ class MainActivity : Activity() {
         // Meters & tariff (needs the API key)
         val ins = Insights(this).load()
         setIfChanged(R.id.setTariff, ins?.tariff?.let { tariffName(it) ?: it } ?: "—")
+        findViewById<TextView>(R.id.setTariffCode).apply {
+            val code = ins?.tariff
+            visibility = if (code != null && tariffName(code) != null) View.VISIBLE else View.GONE
+            if (code != null && text.toString() != code) text = code
+        }
+        setIfChanged(R.id.setOpenMetersSub, ins?.tariff?.let { tariffName(it) ?: it }
+            ?: if (prefs.apiKey.isNullOrBlank()) getString(R.string.insights_need_key) else "—")
+        setIfChanged(R.id.setOpenConnectionSub, getString(R.string.set_connection_sub))
+        setIfChanged(R.id.setOpenPrefsSub, getString(R.string.set_prefs_sub))
         setIfChanged(R.id.setMpan, ins?.mpan?.let { meterNumber(it, intArrayOf(2, 4, 4, 3)) } ?: "—")
         val mprn = ins?.mprn
         findViewById<View>(R.id.setMprnRow).visibility = if (mprn != null) View.VISIBLE else View.GONE
@@ -931,8 +913,8 @@ class MainActivity : Activity() {
     companion object {
         private const val REQ_NOTIFY = 1
         private const val K_TAB = "tab"
-        private const val K_CHART_GAS = "homeChartGas"
         private const val K_USAGE_GAS = "usageChartGas"
+        private const val K_USAGE_PERIOD = "usagePeriod"
         const val EXTRA_TAB = "tab"
         const val TAB_HOME = 0
         const val TAB_USAGE = 1

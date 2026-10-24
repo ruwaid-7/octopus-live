@@ -11,8 +11,8 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * The gas card's flame. Off: a thin grey outline. On: an orange outline with flickering
- * flame tongues inside (orange, with an amber core) that dance around the middle height.
+ * The gas card's flame. Off: a thin grey outline. On: an orange outline with fire inside,
+ * licking upward to around the middle (a small shader on Android 13+, flame tongues before that).
  * Animates only while [running] is true (gas on and Home on screen).
  */
 class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
@@ -32,6 +32,10 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
     private val gas = context.getColor(R.color.gas_accent)
     private val muted = context.getColor(R.color.text_muted)
     private val core = context.getColor(R.color.elec_mid)   // amber: the hot centre
+    private val pale = 0xFFFFE08A.toInt()                     // pale yellow: hottest, at the base
+    // Android 13+: real fire from a small shader; older phones draw flame tongues
+    private val fire: Any? = if (android.os.Build.VERSION.SDK_INT >= 33) FlameShader() else null
+    private val firePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val tongue = Path()
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -85,7 +89,17 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         scaled.reset()
         flame.transform(m, scaled)
 
-        if (on) {
+        if (on && fire != null && android.os.Build.VERSION.SDK_INT >= 33) {
+            // Time wraps every 2 minutes so the noise keeps full precision
+            val t = (((System.nanoTime() - started) / 1e9) % 120.0).toFloat()
+            val f = fire as FlameShader
+            f.update(dx, dy, 24 * s, t, pale, core, gas)
+            firePaint.shader = f.shader
+            canvas.save()
+            canvas.clipPath(scaled)
+            canvas.drawRect(dx, dy, dx + 24 * s, dy + 24 * s, firePaint)
+            canvas.restore()
+        } else if (on) {
             val t = ((System.nanoTime() - started) / 1e9).toFloat()
             canvas.save()
             canvas.clipPath(scaled)

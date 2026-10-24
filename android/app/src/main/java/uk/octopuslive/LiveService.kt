@@ -141,6 +141,7 @@ class LiveService : Service() {
                 }
                 if (!prefs.running) { stopForeground(STOP_FOREGROUND_REMOVE); stopSelf(); return START_NOT_STICKY }
             }
+            ACTION_DEV_ALERT -> if (prefs.devMode) devAlert(intent.getStringExtra("kind").orEmpty())
             ACTION_STOP -> {
                 prefs.running = false
                 cancelBackground()
@@ -174,7 +175,7 @@ class LiveService : Service() {
 
     private fun poll() {
         try {
-            val r = api.fetch()
+            val r = if (prefs.devMode) DevData.reading(this) else api.fetch()
             last = r
             lastError = null
             failures = 0
@@ -185,7 +186,9 @@ class LiveService : Service() {
         }
         prefs.lastError = lastError
         // Slow look-ups (tariff, prices, history): at most once a minute, needs the API key
-        try { ins = insights.refresh() } catch (e: Exception) {}
+        try {
+            ins = if (prefs.devMode) DevData.insights(this).also { insights.save(it) } else insights.refresh()
+        } catch (e: Exception) {}
         main.post { onPollFinished() }
     }
 
@@ -330,6 +333,24 @@ class LiveService : Service() {
         }
         getSystemService(NotificationManager::class.java).notify(id, b.build())
         if (!quiet) AlertLog.add(this, id, title, text.substringBefore(". "))
+    }
+
+    /** Dev build: send one of each notification on demand, with sample text. */
+    private fun devAlert(kind: String) {
+        when (kind) {
+            "gas" -> postWarning(GAS_NOTIF_ID, "Gas on for 2 h 10 min",
+                "Since 19:20 · 8.4 kW in the latest half-hour. Gas readings arrive about an hour late, so it may already be off.",
+                Color.rgb(240, 122, 42), R.drawable.ic_flame, quiet = false, muteAction = ACTION_MUTE_GAS)
+            "high" -> postWarning(HIGH_NOTIF_ID, "Electricity above 3 kW for 50 min",
+                "Since 21:40 · 3.42 kW now. Is something left on?",
+                Color.rgb(229, 72, 77), R.drawable.ic_bolt, quiet = false, muteAction = ACTION_MUTE_HIGH)
+            "offline" -> notifyAlert(OFFLINE_NOTIF_ID, GAS_CHANNEL_ID, "No new energy readings",
+                "Your Home Mini hasn't sent a reading for 30 minutes.", Color.rgb(255, 179, 0))
+            "cheap" -> notifyAlert(CHEAP_NOTIF_ID, INFO_CHANNEL_ID, "Cheap electricity from 01:00",
+                "4.2p/kWh until 04:30. A good time for the washing or charging.", Color.rgb(31, 164, 99))
+            "summary" -> notifyAlert(SUMMARY_NOTIF_ID, INFO_CHANNEL_ID, "Yesterday's energy",
+                "£3.12 · 7.4 kWh electricity, 16.2 kWh gas. 8% less than the day before.", Color.rgb(232, 71, 139))
+        }
     }
 
     // ---------- other warnings and notices ----------
@@ -566,6 +587,7 @@ class LiveService : Service() {
         const val ACTION_START = "uk.octopuslive.START"
         const val ACTION_REFRESH = "uk.octopuslive.REFRESH"
         const val ACTION_STOP = "uk.octopuslive.STOP"
+        const val ACTION_DEV_ALERT = "uk.octopuslive.DEV_ALERT"
         const val ACTION_BG_POLL = "uk.octopuslive.BG_POLL"
         const val ACTION_MUTE_GAS = "uk.octopuslive.MUTE_GAS"
         const val ACTION_MUTE_HIGH = "uk.octopuslive.MUTE_HIGH"

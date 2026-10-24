@@ -239,4 +239,6 @@
     <string name="usage_last_month">Last 30 days</string>
     <string name="set_connection_sub">API key, relay and refresh</string>
     <string name="set_prefs_sub">Startup, widget and battery</string>
+    <string name="set_dev">Developer: test data</string>
+    <string name="set_dev_sub">Try the screens with any values</string>
 </resources>

@@ -665,6 +665,14 @@ class MainActivity : Activity() {
             findViewById<View>(row).setOnClickListener { showSettingsSection(i) }
         }
         findViewById<View>(R.id.settingsBack).setOnClickListener { showSettingsSection(-1) }
+        // Dev build only: the test-data panel
+        if (BuildConfig.DEV_TOOLS) {
+            findViewById<View>(R.id.setDevDivider).visibility = View.VISIBLE
+            findViewById<View>(R.id.setOpenDev).apply {
+                visibility = View.VISIBLE
+                setOnClickListener { startActivity(Intent().setClassName(this@MainActivity, "uk.octopuslive.DevActivity")) }
+            }
+        }
         findViewById<View>(R.id.setMpanRow).setOnClickListener { showMeters = !showMeters; renderSettingsStatus() }
         findViewById<View>(R.id.setMprnRow).setOnClickListener { showMeters = !showMeters; renderSettingsStatus() }
         findViewById<View>(R.id.rowAbout).setOnClickListener { AboutActivity.start(this) }

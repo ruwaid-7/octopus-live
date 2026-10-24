@@ -115,6 +115,9 @@ class Insights(context: Context) {
 
     fun load(): InsightsData? = InsightsData.fromJson(prefs.str(K_DATA))
 
+    /** Stores data computed elsewhere (the dev build's test data). */
+    fun save(d: InsightsData) = prefs.setStr(K_DATA, d.toJson())
+
     /** Blocking - call off the main thread. Returns the latest data (also saved). */
     fun refresh(): InsightsData? {
         if (prefs.apiKey.isNullOrBlank()) return load()

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev build only: the test-data panel -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".DevActivity"
+            android:exported="false"
+            android:label="Test data"
+            android:windowSoftInputMode="adjustResize" />
+    </application>
+</manifest>

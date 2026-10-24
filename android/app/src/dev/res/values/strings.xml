@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev build only: its own name so it's easy to tell apart from the real app -->
+<resources>
+    <string name="app_name">Octopus Live Dev</string>
+</resources>

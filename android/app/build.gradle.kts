@@ -13,6 +13,11 @@ android {
         targetSdk = 35
         versionCode = 15
         versionName = "1.8.0"
+        buildConfigField("boolean", "DEV_TOOLS", "false")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     // Release signing: uses a real keystore when the CI secrets are set (so updates install over
@@ -36,6 +41,17 @@ android {
             // which is what F-Droid expects (it signs with its own key). For your own builds, use
             // the debug build (Android Studio's Run button), which is signed automatically.
             if (keystoreFile != null) signingConfig = signingConfigs.getByName("release")
+        }
+        // "Octopus Live Dev": a separate app (own package and data) with a test-data panel for
+        // checking the screens, widget and notifications. Not published; signed with the debug key
+        // so it always installs.
+        create("dev") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            signingConfig = signingConfigs.getByName("debug")
+            buildConfigField("boolean", "DEV_TOOLS", "true")
+            matchingFallbacks += listOf("release")
         }
     }
 

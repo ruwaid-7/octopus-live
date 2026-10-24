@@ -1550,6 +1550,48 @@
                             android:src="@drawable/ic_chevron"
                             android:tint="@color/text_muted" />
                     </LinearLayout>
+
+                    <View
+                        android:id="@+id/setDevDivider"
+                        style="@style/SDivider"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:id="@+id/setOpenDev"
+                        style="@style/SRow"
+                        android:background="@drawable/bg_row"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0"
+                                android:text="@string/set_dev" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/set_dev_sub" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_chevron"
+                            android:tint="@color/text_muted" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout

@@ -80,6 +80,11 @@ class Prefs(context: Context) {
         get() = p.getBoolean("widgetOpensApp", false)
         set(v) = p.edit().putBoolean("widgetOpensApp", v).apply()
 
+    /** Dev build only: show test data (DevData) instead of asking Octopus. */
+    var devMode: Boolean
+        get() = BuildConfig.DEV_TOOLS && p.getBoolean("devMode", false)
+        set(v) = p.edit().putBoolean("devMode", v).apply()
+
     /** Daily budget in £ for the meter display (electricity + gas); 0 = none. */
     var dailyBudget: Float
         get() = p.getFloat("dailyBudget", 0f)

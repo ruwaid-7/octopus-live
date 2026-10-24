@@ -49,7 +49,7 @@ jobs:
         run: |
           chmod +x gradlew
           set +e
-          ./gradlew assembleRelease --no-daemon 2>&1 | tee build.log
+          ./gradlew assembleRelease assembleDev --no-daemon 2>&1 | tee build.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
             # Show the key error lines as one annotation on the run summary
@@ -77,6 +77,12 @@ jobs:
         with:
           name: OctopusLive
           path: dist/*
+
+      # Test build with the developer panel: a separate download, never attached to releases
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OctopusLive-Dev
+          path: android/app/build/outputs/apk/dev/app-dev.apk
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/v')

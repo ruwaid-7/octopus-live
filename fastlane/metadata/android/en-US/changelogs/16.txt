@@ -1,0 +1,3 @@
+• Four new home-screen widgets: Live dial, Electricity and gas, Cost and price, and Today's chart
+• The original widget now matches the app's design, in light and dark
+• All widgets update together after every reading

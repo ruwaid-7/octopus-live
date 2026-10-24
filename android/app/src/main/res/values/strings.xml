@@ -65,10 +65,10 @@
     <string name="api_key">Octopus API key</string>
     <string name="get_key">Find your API key</string>
     <string name="relay_label">Relay address (optional)</string>
-    <string name="relay_help">A free Cloudflare Worker or your own server. Lets the app refresh every 10 seconds.</string>
+    <string name="relay_help">A free Cloudflare Worker or your own server. Shares one Octopus connection with all your devices. New readings still arrive about once a minute: that\'s Octopus\'s limit.</string>
     <string name="account">Account number (optional)</string>
     <string name="interval">Refresh every (seconds)</string>
-    <string name="interval_help">60 or more without a relay, 10–15 with one.</string>
+    <string name="interval_help">How often the app checks. 60 or more without a relay, 10–15 with one, so it picks up each new reading quickly.</string>
     <string name="save">Save</string>
     <string name="show">Show</string>
     <string name="hide">Hide</string>
@@ -119,7 +119,7 @@
     <string name="ob_opt_relay">I already have a relay</string>
     <string name="ob_opt_relay_sub">Your own server or Cloudflare Worker</string>
     <string name="ob_opt_make">Make a free relay</string>
-    <string name="ob_opt_make_sub">For several devices or 10-second updates. About 5 minutes.</string>
+    <string name="ob_opt_make_sub">For several devices, a PC or Home Assistant. About 5 minutes.</string>
     <string name="ob_choose_note">Not sure? Choose Just this phone. Most people don\'t need a relay.</string>
     <string name="ob_key_title">Add your API key</string>
     <string name="ob_key_body">Octopus gives every customer a personal API key. Copy it from your account and paste it here.</string>

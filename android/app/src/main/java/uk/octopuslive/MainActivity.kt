@@ -756,7 +756,8 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.setStatusDot).backgroundTintList = ColorStateList.valueOf(c)
         findViewById<TextView>(R.id.setStatusText).apply { text = badge; setTextColor(c) }
         val relay = prefs.relayUrl?.takeIf { it.isNotBlank() }
-        setIfChanged(R.id.setCadence, "Every ${prefs.intervalSeconds}s")
+        // Octopus allows ~100 requests an hour, so new readings come about once a minute at best
+        setIfChanged(R.id.setCadence, if (relay != null) "About every minute" else "Every ${prefs.intervalSeconds}s")
         setIfChanged(R.id.setConnection, relay?.let { "Relay · " + (Uri.parse(it).host ?: "custom") } ?: "Direct to Octopus")
         setIfChanged(R.id.setLastReading, r?.readAt ?: "—")
         findViewById<TextView>(R.id.liveStatus).apply {

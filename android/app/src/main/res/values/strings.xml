@@ -186,6 +186,8 @@
     <string name="about_source_sub">github.com/ruwaid-7/octopus-live</string>
     <string name="about_report">Report a problem or suggest an idea</string>
     <string name="about_report_sub">Opens a new issue on GitHub</string>
+    <string name="about_coffee">Buy me a coffee</string>
+    <string name="about_coffee_sub">Support the app at buymeacoffee.com/ruwaid7</string>
     <string name="about_privacy">Privacy policy</string>
     <string name="about_privacy_sub">No accounts, ads or tracking. Your data stays on your devices.</string>
     <string name="about_terms">Terms of use</string>

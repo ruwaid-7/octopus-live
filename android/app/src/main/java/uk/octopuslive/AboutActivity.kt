@@ -76,6 +76,7 @@ class AboutActivity : Activity() {
             Row(R.string.about_whats_new, R.string.about_whats_new_sub) { open("$REPO/releases") },
             Row(R.string.about_source, R.string.about_source_sub) { open(REPO) },
             Row(R.string.about_report, R.string.about_report_sub) { open("$REPO/issues/new") },
+            Row(R.string.about_coffee, R.string.about_coffee_sub) { open(COFFEE) },
         )
 
         section(c, R.string.about_section_legal)
@@ -207,6 +208,7 @@ class AboutActivity : Activity() {
         const val DOC_TERMS = "terms"
         const val DOC_LICENCES = "licences"
         private const val REPO = "https://github.com/ruwaid-7/octopus-live"
+        private const val COFFEE = "https://buymeacoffee.com/ruwaid7"
 
         /** Opens the About screen, or one of its documents. */
         fun start(context: Context, doc: String? = null) {

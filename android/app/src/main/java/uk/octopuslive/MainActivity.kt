@@ -102,6 +102,8 @@ class MainActivity : Activity() {
         LiveService.listener = { _ -> runOnUiThread { renderAll() } }
         loadControls()
         renderAll()
+        renderVersion()
+        checkForUpdate()
     }
 
     private var resumed = false
@@ -777,6 +779,12 @@ class MainActivity : Activity() {
         swWidgetApp.setOnCheckedChangeListener { _, on ->
             if (!loading) { prefs.widgetOpensApp = on; OctopusWidget.updateAll(this) }
         }
+        findViewById<Switch>(R.id.swUpdates).setOnCheckedChangeListener { _, on ->
+            if (loading) return@setOnCheckedChangeListener
+            prefs.updateCheck = on
+            if (on) { prefs.updateCheckedAt = 0; checkForUpdate() }
+            renderVersion()
+        }
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
         findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
@@ -797,9 +805,24 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.setMprnRow).setOnClickListener { showMeters = !showMeters; renderSettingsStatus() }
         findViewById<View>(R.id.rowAbout).setOnClickListener { AboutActivity.start(this) }
         findViewById<View>(R.id.rowPrivacy).setOnClickListener { AboutActivity.start(this, AboutActivity.DOC_PRIVACY) }
-        val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { null }
-        findViewById<TextView>(R.id.aboutVersion).text = version?.let { getString(R.string.about_version, it) } ?: ""
+        renderVersion()
     }
+
+    /** Settings' About row: the version, and "update available" in pink when GitHub has a newer one. */
+    private fun renderVersion() {
+        val version = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (e: Exception) { null }
+        val update = UpdateCheck.available(this)
+        findViewById<TextView>(R.id.aboutVersion).apply {
+            text = when {
+                version == null -> ""
+                update != null -> getString(R.string.about_version_update, version, update)
+                else -> getString(R.string.about_version, version)
+            }
+            setTextColor(getColor(if (update != null) R.color.brand_pink else R.color.text_muted))
+        }
+    }
+
+    private fun checkForUpdate() = UpdateCheck.checkIfDue(this) { runOnUiThread { renderVersion() } }
 
     /** Puts the saved settings into the switches and fields (without triggering their listeners). */
     private fun loadControls() {
@@ -818,6 +841,7 @@ class MainActivity : Activity() {
         swLive.isChecked = prefs.running
         swBoot.isChecked = prefs.startOnBoot
         swWidgetApp.isChecked = prefs.widgetOpensApp
+        findViewById<Switch>(R.id.swUpdates).isChecked = prefs.updateCheck
         updateOptionRows()
         loading = false
     }

@@ -80,6 +80,24 @@ class Prefs(context: Context) {
         get() = p.getBoolean("widgetOpensApp", false)
         set(v) = p.edit().putBoolean("widgetOpensApp", v).apply()
 
+    /** Check GitHub once a day for a newer version (on unless turned off in Settings). */
+    var updateCheck: Boolean
+        get() = p.getBoolean("updateCheck", true)
+        set(v) = p.edit().putBoolean("updateCheck", v).apply()
+
+    /** Latest release tag seen on GitHub, its page, and when we last asked. */
+    var updateLatest: String?
+        get() = p.getString("updateLatest", null)
+        set(v) = p.edit().putString("updateLatest", v).apply()
+
+    var updateUrl: String?
+        get() = p.getString("updateUrl", null)
+        set(v) = p.edit().putString("updateUrl", v).apply()
+
+    var updateCheckedAt: Long
+        get() = p.getLong("updateCheckedAt", 0L)
+        set(v) = p.edit().putLong("updateCheckedAt", v).apply()
+
     /** Dev build only: show test data (DevData) instead of asking Octopus. */
     var devMode: Boolean
         get() = BuildConfig.DEV_TOOLS && p.getBoolean("devMode", false)

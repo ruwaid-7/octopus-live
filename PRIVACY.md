@@ -1,6 +1,6 @@
 # Privacy policy
 
-Last updated: 19 October 2026
+Last updated: 3 November 2026
 
 Octopus Live is a free, open-source app made by an independent developer (ruwaid-7). This policy covers the Android app, the Windows Rainmeter skin and the optional relays (home server and Cloudflare Worker).
 
@@ -20,6 +20,7 @@ Octopus Live is a free, open-source app made by an independent developer (ruwaid
 
 - Octopus Energy (api.octopus.energy). Your API key is sent to Octopus to sign in, then the app reads your smart meter readings, account details and tariff. Octopus Energy's privacy policy covers what they do: https://octopus.energy/policies/privacy-policy/
 - Your relay, if you add one. The app sends your device link and receives your live readings. A relay is software you run in your own Cloudflare account or on your own server. The developer has no access to it.
+- GitHub (api.github.com), once a day, to see if a newer version of the app is out. Nothing about you or your energy is sent: GitHub only sees the request itself, including your internet address, as with any website. Turn it off under Settings → Preferences → Check for updates. GitHub's privacy statement: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
 - Links you tap (Octopus, Cloudflare, GitHub) open in your browser under those sites' own policies.
 
 The app doesn't send anything anywhere else.

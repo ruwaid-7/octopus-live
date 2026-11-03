@@ -2071,6 +2071,37 @@
                     <View style="@style/SDivider" />
 
                     <LinearLayout
+                        style="@style/SRow">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:paddingTop="10dp"
+                            android:paddingBottom="10dp">
+
+                            <TextView
+                                style="@style/SRowTitle"
+                                android:text="@string/update_check"
+                                android:layout_width="wrap_content"
+                                android:layout_marginEnd="0dp"
+                                android:layout_weight="0" />
+
+                            <TextView
+                                style="@style/SRowSub"
+                                android:text="@string/update_check_sub" />
+                        </LinearLayout>
+
+                        <Switch
+                            android:id="@+id/swUpdates"
+                            style="@style/PinkSwitch" />
+                    </LinearLayout>
+
+                    <View style="@style/SDivider" />
+
+                    <LinearLayout
                         android:id="@+id/rowBattery"
                         style="@style/SRow"
                         android:background="@drawable/bg_row"

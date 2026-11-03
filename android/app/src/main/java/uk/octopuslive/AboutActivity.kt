@@ -71,6 +71,12 @@ class AboutActivity : Activity() {
         c.addView(text(getString(R.string.about_version, version), 14f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, full(top = 2))
         c.addView(text(getString(R.string.about_summary), 15f, R.color.text_secondary).apply { gravity = Gravity.CENTER }, full(top = 14))
 
+        // A newer version on GitHub (checked once a day, if "Check for updates" is on)
+        UpdateCheck.available(this)?.let { tag ->
+            section(c, R.string.about_section_update)
+            list(c, Row(getString(R.string.update_available, tag), getString(R.string.update_available_sub), pink = true) { open(UpdateCheck.url(this)) })
+        }
+
         section(c, R.string.about_section_app)
         list(c,
             Row(R.string.about_whats_new, R.string.about_whats_new_sub) { open("$REPO/releases") },
@@ -116,7 +122,11 @@ class AboutActivity : Activity() {
         c.addView(text(getString(R.string.about_footer), 12f, R.color.text_muted).apply { gravity = Gravity.CENTER }, full(top = 20))
     }
 
-    private class Row(val title: Int, val sub: Int, val onClick: () -> Unit)
+    private class Row(val title: CharSequence, val sub: CharSequence, val pink: Boolean = false, val onClick: () -> Unit) {
+        constructor(title: Int, sub: Int, onClick: () -> Unit) : this("", "", false, onClick) { titleRes = title; subRes = sub }
+        var titleRes = 0
+        var subRes = 0
+    }
 
     private fun list(c: LinearLayout, vararg rows: Row) {
         val card = LinearLayout(this, null, 0, R.style.ListCard).apply { orientation = LinearLayout.VERTICAL }
@@ -129,8 +139,11 @@ class AboutActivity : Activity() {
                 setOnClickListener { r.onClick() }
             }
             val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            texts.addView(TextView(this, null, 0, R.style.RowTitle).apply { setText(r.title) })
-            texts.addView(TextView(this, null, 0, R.style.RowSubtitle).apply { setText(r.sub) })
+            texts.addView(TextView(this, null, 0, R.style.RowTitle).apply {
+                text = if (r.titleRes != 0) getString(r.titleRes) else r.title
+                if (r.pink) setTextColor(getColor(R.color.brand_pink))
+            })
+            texts.addView(TextView(this, null, 0, R.style.RowSubtitle).apply { text = if (r.subRes != 0) getString(r.subRes) else r.sub })
             row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = px(12) })
             row.addView(ImageView(this).apply {
                 setImageResource(R.drawable.ic_chevron)

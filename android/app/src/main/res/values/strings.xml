@@ -82,6 +82,12 @@
     <string name="start_on_boot">Start after restart</string>
     <string name="widget_opens_app">Widget opens the app</string>
     <string name="widget_opens_app_sub">Instead of refreshing when tapped</string>
+    <string name="update_check">Check for updates</string>
+    <string name="about_section_update">Update</string>
+    <string name="update_check_sub">Once a day, from GitHub</string>
+    <string name="update_available">Update available: %1$s</string>
+    <string name="update_available_sub">Tap to open the download page</string>
+    <string name="about_version_update">Version %1$s · update available (%2$s)</string>
     <string name="source_code">Source code</string>
 
     <!-- Status and messages -->

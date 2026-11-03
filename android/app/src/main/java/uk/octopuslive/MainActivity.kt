@@ -184,16 +184,24 @@ class MainActivity : Activity() {
     /** Optional nickname for an account, e.g. "Home" or "Mum's flat". */
     private fun askNickname(a: OctopusAccount, switchAfter: Boolean) {
         val pad = (20 * resources.displayMetrics.density).toInt()
+        // Built from the input style alone loses EditText's own defaults, so make it typeable again
         val input = EditText(this, null, 0, R.style.InputField).apply {
             hint = getString(R.string.account_nickname_hint)
             setText(Accounts.nickname(prefs, a.number).orEmpty())
             setSingleLine()
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+            isFocusable = true
+            isFocusableInTouchMode = true
+            isClickable = true
+            isCursorVisible = true
             filters = arrayOf(android.text.InputFilter.LengthFilter(Accounts.MAX_NAME))
+            setSelection(text.length)
         }
         val box = LinearLayout(this).apply { setPadding(pad, pad / 2, pad, 0); addView(input,
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)) }
         accountDialogOpen = true
-        android.app.AlertDialog.Builder(this)
+        val dialog = android.app.AlertDialog.Builder(this)
             .setTitle(getString(R.string.account_nickname_title, a.number))
             .setMessage(R.string.account_nickname_msg)
             .setView(box)
@@ -206,6 +214,14 @@ class MainActivity : Activity() {
             }
             .setOnDismissListener { accountDialogOpen = false }
             .show()
+        // Open the keyboard straight away, in the box
+        dialog.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM or
+            android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+        dialog.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        input.requestFocus()
+        input.postDelayed({
+            (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+        }, 150)
     }
 
     /** Switches to [number] and fetches its data now. */

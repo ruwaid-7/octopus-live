@@ -1,0 +1,3 @@
+• More than one Octopus account on your API key? Pick which one to show, give it a nickname, and switch from the chip on Home
+• Check for updates: the app tells you when a new version is out (Settings > Preferences)
+• Simpler connection settings: the refresh rate is now automatic

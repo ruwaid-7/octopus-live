@@ -9,6 +9,7 @@ Octopus Home Mini you already have.
 | Today's electricity and **gas** kWh | Live watts drawn into the **status-bar icon** |
 | Usage bar + ~3.5 h mini graph | **Home-screen widget** |
 | Click to refresh | Pauses while the screen is off to save battery |
+| Four more skins matching the Android widgets: dial, electricity and gas, cost and price, today's chart | Five widgets: the original, dial, electricity and gas, cost and price, today's chart |
 
 > **Unofficial.** This project is not made, endorsed or supported by Octopus Energy. It uses the
 > public [Octopus Energy API](https://developer.octopus.energy/) with your own API key.
@@ -48,9 +49,26 @@ Get the latest files from the **[Releases page](../../releases/latest)**:
 3. Open `OctopusLive\@Resources\Settings.inc` in Notepad, paste your key after `ApiKey=`, and save.
 4. In Rainmeter choose **Refresh all**, then load **OctopusLive → OctopusLive.ini**.
 
-**Using it:** click the skin to refresh. Right-click for *Edit settings* (interval, colour
-thresholds) and *Open error log*. If the top-right corner says anything other than "live", that's
-the problem message.
+**More skins, in the Android app's design** (load any of them, alongside the original or instead of it):
+
+| Skin | Shows |
+|---|---|
+| **OctopusLive → Dial → Dial.ini** | The Home dial: live electricity on a 0–4 kW scale and about how much it costs an hour |
+| **OctopusLive → Energy → Energy.ini** | Electricity and gas right now, side by side; the flame lights up while the gas is on (no smart gas meter: today's electricity instead) |
+| **OctopusLive → Cost → Cost.ini** | Today's cost so far (electricity and gas), the price now and the next price |
+| **OctopusLive → Chart → Chart.ini** | Today's 48 half-hours as bars, with the total, cost and the peak half-hour |
+
+They use `Theme=Dark` or `Theme=Light` in `Settings.inc`. Prices and costs need your API key (even
+with a relay): the skins look up your tariff once a day and use Octopus's public price list, the
+same way the phone app does. However many skins you open, they share **one** fetch per `Interval`,
+so adding skins doesn't use more of your Octopus limit.
+
+**Using it:** click a skin to refresh. Right-click for *Edit settings* (interval, theme, colour
+thresholds) and *Open error log*. If the original skin's top-right corner says anything other than
+"live", that's the problem message (the other skins show it under the main number).
+
+**Updating:** copy your `Settings.inc` somewhere first, unzip the new version over the old one,
+then put your `Settings.inc` back, so you keep your API key.
 
 **Test from PowerShell:**
 ```powershell

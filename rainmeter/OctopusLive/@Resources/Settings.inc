@@ -19,7 +19,11 @@ AccountNumber=
 
 ; Seconds between refreshes. Calling Octopus directly: 60 or more (90 if the phone app also
 ; calls Octopus directly). Using RelayUrl: 15 is fine - your server does the Octopus calls.
+; This is shared: however many Octopus Live skins are open, they fetch once per Interval together.
 Interval=60
+
+; Look of the Dial, Energy, Cost and Chart skins: Dark or Light (the original skin keeps its own look)
+Theme=Dark
 
 ; Power (watts) that fills the bar completely, and the colour thresholds.
 MaxWatts=4000

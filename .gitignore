@@ -12,6 +12,7 @@ android/.kotlin/
 # Rainmeter runtime files (contain tokens / personal data)
 rainmeter/OctopusLive/@Resources/cache.json
 rainmeter/OctopusLive/@Resources/last-error.txt
+rainmeter/OctopusLive/@Resources/last-run.txt
 rainmeter/OctopusLive/@Resources/data.txt.tmp
 
 # OS

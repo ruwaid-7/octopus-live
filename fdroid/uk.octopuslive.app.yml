@@ -1,0 +1,29 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: Reads your usage from the Octopus Energy API, a non-free online service.
+Categories:
+  - Money
+  - Internet
+License: MIT
+AuthorName: ruwaid-7
+SourceCode: https://github.com/ruwaid-7/octopus-live
+IssueTracker: https://github.com/ruwaid-7/octopus-live/issues
+Changelog: https://github.com/ruwaid-7/octopus-live/releases
+
+AutoName: Octopus Live
+
+RepoType: git
+Repo: https://github.com/ruwaid-7/octopus-live.git
+
+Builds:
+  - versionName: 1.9.3
+    versionCode: 19
+    commit: ffc526c00b22d36433a747e1b5fb700434e25ccc
+    subdir: android/app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: 1.9.3
+CurrentVersionCode: 19

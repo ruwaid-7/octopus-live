@@ -1,0 +1,2 @@
+• Windows: four new Rainmeter skins matching the Android widgets: dial, electricity and gas, cost and price, and today's chart, in dark or light
+• Connection settings: clearer wording on how often readings arrive with a relay

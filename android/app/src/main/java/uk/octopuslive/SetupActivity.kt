@@ -208,7 +208,6 @@ class SetupActivity : Activity() {
             prefs.apiKey = k
             prefs.accountNumber = acct
             prefs.relayUrl = ""
-            if (prefs.intervalSeconds < 30) prefs.intervalSeconds = 60
             show(ALERTS)
         }, full(top = 24))
     }
@@ -231,7 +230,6 @@ class SetupActivity : Activity() {
             }
             if (u != prefs.relayUrl.orEmpty()) prefs.clearCachedApiState()
             prefs.relayUrl = u
-            if (prefs.intervalSeconds > 15) prefs.intervalSeconds = 15
             show(ALERTS)
         }, full(top = 24))
     }

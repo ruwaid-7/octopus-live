@@ -71,9 +71,10 @@ class Prefs(context: Context) {
         get() = p.getString("account", null)
         set(v) = p.edit().putString("account", v).apply()
 
-    var intervalSeconds: Int
-        get() = p.getInt("interval", 60)
-        set(v) = p.edit().putInt("interval", v).apply()
+    /** How often to check for a reading: 10 s from a relay (free, and catches each new minute's
+     *  reading quickly), 60 s straight from Octopus (to stay within its hourly limit). */
+    val intervalSeconds: Int
+        get() = if (relayUrl.isNullOrBlank()) 60 else 10
 
     /** Tapping the home-screen widget opens the app instead of refreshing it. */
     var widgetOpensApp: Boolean

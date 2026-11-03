@@ -81,7 +81,6 @@ class MainActivity : Activity() {
                 if (relay != prefs.relayUrl.orEmpty()) prefs.clearCachedApiState()
                 prefs.relayUrl = relay
                 prefs.onboarded = true
-                if (prefs.intervalSeconds > 15) prefs.intervalSeconds = 15
                 loadControls()
                 showTab(TAB_HOME)
                 startWithPermission()
@@ -107,6 +106,7 @@ class MainActivity : Activity() {
     }
 
     private var resumed = false
+    private var showAccountField = false
 
     override fun onPause() {
         resumed = false
@@ -740,7 +740,6 @@ class MainActivity : Activity() {
     private val apiKey by lazy { findViewById<EditText>(R.id.apiKey) }
     private val relayUrl by lazy { findViewById<EditText>(R.id.relayUrl) }
     private val account by lazy { findViewById<EditText>(R.id.account) }
-    private val interval by lazy { findViewById<EditText>(R.id.interval) }
     private val swLive by lazy { findViewById<Switch>(R.id.swLive) }
     private val swBoot by lazy { findViewById<Switch>(R.id.swBoot) }
     private val swWidgetApp by lazy { findViewById<Switch>(R.id.swWidgetApp) }
@@ -788,6 +787,12 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
         findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
+        findViewById<View>(R.id.moreOptions).setOnClickListener {
+            showAccountField = true
+            findViewById<View>(R.id.accountBox).visibility = View.VISIBLE
+            it.visibility = View.GONE
+            account.requestFocus()
+        }
         // Menu: each section opens on its own; back returns to the menu
         settingsSections.forEachIndexed { i, (row, _, _) ->
             findViewById<View>(row).setOnClickListener { showSettingsSection(i) }
@@ -837,7 +842,10 @@ class MainActivity : Activity() {
         if (!apiKey.hasFocus()) apiKey.setText(prefs.apiKey.orEmpty())
         if (!relayUrl.hasFocus()) relayUrl.setText(prefs.relayUrl.orEmpty())
         if (!account.hasFocus()) account.setText(prefs.accountNumber.orEmpty())
-        if (!interval.hasFocus()) interval.setText(prefs.intervalSeconds.toString())
+        // Account number: only for logins with more than one account, so it's tucked away unless set
+        val showAccount = showAccountField || !prefs.accountNumber.isNullOrBlank()
+        findViewById<View>(R.id.accountBox).visibility = if (showAccount) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.moreOptions).visibility = if (showAccount) View.GONE else View.VISIBLE
         swLive.isChecked = prefs.running
         swBoot.isChecked = prefs.startOnBoot
         swWidgetApp.isChecked = prefs.widgetOpensApp
@@ -961,14 +969,10 @@ class MainActivity : Activity() {
             return
         }
         val acct = account.text.toString().trim().uppercase(Locale.UK)
-        val minSecs = if (relay.isEmpty()) 30 else 10
-        val secs = interval.text.toString().toIntOrNull()?.coerceIn(minSecs, 3600) ?: 60
         if (key != prefs.apiKey.orEmpty() || acct != prefs.accountNumber.orEmpty()) prefs.clearCachedApiState()
         prefs.relayUrl = relay
         prefs.apiKey = key
         prefs.accountNumber = acct
-        prefs.intervalSeconds = secs
-        interval.setText(secs.toString())
         currentFocus?.clearFocus()
         hideKeyboard()
         startWithPermission()

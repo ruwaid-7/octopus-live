@@ -13,7 +13,8 @@ Octopus Live is a free, open-source app made by an independent developer (ruwaid
 ## What the app stores, and where
 
 - Your Octopus API key, account number, relay link and settings are kept in the app's private storage on your phone. They're left out of Android backups.
-- Recent readings, tariff prices and up to 7 days of daily totals are kept on your phone to show the dashboard, widget and history.
+- If your API key can see more than one Octopus account, the app keeps their account numbers and postcodes (to help you tell them apart), any nicknames you give them, and each account's prices and history, all on your phone only.
+- Recent readings, tariff prices and about 3 months of daily totals (and a month of half-hours) are kept on your phone to show the dashboard, widget and history.
 - Uninstalling the app, or clearing its storage, deletes all of it.
 
 ## Who the app talks to

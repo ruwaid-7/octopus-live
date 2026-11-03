@@ -194,19 +194,13 @@ class SetupActivity : Activity() {
         }
         card.addView(key, full(top = 6))
         card.addView(text(getString(R.string.ob_key_private), 12f, R.color.text_muted), full(top = 6))
-        card.addView(label(getString(R.string.ob_account_label)), full(top = 16))
-        val account = input("A-1234ABCD", InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS).apply {
-            setText(prefs.accountNumber.orEmpty())
-        }
-        card.addView(account, full(top = 6))
         c.addView(card)
         c.addView(primary(getString(R.string.ob_continue)) {
             val k = key.text.toString().trim()
             if (!k.startsWith("sk_")) { key.error = getString(R.string.ob_key_invalid); key.requestFocus(); return@primary }
-            val acct = account.text.toString().trim().uppercase(Locale.UK)
-            if (k != prefs.apiKey.orEmpty() || acct != prefs.accountNumber.orEmpty()) prefs.clearCachedApiState()
+            // More than one account on this key? Home asks which one, once the app has checked
+            if (k != prefs.apiKey.orEmpty()) { prefs.clearCachedApiState(); Accounts.reset(prefs) }
             prefs.apiKey = k
-            prefs.accountNumber = acct
             prefs.relayUrl = ""
             show(ALERTS)
         }, full(top = 24))

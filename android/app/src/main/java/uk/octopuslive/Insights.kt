@@ -119,17 +119,23 @@ class Insights(context: Context) {
     private val api = OctopusApi(context)
     private val zone: ZoneId get() = ZoneId.systemDefault()
 
-    fun load(): InsightsData? = InsightsData.fromJson(prefs.str(K_DATA))
+    // Each Octopus account keeps its own prices, costs and history (see Accounts.storageKey)
+    private fun str(k: String) = prefs.str(Accounts.storageKey(prefs, k))
+    private fun setStr(k: String, v: String?) = prefs.setStr(Accounts.storageKey(prefs, k), v)
+    private fun long(k: String) = prefs.long(Accounts.storageKey(prefs, k))
+    private fun setLong(k: String, v: Long) = prefs.setLong(Accounts.storageKey(prefs, k), v)
+
+    fun load(): InsightsData? = InsightsData.fromJson(str(K_DATA))
 
     /** Stores data computed elsewhere (the dev build's test data). */
-    fun save(d: InsightsData) = prefs.setStr(K_DATA, d.toJson())
+    fun save(d: InsightsData) = setStr(K_DATA, d.toJson())
 
     /** Blocking - call off the main thread. Returns the latest data (also saved). */
     fun refresh(): InsightsData? {
         if (prefs.apiKey.isNullOrBlank()) return load()
         val now = System.currentTimeMillis()
-        if (now - prefs.long(K_LAST_RUN) < MIN_GAP_MS) return load()
-        prefs.setLong(K_LAST_RUN, now)
+        if (now - long(K_LAST_RUN) < MIN_GAP_MS) return load()
+        setLong(K_LAST_RUN, now)
 
         var error: String? = null
         try {
@@ -146,15 +152,15 @@ class Insights(context: Context) {
             error = e.message ?: e.javaClass.simpleName
         }
         val data = compute(error)
-        prefs.setStr(K_DATA, data.toJson())
+        setStr(K_DATA, data.toJson())
         return data
     }
 
     // ---------------------------------------------------------------- tariff codes
 
     private fun ensureTariffs(token: String) {
-        if (prefs.str(K_ELEC_TARIFF) != null && prefs.str(K_MPAN) != null &&
-            System.currentTimeMillis() - prefs.long(K_TARIFF_AT) < TARIFF_EVERY_MS) return
+        if (str(K_ELEC_TARIFF) != null && str(K_MPAN) != null &&
+            System.currentTimeMillis() - long(K_TARIFF_AT) < TARIFF_EVERY_MS) return
         val account = prefs.accountNumber?.takeIf { it.isNotBlank() } ?: prefs.foundAccount ?: return
         val d = api.graphql(
             """query { account(accountNumber: "${api.clean(account)}") {
@@ -168,8 +174,8 @@ class Insights(context: Context) {
             .filter { it.optString("direction") != "EXPORT" }
         val gasPoints = acc.optJSONArray("gasAgreements").objects().mapNotNull { it.optJSONObject("meterPoint") }
         // Meter numbers for Settings ("-" = none, so we don't ask again every time)
-        prefs.setStr(K_MPAN, elecPoints.firstNotNullOfOrNull { it.optString("mpan").takeIf { m -> m.isNotBlank() } } ?: "-")
-        prefs.setStr(K_MPRN, gasPoints.firstNotNullOfOrNull { it.optString("mprn").takeIf { m -> m.isNotBlank() } } ?: "-")
+        setStr(K_MPAN, elecPoints.firstNotNullOfOrNull { it.optString("mpan").takeIf { m -> m.isNotBlank() } } ?: "-")
+        setStr(K_MPRN, gasPoints.firstNotNullOfOrNull { it.optString("mprn").takeIf { m -> m.isNotBlank() } } ?: "-")
         val elec = elecPoints
             .flatMap { it.optJSONArray("agreements").objects() }
             .let { currentAgreement(it) }
@@ -178,12 +184,12 @@ class Insights(context: Context) {
             .flatMap { it.optJSONArray("agreements").objects() }
             .let { currentAgreement(it) }
 
-        prefs.setStr(K_ELEC_PRODUCT, elec?.optString("productCode")?.takeIf { it.isNotBlank() })
-        prefs.setStr(K_ELEC_TARIFF, elec?.optString("tariffCode")?.takeIf { it.isNotBlank() })
-        prefs.setStr(K_GAS_PRODUCT, gas?.optString("productCode")?.takeIf { it.isNotBlank() })
-        prefs.setStr(K_GAS_TARIFF, gas?.optString("tariffCode")?.takeIf { it.isNotBlank() })
-        prefs.setLong(K_TARIFF_AT, System.currentTimeMillis())
-        prefs.setLong(K_RATES_AT, 0)   // tariff may have changed: fetch prices again
+        setStr(K_ELEC_PRODUCT, elec?.optString("productCode")?.takeIf { it.isNotBlank() })
+        setStr(K_ELEC_TARIFF, elec?.optString("tariffCode")?.takeIf { it.isNotBlank() })
+        setStr(K_GAS_PRODUCT, gas?.optString("productCode")?.takeIf { it.isNotBlank() })
+        setStr(K_GAS_TARIFF, gas?.optString("tariffCode")?.takeIf { it.isNotBlank() })
+        setLong(K_TARIFF_AT, System.currentTimeMillis())
+        setLong(K_RATES_AT, 0)   // tariff may have changed: fetch prices again
     }
 
     /** The agreement in force now; returns its tariff object. */
@@ -204,32 +210,32 @@ class Insights(context: Context) {
     // ---------------------------------------------------------------- prices (public REST)
 
     private fun refreshRates() {
-        val elecTariff = prefs.str(K_ELEC_TARIFF) ?: return
-        val elecProduct = prefs.str(K_ELEC_PRODUCT) ?: return
+        val elecTariff = str(K_ELEC_TARIFF) ?: return
+        val elecProduct = str(K_ELEC_PRODUCT) ?: return
         val today = LocalDate.now(zone)
         // Agile and similar publish tomorrow's prices around 16:00: fetch again soon after that
         val publish = today.atTime(16, 15).atZone(zone).toInstant().toEpochMilli()
-        val missedPublish = System.currentTimeMillis() >= publish && prefs.long(K_RATES_AT) < publish
-        val fresh = prefs.str(K_RATES_DAY) == today.toString() && prefs.long(K_RATES_SPAN) == RATES_DAYS.toLong() &&
-            System.currentTimeMillis() - prefs.long(K_RATES_AT) < RATES_EVERY_MS && !missedPublish
+        val missedPublish = System.currentTimeMillis() >= publish && long(K_RATES_AT) < publish
+        val fresh = str(K_RATES_DAY) == today.toString() && long(K_RATES_SPAN) == RATES_DAYS.toLong() &&
+            System.currentTimeMillis() - long(K_RATES_AT) < RATES_EVERY_MS && !missedPublish
         if (fresh) return
 
         val from = today.minusDays(RATES_DAYS.toLong()).atStartOfDay(zone)   // older days fetch their own prices
         val to = today.plusDays(2).atStartOfDay(zone)
         val base = "https://api.octopus.energy/v1/products/${enc(elecProduct)}/electricity-tariffs/${enc(elecTariff)}"
-        prefs.setStr(K_ELEC_RATES, ratesToJson(fetchRates("$base/standard-unit-rates/", from, to)))
-        prefs.setStr(K_ELEC_STANDING, ratesToJson(fetchRates("$base/standing-charges/", from, to)))
+        setStr(K_ELEC_RATES, ratesToJson(fetchRates("$base/standard-unit-rates/", from, to)))
+        setStr(K_ELEC_STANDING, ratesToJson(fetchRates("$base/standing-charges/", from, to)))
 
-        val gasTariff = prefs.str(K_GAS_TARIFF)
-        val gasProduct = prefs.str(K_GAS_PRODUCT)
+        val gasTariff = str(K_GAS_TARIFF)
+        val gasProduct = str(K_GAS_PRODUCT)
         if (gasTariff != null && gasProduct != null) {
             val g = "https://api.octopus.energy/v1/products/${enc(gasProduct)}/gas-tariffs/${enc(gasTariff)}"
-            prefs.setStr(K_GAS_RATES, ratesToJson(fetchRates("$g/standard-unit-rates/", from, to)))
-            prefs.setStr(K_GAS_STANDING, ratesToJson(fetchRates("$g/standing-charges/", from, to)))
+            setStr(K_GAS_RATES, ratesToJson(fetchRates("$g/standard-unit-rates/", from, to)))
+            setStr(K_GAS_STANDING, ratesToJson(fetchRates("$g/standing-charges/", from, to)))
         }
-        prefs.setStr(K_RATES_DAY, today.toString())
-        prefs.setLong(K_RATES_SPAN, RATES_DAYS.toLong())
-        prefs.setLong(K_RATES_AT, System.currentTimeMillis())
+        setStr(K_RATES_DAY, today.toString())
+        setLong(K_RATES_SPAN, RATES_DAYS.toLong())
+        setLong(K_RATES_AT, System.currentTimeMillis())
     }
 
     /** kWh per half-hour of a day, from (start time, Wh) pairs. 46/50 slots on clock-change days. */
@@ -246,8 +252,8 @@ class Insights(context: Context) {
 
     /** Base URL of the current tariff's public price list, or null if not known yet. */
     private fun tariffUrl(productKey: String, tariffKey: String, fuel: String): String? {
-        val product = prefs.str(productKey) ?: return null
-        val tariff = prefs.str(tariffKey) ?: return null
+        val product = str(productKey) ?: return null
+        val tariff = str(tariffKey) ?: return null
         return "https://api.octopus.energy/v1/products/${enc(product)}/$fuel-tariffs/${enc(tariff)}/"
     }
 
@@ -281,18 +287,18 @@ class Insights(context: Context) {
 
     private fun refreshToday(token: String) {
         val today = LocalDate.now(zone).toString()
-        val fresh = prefs.str(K_TODAY_DAY) == today && System.currentTimeMillis() - prefs.long(K_TODAY_AT) < TODAY_EVERY_MS
+        val fresh = str(K_TODAY_DAY) == today && System.currentTimeMillis() - long(K_TODAY_AT) < TODAY_EVERY_MS
         if (fresh) return
         val elecId = prefs.deviceId ?: return
         val start = LocalDate.now(zone).atStartOfDay(zone)
         val now = ZonedDateTime.now(zone)
-        prefs.setStr(K_TODAY_ELEC, slotsToJson(api.halfHourly(token, elecId, start, now)))
+        setStr(K_TODAY_ELEC, slotsToJson(api.halfHourly(token, elecId, start, now)))
         val gasId = prefs.gasDeviceId
         if (gasId != null && gasId != OctopusApi.NO_GAS) {
-            prefs.setStr(K_TODAY_GAS, slotsToJson(api.halfHourly(token, gasId, start, now)))
+            setStr(K_TODAY_GAS, slotsToJson(api.halfHourly(token, gasId, start, now)))
         }
-        prefs.setStr(K_TODAY_DAY, today)
-        prefs.setLong(K_TODAY_AT, System.currentTimeMillis())
+        setStr(K_TODAY_DAY, today)
+        setLong(K_TODAY_AT, System.currentTimeMillis())
     }
 
     // ---------------------------------------------------------------- history
@@ -305,11 +311,11 @@ class Insights(context: Context) {
      */
     private fun backfillOneDay(token: String) {
         val elecId = prefs.deviceId ?: return
-        if (System.currentTimeMillis() - prefs.long(K_BACKFILL_AT) < BACKFILL_EVERY_MS) return
+        if (System.currentTimeMillis() - long(K_BACKFILL_AT) < BACKFILL_EVERY_MS) return
         // History saved by older versions counted empty days and part-day always-on; start it afresh
-        if (prefs.str(K_HISTORY_VER) != HISTORY_VER) {
-            prefs.setStr(K_HISTORY, null)
-            prefs.setStr(K_HISTORY_VER, HISTORY_VER)
+        if (str(K_HISTORY_VER) != HISTORY_VER) {
+            setStr(K_HISTORY, null)
+            setStr(K_HISTORY_VER, HISTORY_VER)
         }
         val today = LocalDate.now(zone)
         val history = loadHistory().associateBy { it.date }.toMutableMap()
@@ -327,7 +333,7 @@ class Insights(context: Context) {
             rec.fetchedAt < complete && System.currentTimeMillis() >= complete
         } ?: return
 
-        prefs.setLong(K_BACKFILL_AT, System.currentTimeMillis())
+        setLong(K_BACKFILL_AT, System.currentTimeMillis())
         val start = missing.atStartOfDay(zone)
         val end = missing.plusDays(1).atStartOfDay(zone)
         val elec = api.halfHourly(token, elecId, start, end).filter { it.first < end.toInstant().toEpochMilli() }
@@ -366,11 +372,11 @@ class Insights(context: Context) {
         val slotsFrom = today.minusDays(SLOT_DAYS.toLong()).toString()
         history.replaceAll { _, d -> if (d.date < slotsFrom && d.elecSlots.isNotEmpty()) d.copy(elecSlots = emptyList(), gasSlots = emptyList()) else d }
         val list = history.values.filter { it.date >= keep && it.date < today.toString() }.sortedBy { it.date }
-        prefs.setStr(K_HISTORY, JSONArray().apply { list.forEach { put(InsightsData.dayToJson(it)) } }.toString())
+        setStr(K_HISTORY, JSONArray().apply { list.forEach { put(InsightsData.dayToJson(it)) } }.toString())
     }
 
     private fun loadHistory(): List<DayStats> = try {
-        JSONArray(prefs.str(K_HISTORY) ?: "[]").let { a -> (0 until a.length()).map { InsightsData.dayFromJson(a.getJSONObject(it)) } }
+        JSONArray(str(K_HISTORY) ?: "[]").let { a -> (0 until a.length()).map { InsightsData.dayFromJson(a.getJSONObject(it)) } }
     } catch (e: Exception) { emptyList() }
 
     // ---------------------------------------------------------------- maths
@@ -398,9 +404,9 @@ class Insights(context: Context) {
         val dayStart = zoneNow.toLocalDate().atStartOfDay(zone).toInstant().toEpochMilli()
         val elecRates = rates(K_ELEC_RATES)
 
-        val sameDay = prefs.str(K_TODAY_DAY) == zoneNow.toLocalDate().toString()
-        val elecSlots = if (sameDay) slotsFromJson(prefs.str(K_TODAY_ELEC)) else emptyList()
-        val gasSlots = if (sameDay) slotsFromJson(prefs.str(K_TODAY_GAS)) else emptyList()
+        val sameDay = str(K_TODAY_DAY) == zoneNow.toLocalDate().toString()
+        val elecSlots = if (sameDay) slotsFromJson(str(K_TODAY_ELEC)) else emptyList()
+        val gasSlots = if (sameDay) slotsFromJson(str(K_TODAY_GAS)) else emptyList()
 
         // Today's electricity: half-hours we have, plus anything since then at the current price
         val reading = prefs.loadReading()
@@ -410,7 +416,7 @@ class Insights(context: Context) {
         val elecCost = cost(elecSlots, elecRates, rates(K_ELEC_STANDING), dayStart)?.let { c ->
             c + (liveKwh - slotKwh).coerceAtLeast(0.0) * (priceNow ?: 0.0) / 100.0
         }
-        val hasGas = prefs.str(K_GAS_TARIFF) != null && prefs.gasDeviceId != OctopusApi.NO_GAS
+        val hasGas = str(K_GAS_TARIFF) != null && prefs.gasDeviceId != OctopusApi.NO_GAS
         // Gas: half-hours we have, plus anything newer that the live reading (e.g. the relay) already
         // includes, at the current gas price, so the £ always matches the kWh shown next to it
         val gasRates = rates(K_GAS_RATES)
@@ -445,7 +451,7 @@ class Insights(context: Context) {
 
         return InsightsData(
             updated = now,
-            tariff = prefs.str(K_ELEC_TARIFF),
+            tariff = str(K_ELEC_TARIFF),
             priceNow = priceNow,
             priceNext = next?.p, priceNextAt = next?.from,
             elecCostToday = elecCost, gasCostToday = gasCost,
@@ -454,8 +460,8 @@ class Insights(context: Context) {
             todaySlotPence = slotPence.toList(),
             elecStanding = rateAt(rates(K_ELEC_STANDING), noon),
             gasStanding = if (hasGas) rateAt(rates(K_GAS_STANDING), noon) else null,
-            mpan = prefs.str(K_MPAN)?.takeIf { it != "-" },
-            mprn = prefs.str(K_MPRN)?.takeIf { it != "-" },
+            mpan = str(K_MPAN)?.takeIf { it != "-" },
+            mprn = str(K_MPRN)?.takeIf { it != "-" },
             baseW = baseload(completed),
             history = loadHistory(),
             error = error,
@@ -482,7 +488,7 @@ class Insights(context: Context) {
     }
 
     private fun rates(key: String): List<Rate> = try {
-        JSONArray(prefs.str(key) ?: "[]").let { a ->
+        JSONArray(str(key) ?: "[]").let { a ->
             (0 until a.length()).map { a.getJSONArray(it).let { r -> Rate(r.getLong(0), r.getLong(1), r.getDouble(2)) } }
         }
     } catch (e: Exception) { emptyList() }

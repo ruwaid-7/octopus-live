@@ -260,16 +260,36 @@ class OctopusApi(context: Context) {
         return token
     }
 
+    /** Every account this API key can see, with its postcode when Octopus gives one (to tell them apart). */
+    internal fun accounts(token: String): List<OctopusAccount> {
+        val d = try {
+            graphql("query { viewer { accounts { number properties { postcode } } } }", token)
+        } catch (e: ApiException) {
+            if (e.code?.startsWith("KT-CT-11") == true) throw e
+            graphql("query { viewer { accounts { number } } }", token)   // without postcodes
+        }
+        return d.getJSONObject("viewer").optJSONArray("accounts").objects().mapNotNull { a ->
+            val n = a.optString("number").takeIf { it.isNotBlank() } ?: return@mapNotNull null
+            val pc = a.optJSONArray("properties").objects().firstNotNullOfOrNull { it.optString("postcode").takeIf { p -> p.isNotBlank() && p != "null" } }
+            OctopusAccount(n, pc)
+        }.distinctBy { it.number }
+    }
+
     internal fun deviceId(token: String): String {
+        // Once per API key: which accounts can it see? (Home asks which one to show if there are several.)
+        if (!Accounts.checked(prefs)) {
+            try { Accounts.setList(prefs, accounts(token)) } catch (e: ApiException) {
+                if (e.code?.startsWith("KT-CT-11") == true) throw e
+            }
+        }
         val cachedId = prefs.deviceId
         if (cachedId != null && prefs.gasDeviceId != null) return cachedId
 
-        val account = prefs.accountNumber?.takeIf { it.isNotBlank() } ?: run {
-            val d = graphql("query { viewer { accounts { number } } }", token)
-            d.getJSONObject("viewer").optJSONArray("accounts").objects().firstOrNull()?.optString("number")
-                ?.takeIf { it.isNotBlank() }
-                ?: throw ApiException("No account found - enter your account number")
-        }
+        val known = Accounts.list(prefs)
+        val chosen = prefs.accountNumber?.takeIf { it.isNotBlank() }
+        val account = chosen?.takeIf { c -> known.isEmpty() || known.any { it.number == c } }
+            ?: known.firstOrNull()?.number
+            ?: throw ApiException("No account found for this API key")
         prefs.foundAccount = account
 
         val d = graphql(

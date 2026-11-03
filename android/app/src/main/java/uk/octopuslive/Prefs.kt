@@ -230,6 +230,13 @@ class Prefs(context: Context) {
         gasRunSince = r.gasRunSince
     }
 
+    /** Forgets the latest reading (another account is about to be shown). */
+    fun clearReading() {
+        p.edit().remove("lastDemand").remove("lastToday").remove("lastReadAt").remove("lastFetchedAt")
+            .remove("lastViaServer").remove("lastReadAtMs").remove("gasRunMinutes").remove("gasRunSince")
+            .remove("lastError").apply()
+    }
+
     fun loadReading(): Reading? {
         val fetchedAt = p.getLong("lastFetchedAt", 0)
         if (fetchedAt == 0L) return null

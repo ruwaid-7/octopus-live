@@ -106,7 +106,7 @@ class MainActivity : Activity() {
     }
 
     private var resumed = false
-    private var showAccountField = false
+    private var accountDialogOpen = false
 
     override fun onPause() {
         resumed = false
@@ -129,6 +129,94 @@ class MainActivity : Activity() {
         renderUsage()
         renderRecentAlerts()
         renderSettingsStatus()
+        renderAccount()
+    }
+
+    // ================================================================= accounts
+
+    /** Home's account chip and Settings' account row, when the key sees more than one account. */
+    private fun renderAccount() {
+        val show = Accounts.canSwitch(prefs)
+        val current = Accounts.current(prefs)
+        val chip = findViewById<TextView>(R.id.homeAccount)
+        val row = findViewById<TextView>(R.id.accountRow)
+        chip.visibility = if (show && current != null) View.VISIBLE else View.GONE
+        row.visibility = chip.visibility
+        if (show && current != null) {
+            val label = Accounts.label(prefs, current)
+            setIfChanged(R.id.homeAccount, label)
+            chip.contentDescription = getString(R.string.account_chip_desc, label)
+            setIfChanged(R.id.accountRow, getString(R.string.account_row,
+                listOfNotNull(Accounts.nickname(prefs, current), current).joinToString(" · ")))
+        }
+        // Several accounts found and none picked yet: ask once
+        if (resumed && !accountDialogOpen && Accounts.needsChoice(prefs)) showAccountChooser(first = true)
+    }
+
+    /** "Which account?" with each account's nickname, number and postcode. */
+    private fun showAccountChooser(first: Boolean = false) {
+        val accounts = Accounts.list(prefs)
+        if (accounts.size < 2 || accountDialogOpen) return
+        val current = Accounts.current(prefs)
+        var picked = accounts.indexOfFirst { it.number == current }.coerceAtLeast(0)
+        val labels = accounts.mapIndexed { i, a ->
+            val name = Accounts.nickname(prefs, a.number) ?: getString(R.string.account_n, i + 1)
+            "$name\n" + listOfNotNull(a.number, a.postcode).joinToString(" · ")
+        }.toTypedArray()
+        accountDialogOpen = true
+        android.app.AlertDialog.Builder(this)
+            .setTitle(if (first) R.string.account_choose_first else R.string.account_choose)
+            .setSingleChoiceItems(labels, picked) { _, i -> picked = i }
+            .setPositiveButton(R.string.account_use) { _, _ ->
+                val a = accounts[picked]
+                if (Accounts.nickname(prefs, a.number) == null) askNickname(a, switchAfter = true)
+                else useAccount(a.number)
+            }
+            .setNeutralButton(R.string.account_rename) { _, _ -> askNickname(accounts[picked], switchAfter = false) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setOnDismissListener {
+                accountDialogOpen = false
+                if (first) Accounts.markChosen(prefs)   // asked once: the first account stays unless they change it
+            }
+            .show()
+    }
+
+    /** Optional nickname for an account, e.g. "Home" or "Mum's flat". */
+    private fun askNickname(a: OctopusAccount, switchAfter: Boolean) {
+        val pad = (20 * resources.displayMetrics.density).toInt()
+        val input = EditText(this, null, 0, R.style.InputField).apply {
+            hint = getString(R.string.account_nickname_hint)
+            setText(Accounts.nickname(prefs, a.number).orEmpty())
+            setSingleLine()
+            filters = arrayOf(android.text.InputFilter.LengthFilter(Accounts.MAX_NAME))
+        }
+        val box = LinearLayout(this).apply { setPadding(pad, pad / 2, pad, 0); addView(input,
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)) }
+        accountDialogOpen = true
+        android.app.AlertDialog.Builder(this)
+            .setTitle(getString(R.string.account_nickname_title, a.number))
+            .setMessage(R.string.account_nickname_msg)
+            .setView(box)
+            .setPositiveButton(R.string.account_nickname_save) { _, _ ->
+                Accounts.setNickname(prefs, a.number, input.text.toString())
+                if (switchAfter) useAccount(a.number) else renderAccount()
+            }
+            .setNegativeButton(if (switchAfter) R.string.account_nickname_skip else android.R.string.cancel) { _, _ ->
+                if (switchAfter) useAccount(a.number)
+            }
+            .setOnDismissListener { accountDialogOpen = false }
+            .show()
+    }
+
+    /** Switches to [number] and fetches its data now. */
+    private fun useAccount(number: String) {
+        val changed = number != Accounts.current(prefs) || prefs.accountNumber.isNullOrBlank()
+        Accounts.switchTo(this, number)
+        renderAll()
+        if (changed && prefs.isConfigured) {
+            if (prefs.running) LiveService.start(this, LiveService.ACTION_REFRESH) else startWithPermission()
+        }
+        OctopusWidget.updateAll(this)
     }
 
     // ================================================================= tabs
@@ -739,7 +827,6 @@ class MainActivity : Activity() {
 
     private val apiKey by lazy { findViewById<EditText>(R.id.apiKey) }
     private val relayUrl by lazy { findViewById<EditText>(R.id.relayUrl) }
-    private val account by lazy { findViewById<EditText>(R.id.account) }
     private val swLive by lazy { findViewById<Switch>(R.id.swLive) }
     private val swBoot by lazy { findViewById<Switch>(R.id.swBoot) }
     private val swWidgetApp by lazy { findViewById<Switch>(R.id.swWidgetApp) }
@@ -787,12 +874,8 @@ class MainActivity : Activity() {
         findViewById<View>(R.id.rowBattery).setOnClickListener { requestUnrestrictedBattery() }
         findViewById<View>(R.id.rowUnused).setOnClickListener { openUnusedAppSettings() }
         findViewById<View>(R.id.makeRelay).setOnClickListener { openSetup(SetupActivity.MAKE_RELAY) }
-        findViewById<View>(R.id.moreOptions).setOnClickListener {
-            showAccountField = true
-            findViewById<View>(R.id.accountBox).visibility = View.VISIBLE
-            it.visibility = View.GONE
-            account.requestFocus()
-        }
+        findViewById<View>(R.id.homeAccount).setOnClickListener { showAccountChooser() }
+        findViewById<View>(R.id.accountRow).setOnClickListener { showAccountChooser() }
         // Menu: each section opens on its own; back returns to the menu
         settingsSections.forEachIndexed { i, (row, _, _) ->
             findViewById<View>(row).setOnClickListener { showSettingsSection(i) }
@@ -841,11 +924,6 @@ class MainActivity : Activity() {
         renderAlertValues()
         if (!apiKey.hasFocus()) apiKey.setText(prefs.apiKey.orEmpty())
         if (!relayUrl.hasFocus()) relayUrl.setText(prefs.relayUrl.orEmpty())
-        if (!account.hasFocus()) account.setText(prefs.accountNumber.orEmpty())
-        // Account number: only for logins with more than one account, so it's tucked away unless set
-        val showAccount = showAccountField || !prefs.accountNumber.isNullOrBlank()
-        findViewById<View>(R.id.accountBox).visibility = if (showAccount) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.moreOptions).visibility = if (showAccount) View.GONE else View.VISIBLE
         swLive.isChecked = prefs.running
         swBoot.isChecked = prefs.startOnBoot
         swWidgetApp.isChecked = prefs.widgetOpensApp
@@ -968,11 +1046,13 @@ class MainActivity : Activity() {
             apiKey.error = getString(R.string.key_required)
             return
         }
-        val acct = account.text.toString().trim().uppercase(Locale.UK)
-        if (key != prefs.apiKey.orEmpty() || acct != prefs.accountNumber.orEmpty()) prefs.clearCachedApiState()
+        if (key != prefs.apiKey.orEmpty()) {
+            // A different key may see different accounts: ask Octopus again
+            prefs.clearCachedApiState()
+            Accounts.reset(prefs)
+        }
         prefs.relayUrl = relay
         prefs.apiKey = key
-        prefs.accountNumber = acct
         currentFocus?.clearFocus()
         hideKeyboard()
         startWithPermission()

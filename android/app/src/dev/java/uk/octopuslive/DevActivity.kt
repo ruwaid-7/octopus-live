@@ -82,6 +82,7 @@ class DevActivity : Activity() {
             listOf("Gas on" to ::gasOn, "No gas meter" to ::noGas),
             listOf("Delayed reading" to ::delayed, "Update failed" to ::failed),
             listOf("Cheaper next" to ::cheaperNext, "No API key costs" to ::noCosts),
+            listOf("Two accounts" to ::twoAccounts, "One account" to ::oneAccount),
         ).forEach { pair ->
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             pair.forEachIndexed { i, (label, fn) ->
@@ -190,6 +191,18 @@ class DevActivity : Activity() {
     private fun failed() = set(DevData.ERROR to "No internet connection. It will update when you're back online.")
     private fun cheaperNext() = set(DevData.PRICE to "28.4", DevData.NEXT_PRICE to "4.2", DevData.NEXT_IN_MIN to "35")
     private fun noCosts() = set(DevData.ELEC_COST to "-1", DevData.GAS_COST to "-1", DevData.PRICE to "-1", DevData.NEXT_PRICE to "-1")
+
+    /** Pretend the API key sees two accounts: Home asks which one to show (and offers a nickname). */
+    private fun twoAccounts() {
+        Accounts.reset(prefs)
+        Accounts.setList(prefs, listOf(OctopusAccount("A-DEV00001", "AB1 2CD"), OctopusAccount("A-DEV00002", "EF3 4GH")))
+    }
+
+    /** Back to a single account: no account chip or question. */
+    private fun oneAccount() {
+        Accounts.reset(prefs)
+        Accounts.setList(prefs, listOf(OctopusAccount("A-DEV00001", "AB1 2CD")))
+    }
 
     // ---------------------------------------------------------------- building blocks
 

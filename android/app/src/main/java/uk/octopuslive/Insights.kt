@@ -131,6 +131,12 @@ class Insights(context: Context) {
     /** Stores data computed elsewhere (the dev build's test data). */
     fun save(d: InsightsData) = setStr(K_DATA, d.toJson())
 
+    /** Pull to refresh: the next [refresh] fetches again instead of waiting for its usual gaps. */
+    fun forceNext() {
+        setLong(K_LAST_RUN, 0)
+        prefs.setLong(K_RELAY_AT, 0)
+    }
+
     /** Blocking - call off the main thread. Returns the latest data (also saved). */
     fun refresh(): InsightsData? {
         val now = System.currentTimeMillis()

@@ -17,7 +17,7 @@
         android:layout_weight="1">
 
         <!-- ============================== HOME ============================== -->
-        <ScrollView
+        <uk.octopuslive.PullRefreshScrollView
             android:id="@+id/pageHome"
             style="@style/Page">
 
@@ -483,10 +483,10 @@
                         tools:text="Problem: Too many requests" />
                 </LinearLayout>
             </LinearLayout>
-        </ScrollView>
+        </uk.octopuslive.PullRefreshScrollView>
 
         <!-- ============================== USAGE ============================== -->
-        <ScrollView
+        <uk.octopuslive.PullRefreshScrollView
             android:id="@+id/pageUsage"
             style="@style/Page"
             android:visibility="gone">
@@ -1029,7 +1029,7 @@
                     
                 </LinearLayout>
             </LinearLayout>
-        </ScrollView>
+        </uk.octopuslive.PullRefreshScrollView>
 
         <!-- ============================== ALERTS ============================== -->
         <ScrollView

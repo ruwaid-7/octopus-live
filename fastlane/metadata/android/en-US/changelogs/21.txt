@@ -1,0 +1,2 @@
+• Pull down on Home or Usage to refresh
+• Opening the app brings back the live notification if it was swiped away, and catches up straight away if Android had stopped updates

@@ -60,6 +60,7 @@ class MainActivity : Activity() {
         setUpAlerts()
         setUpUsage()
         setUpSettings()
+        setUpPullRefresh()
         tab = savedInstanceState?.getInt(K_TAB) ?: intent.getIntExtra(EXTRA_TAB, TAB_HOME)
         showTab(tab)
         // Back where we were after a theme change (which rebuilds the screen)
@@ -108,14 +109,64 @@ class MainActivity : Activity() {
         super.onResume()
         OctopusWidget.updateAll(this)   // keep widgets in step with the installed version
         resumed = true
-        LiveService.listener = { _ -> runOnUiThread { renderAll() } }
+        LiveService.listener = { _ -> runOnUiThread { renderAll(); finishPullRefresh() } }
         loadControls()
         renderAll()
+        wakeLiveUpdates()
         renderVersion()
         checkForUpdate()
     }
 
     private var resumed = false
+
+    /**
+     * Opening the app: if live updates are meant to be on, make sure the service is running.
+     * Brings back a live notification that was swiped away, and catches up straight away if
+     * Android stopped the service in the background. Skipped when it's clearly fine already
+     * (notification showing and a reading from the last 15 seconds), to spare Octopus requests.
+     */
+    private fun wakeLiveUpdates() {
+        if (!prefs.running || !prefs.isConfigured) return
+        val showing = try {
+            getSystemService(android.app.NotificationManager::class.java).activeNotifications.any { it.id == LiveService.NOTIF_ID }
+        } catch (e: Exception) { false }
+        val fresh = (prefs.loadReading()?.fetchedAt ?: 0L) > System.currentTimeMillis() - 15_000L
+        if (showing && fresh) return
+        try { LiveService.start(this, LiveService.ACTION_REFRESH) } catch (e: Exception) {}
+    }
+
+    // ---------------------------------------------------------------- pull to refresh (Home, Usage)
+
+    private val pullPages by lazy { listOf(R.id.pageHome, R.id.pageUsage).map { findViewById<PullRefreshScrollView>(it) } }
+    private val uiHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private var pullStartedAt = 0L
+    private val pullTimeout = Runnable { pullPages.forEach { it.setRefreshing(false) } }
+
+    private fun setUpPullRefresh() {
+        pullPages.forEach { page ->
+            page.onRefresh = {
+                pullStartedAt = System.currentTimeMillis()
+                uiHandler.removeCallbacks(pullTimeout)
+                uiHandler.postDelayed(pullTimeout, 15_000L)   // give up on the spinner if no answer
+                if (!prefs.isConfigured) {
+                    uiHandler.post(pullTimeout)
+                } else {
+                    Insights(this).forceNext()   // prices and history too, not just the live reading
+                    if (prefs.running) LiveService.start(this, LiveService.ACTION_REFRESH) else startWithPermission()
+                }
+            }
+        }
+    }
+
+    /** A refresh came back: stop the spinner (after a moment, so it doesn't just flicker). */
+    private fun finishPullRefresh() {
+        if (pullStartedAt == 0L) return
+        pullStartedAt.let { started ->
+            pullStartedAt = 0L
+            uiHandler.removeCallbacks(pullTimeout)
+            uiHandler.postDelayed(pullTimeout, (600L - (System.currentTimeMillis() - started)).coerceAtLeast(0L))
+        }
+    }
     private var accountDialogOpen = false
 
     override fun onPause() {

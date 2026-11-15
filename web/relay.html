@@ -408,8 +408,9 @@ footer a{color:var(--muted)}
     $("watts").textContent = w == null ? "—" : (w >= 1000 ? (w / 1000).toFixed(2) + " kW" : w + " W");
     $("bar").style.width = Math.min(100, (w || 0) / 30) + "%";
     $("bar").style.background = colour;
-    $("wattsSub").textContent = d.ok ? "Meter reading at " + hm(d.readAt) : d.status || "";
-    $("wattsSub").style.color = d.ok ? "" : css("--red");
+    var offline = d.ok && d.homeMiniOffline;   // relay works, but no new readings from the Home Mini
+    $("wattsSub").textContent = d.ok && !offline ? "Meter reading at " + hm(d.readAt) : d.status || "";
+    $("wattsSub").style.color = !d.ok ? css("--red") : offline ? css("--amber") : "";
     $("elecToday").textContent = d.todayKwh == null ? "—" : d.todayKwh.toFixed(2) + " kWh";
     $("gasTile").classList.toggle("hidden", !d.hasGas);
     if (d.hasGas) {
@@ -419,7 +420,8 @@ footer a{color:var(--muted)}
     var gasOn = d.hasGas && d.gasRunMinutes > 0;
     $("gasBanner").classList.toggle("hidden", !gasOn);
     if (gasOn) $("gasText").textContent = "Gas on for " + dur(d.gasRunMinutes) + (d.gasRunSince ? " · since " + hm(d.gasRunSince) : "");
-    if (d.ok) chip(css("--green"), "Live · " + hm(d.readAt));
+    if (offline) chip(css("--amber"), "Home Mini offline");
+    else if (d.ok) chip(css("--green"), "Live · " + hm(d.readAt));
     else chip(css("--red"), "Problem");
   }
 

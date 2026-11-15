@@ -263,7 +263,8 @@ function Update-FromRelay([string]$relayUrl, [hashtable]$data, [hashtable]$cache
             if ($r.gasKwAt -and [DateTimeOffset]::TryParse("$($r.gasKwAt)", $inv, [Globalization.DateTimeStyles]::None, [ref]$t)) { $cache.gasKwAt = $t.ToUnixTimeSeconds() }
         } else { $data.GasKWh = ''; $data.GasAt = ''; $data.GasKW = ''; $cache.gasRunMin = 0 }
     }
-    $data.Status = if ($r.ok) { 'OK' } else { "Relay: $($r.status)" }
+    # ok but homeMiniOffline: the figures are real but old, so show the relay's reason instead of "live"
+    $data.Status = if ($r.ok -and -not $r.homeMiniOffline) { 'OK' } elseif ($r.ok) { "$($r.status)" } else { "Relay: $($r.status)" }
 }
 
 # ---------- prices, costs and today's half-hours (for the newer skins) ----------

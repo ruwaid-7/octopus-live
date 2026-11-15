@@ -15,6 +15,20 @@ class Prefs(context: Context) {
         get() = p.getString("relayUrl", null)
         set(v) = p.edit().putString("relayUrl", v).apply()
 
+    /** The relay keeps history (relay 1.9+), so it supplies costs, prices and history too. */
+    var relayHistory: Boolean
+        get() = p.getBoolean("relayHistory", false)
+        set(v) = p.edit().putBoolean("relayHistory", v).apply()
+
+    /** Costs, prices and history can be shown: from the API key, or from a relay that keeps history. */
+    val hasCosts: Boolean
+        get() = !apiKey.isNullOrBlank() || (relayHistory && !relayUrl.isNullOrBlank())
+
+    /** App colours: ThemeMode.DEVICE (follow the phone), LIGHT or DARK. */
+    var theme: Int
+        get() = p.getInt("theme", ThemeMode.DEVICE)
+        set(v) = p.edit().putInt("theme", v).apply()
+
     var lastDirectAt: Long
         get() = p.getLong("lastDirectAt", 0)
         set(v) = p.edit().putLong("lastDirectAt", v).apply()
@@ -261,6 +275,8 @@ class Prefs(context: Context) {
 
     fun clearCachedApiState() {
         p.edit().remove("token").remove("tokenExpires").remove("deviceId")
-            .remove("gasDeviceId").remove("gasKwh").remove("gasKw").remove("syncDay").remove("syncMeterWh").remove("gasAt").remove("gasDay").remove("gasFetched").apply()
+            .remove("gasDeviceId").remove("gasKwh").remove("gasKw").remove("syncDay").remove("syncMeterWh").remove("gasAt").remove("gasDay").remove("gasFetched")
+            .remove("ins_relayAt").remove("ins_relayNoneAt").remove("ins_lastRun")   // ask the (new) relay for history straight away
+            .apply()
     }
 }

@@ -111,7 +111,8 @@ data class InsightsData(
  * These change slowly, so each call to [refresh] does at most a few small requests:
  * tariff codes once a day, prices every 3 hours (public REST endpoints), today's half-hours every
  * 30 minutes, and one past day of history at a time until the last 7 days are filled.
- * Needs the API key; the live reading itself can still come from a relay.
+ * Needs the API key - unless the relay keeps history (relay 1.9+): then it all comes from the relay,
+ * which collects it around the clock, and the phone doesn't ask Octopus at all.
  */
 class Insights(context: Context) {
 
@@ -132,10 +133,31 @@ class Insights(context: Context) {
 
     /** Blocking - call off the main thread. Returns the latest data (also saved). */
     fun refresh(): InsightsData? {
-        if (prefs.apiKey.isNullOrBlank()) return load()
         val now = System.currentTimeMillis()
+        val relay = prefs.relayUrl?.trim().orEmpty()
+        // The relay's own timing is shared (it's about the relay); its data goes to the current account's keys
+        val tryRelay = relay.isNotEmpty() && now - prefs.long(K_RELAY_NONE_AT) >= RELAY_RECHECK_MS
+        if (!tryRelay && prefs.apiKey.isNullOrBlank()) return load()
         if (now - long(K_LAST_RUN) < MIN_GAP_MS) return load()
         setLong(K_LAST_RUN, now)
+
+        if (tryRelay) {
+            try {
+                // Between downloads, today's cost still moves with the live reading
+                if (prefs.relayHistory && now - prefs.long(K_RELAY_AT) < RELAY_EVERY_MS) return store(compute(null))
+                if (pullFromRelay(relay)) return store(compute(null))
+                // No history on this relay (an older version, or the Cloudflare Worker): ask again in a few hours
+                prefs.relayHistory = false
+                prefs.setLong(K_RELAY_NONE_AT, now)
+            } catch (e: Exception) {
+                // Relay unreachable: keep showing what it sent last
+                if (prefs.relayHistory) {
+                    val at = prefs.long(K_RELAY_AT)
+                    return store(compute("Couldn't reach your relay" + if (at > 0) " - figures from ${formatTime(at)}" else ""))
+                }
+            }
+            if (prefs.apiKey.isNullOrBlank()) return load()
+        }
 
         var error: String? = null
         try {
@@ -151,9 +173,45 @@ class Insights(context: Context) {
         } catch (e: Exception) {
             error = e.message ?: e.javaClass.simpleName
         }
-        val data = compute(error)
-        setStr(K_DATA, data.toJson())
-        return data
+        return store(compute(error))
+    }
+
+    private fun store(d: InsightsData): InsightsData {
+        setStr(K_DATA, d.toJson())
+        return d
+    }
+
+    // ---------------------------------------------------------------- from the relay
+
+    /**
+     * Copies the relay's tariff, prices, today's half-hours and history into the same places the
+     * direct look-ups fill, so everything else works unchanged. False if the relay has no history.
+     */
+    private fun pullFromRelay(base: String): Boolean {
+        val url = api.relayAddress(base, "/api/insights") ?: return false
+        val j = api.relayJson(url) ?: return false
+        if (!j.optBoolean("ok", false)) throw ApiException(j.optString("status", "Relay not ready"))
+        fun field(k: String) = if (j.isNull(k)) null else j.optString(k).takeIf { it.isNotBlank() }
+        fun arr(k: String) = (j.optJSONArray(k) ?: JSONArray()).toString()
+        setStr(K_ELEC_PRODUCT, field("product"))
+        setStr(K_ELEC_TARIFF, field("tariff"))
+        setStr(K_GAS_PRODUCT, field("gasProduct"))
+        setStr(K_GAS_TARIFF, field("gasTariff"))
+        setStr(K_MPAN, field("mpan") ?: "-")
+        setStr(K_MPRN, field("mprn") ?: "-")
+        setStr(K_ELEC_RATES, arr("elecRates"))
+        setStr(K_ELEC_STANDING, arr("elecStanding"))
+        setStr(K_GAS_RATES, arr("gasRates"))
+        setStr(K_GAS_STANDING, arr("gasStanding"))
+        setStr(K_TODAY_DAY, field("today"))
+        setStr(K_TODAY_ELEC, arr("todayElec"))
+        setStr(K_TODAY_GAS, arr("todayGas"))
+        setLong(K_TODAY_AT, System.currentTimeMillis())
+        setStr(K_HISTORY, arr("history"))
+        setStr(K_HISTORY_VER, HISTORY_VER)
+        prefs.setLong(K_RELAY_AT, System.currentTimeMillis())
+        prefs.relayHistory = true
+        return true
     }
 
     // ---------------------------------------------------------------- tariff codes
@@ -511,6 +569,10 @@ class Insights(context: Context) {
             Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))
 
         private const val MIN_GAP_MS = 60_000L
+        private const val RELAY_EVERY_MS = 5 * 60_000L          // download the relay's history this often
+        private const val RELAY_RECHECK_MS = 6 * 3600_000L      // a relay without history: check again (it may be updated)
+        private const val K_RELAY_AT = "ins_relayAt"
+        private const val K_RELAY_NONE_AT = "ins_relayNoneAt"
         const val HISTORY_DAYS = 92   // daily totals: about 3 months, for the Month view
         const val SLOT_DAYS = 31      // half-hours kept for the day charts
         private const val RATES_DAYS = 32

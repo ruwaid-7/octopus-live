@@ -1,6 +1,7 @@
 package uk.octopuslive
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Typeface
@@ -45,6 +46,11 @@ class DevActivity : Activity() {
         Triple(DevData.BASE_W, "Always-on (W)", "120"),
         Triple(DevData.AGE_MIN, "Reading age (minutes, 30+ = delayed)", "0"),
     )
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        ThemeMode.apply(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -101,6 +107,7 @@ class DevActivity : Activity() {
                 LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = px(12) })
             val e = EditText(this, null, 0, R.style.InputField).apply {
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL or InputType.TYPE_NUMBER_FLAG_SIGNED
+                editable()
             }
             fields[key] = e
             v.addView(e, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = px(6) })
@@ -108,7 +115,7 @@ class DevActivity : Activity() {
         listOf(DevData.ERROR to "Error message (empty = working)", DevData.TARIFF to "Tariff code").forEach { (key, label) ->
             v.addView(TextView(this, null, 0, R.style.FieldLabel).apply { text = label },
                 LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = px(12) })
-            val e = EditText(this, null, 0, R.style.InputField).apply { inputType = InputType.TYPE_CLASS_TEXT }
+            val e = EditText(this, null, 0, R.style.InputField).apply { inputType = InputType.TYPE_CLASS_TEXT; editable() }
             fields[key] = e
             v.addView(e, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = px(6) })
         }
@@ -219,7 +226,13 @@ class DevActivity : Activity() {
         texts.addView(TextView(this).apply { text = title; textSize = 15f; setTextColor(getColor(R.color.text_primary)) })
         if (sub != null) texts.addView(TextView(this).apply { text = sub; textSize = 13f; setTextColor(getColor(R.color.text_muted)) })
         row.addView(texts, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginEnd = px(12) })
-        val sw = Switch(this, null, 0, R.style.PinkSwitch).apply { isChecked = checked; setOnCheckedChangeListener { _, on -> onChange(on) } }
+        val sw = Switch(this, null, 0, R.style.PinkSwitch).apply {
+            // Built from a style alone, a Switch misses the platform's clickable/focusable defaults
+            isClickable = true
+            isFocusable = true
+            isChecked = checked
+            setOnCheckedChangeListener { _, on -> onChange(on) }
+        }
         row.addView(sw)
         parent.addView(row)
         return sw
@@ -232,6 +245,14 @@ class DevActivity : Activity() {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             setOnClickListener { onClick() }
         }
+
+    /** Built from a style alone, an EditText can't take focus by touch; this turns typing back on. */
+    private fun EditText.editable() {
+        isFocusable = true
+        isFocusableInTouchMode = true
+        isClickable = true
+        isLongClickable = true
+    }
 
     private fun toast(s: String) = Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
     private fun px(v: Int) = (v * dp).toInt()

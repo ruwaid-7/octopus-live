@@ -1,0 +1,4 @@
+• Your home server relay now keeps your history around the clock: costs, prices and history come from it, with no API key needed on the phone
+• New look: glow dashboard, speedometer with a needle that grows past 4 kW, glowing gas flame
+• Theme: Device, Light or Dark (Settings > Preferences)
+• Fixes: test-data and setup text boxes, and the relay no longer shows 'offline' after one missed reading

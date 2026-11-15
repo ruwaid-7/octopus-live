@@ -2,6 +2,7 @@ package uk.octopuslive
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -47,6 +48,11 @@ class SetupActivity : Activity() {
     private var step = WELCOME
     private var relayBefore: String? = null   // to notice a relay arriving from its web page
     private val dp by lazy { resources.displayMetrics.density }
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        ThemeMode.apply(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -445,6 +451,11 @@ class SetupActivity : Activity() {
     private fun label(s: String) = TextView(this, null, 0, R.style.FieldLabel).apply { text = s }
 
     private fun input(hint: String, type: Int) = EditText(this, null, 0, R.style.InputField).apply {
+        // Built from a style alone, an EditText misses the platform's focus-by-touch default
+        isFocusable = true
+        isFocusableInTouchMode = true
+        isClickable = true
+        isLongClickable = true
         this.hint = hint
         inputType = type
         maxLines = 1

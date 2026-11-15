@@ -3,11 +3,15 @@ package uk.octopuslive
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RadialGradient
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.View
 import kotlin.math.abs
@@ -18,7 +22,8 @@ import kotlin.math.pow
 import kotlin.math.sin
 
 /**
- * The gas card's flame. Off: a thin grey outline. On: an orange outline with fire inside.
+ * The gas card's flame. Off: a thin grey outline. On: an amber-to-orange outline with fire inside
+ * and a soft orange glow behind it that pulses gently.
  *
  * The fire is the standard real-time technique: value noise scrolling upward, multiplied by a
  * height falloff that's tallest in the middle, then a colour ramp (pale yellow base -> amber ->
@@ -50,6 +55,7 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         strokeCap = Paint.Cap.ROUND
     }
     private val firePaint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+    private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val flame = Path()
     private val scaled = Path()
     private val m = Matrix()
@@ -75,7 +81,8 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
     }
 
     override fun onDraw(canvas: Canvas) {
-        val s = min(width, height) / 24f
+        // The flame takes the middle 24 of 32 units, leaving room around it for the glow
+        val s = min(width, height) / 32f
         val dx = (width - 24 * s) / 2f
         val dy = (height - 24 * s) / 2f
         m.setScale(s, s)
@@ -84,6 +91,18 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
         flame.transform(m, scaled)
 
         if (on) {
+            // Glow behind the flame, breathing slowly while it's animating
+            val t = ((System.nanoTime() - start) / 1e9).toFloat()
+            val pulse = if (running) 0.85f + 0.15f * sin(t * 2.4f) else 0.9f
+            val a = (0x66 * pulse).toInt()
+            val gx = width / 2f
+            val gy = dy + 14.5f * s
+            val gr = 15f * s
+            glowPaint.shader = RadialGradient(gx, gy, gr,
+                intArrayOf(Color.argb(a, Color.red(gas), Color.green(gas), Color.blue(gas)), Color.argb(a / 4, Color.red(gas), Color.green(gas), Color.blue(gas)), Color.TRANSPARENT),
+                floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+            canvas.drawCircle(gx, gy, gr, glowPaint)
+
             val now = System.nanoTime()
             if (now - lastFrame > 30_000_000L || lastFrame == 0L) {   // ~30 frames a second
                 lastFrame = now
@@ -96,8 +115,14 @@ class GasFlameView @JvmOverloads constructor(context: Context, attrs: AttributeS
             canvas.restore()
         }
 
-        outline.color = if (on) gas else muted
-        outline.strokeWidth = 1.5f * s
+        if (on) {
+            // Amber at the base to orange at the tip
+            outline.shader = LinearGradient(0f, dy + 21.5f * s, 0f, dy + 2.2f * s, amber, gas, Shader.TileMode.CLAMP)
+        } else {
+            outline.shader = null
+            outline.color = muted
+        }
+        outline.strokeWidth = 1.6f * s
         canvas.drawPath(scaled, outline)
 
         if (on && running) postInvalidateOnAnimation()

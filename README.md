@@ -206,7 +206,16 @@ cd octopus-live/server
 sudo ./install.sh
 ```
 Then open the address it prints (e.g. `http://192.168.1.50:8765/`), paste your API key and choose a
-username and password. Logs:
+username and password.
+
+**History on your server (relay 1.9+):** the home server relay also keeps your usage history around
+the clock in `history.db` next to its settings, whether or not your phone is on: every live reading,
+half-hourly electricity and gas, your tariffs and prices, and the last 92 days (filled in one day at
+a time over the first few hours). The app (1.10+) then takes its costs, prices and history from the
+relay, so they're up to date as soon as you open it, the phone makes no Octopus requests of its own,
+and you don't need the API key on the phone at all. With older relays or the Cloudflare Worker the
+app works as before. For Home Assistant or your own charts, `/api/insights?token=…` has the same data
+and `/api/day?date=2026-11-15&token=…` every live reading of a day. Logs:
 `journalctl -u octopus-relay -f`. To update later: `git pull && sudo ./install.sh`.
 
 **Or with Docker:** `cd octopus-live/server && sudo docker compose up -d`, then open

@@ -31,7 +31,7 @@
     <string name="legend_gas">Gas</string>
     <string name="history_building">History builds up from the day your Home Mini started sending readings.</string>
     <string name="insights_waiting">Loading costs and history…</string>
-    <string name="insights_need_key">Add your API key in Settings to see costs, prices and history.</string>
+    <string name="insights_need_key">Add your API key in Settings, or use a home-server relay (1.9 or newer), to see costs, prices and history.</string>
 
     <!-- Alerts -->
     <string name="section_warnings">Warnings</string>
@@ -264,7 +264,12 @@
     <string name="usage_last_week">Last 7 days</string>
     <string name="usage_last_month">Last 30 days</string>
     <string name="set_connection_sub">API key, relay and refresh</string>
-    <string name="set_prefs_sub">Startup, widget and battery</string>
+    <string name="set_prefs_sub">Theme, startup, widget and battery</string>
+    <string name="theme_title">Theme</string>
+    <string name="theme_device">Device</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_help">Widgets and notifications follow your phone\'s setting.</string>
     <string name="set_dev">Developer: test data</string>
     <string name="set_dev_sub">Try the screens with any values</string>
     <string name="home_last_reading">Last reading %1$s</string>

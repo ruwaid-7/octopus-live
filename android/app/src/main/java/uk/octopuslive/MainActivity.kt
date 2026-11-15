@@ -2,6 +2,7 @@ package uk.octopuslive
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
@@ -13,6 +14,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -36,6 +38,11 @@ class MainActivity : Activity() {
     private var tab = TAB_HOME
     private var loading = false   // true while filling in controls, so their listeners don't save
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        ThemeMode.apply(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
@@ -55,6 +62,8 @@ class MainActivity : Activity() {
         setUpSettings()
         tab = savedInstanceState?.getInt(K_TAB) ?: intent.getIntExtra(EXTRA_TAB, TAB_HOME)
         showTab(tab)
+        // Back where we were after a theme change (which rebuilds the screen)
+        savedInstanceState?.getInt(K_SECTION, -1)?.takeIf { it >= 0 && tab == TAB_SETTINGS }?.let { showSettingsSection(it) }
         if (savedInstanceState == null) handleConnectLink(intent)
     }
 
@@ -92,6 +101,7 @@ class MainActivity : Activity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(K_TAB, tab)
+        outState.putInt(K_SECTION, settingsSection)
     }
 
     override fun onResume() {
@@ -361,6 +371,7 @@ class MainActivity : Activity() {
         // 2. Gas: average over the latest half-hour (arrives about an hour late)
         val hasGas = r?.gasTodayKwh != null
         findViewById<View>(R.id.homeGasCard).visibility = if (hasGas) View.VISIBLE else View.GONE
+        arrangeSideCards(stacked = hasGas)
         if (hasGas && r != null) {
             setIfChanged(R.id.homeGasAvgLabel, r.gasReadAt?.let { getString(R.string.home_gas_avg, it) } ?: getString(R.string.home_gas_avg_none))
             setIfChanged(R.id.homeGasKw, r.gasKw?.let { String.format(Locale.UK, "%.1f", it) } ?: "0.0")
@@ -406,12 +417,32 @@ class MainActivity : Activity() {
         updateFlameAnimation()
     }
 
+    /**
+     * Price now and always-on: stacked beside the gas card, or side by side across the full width
+     * when there's no gas meter.
+     */
+    private fun arrangeSideCards(stacked: Boolean) {
+        val stack = findViewById<android.widget.LinearLayout>(R.id.homeSideStack)
+        val orientation = if (stacked) android.widget.LinearLayout.VERTICAL else android.widget.LinearLayout.HORIZONTAL
+        if (stack.orientation == orientation) return
+        val gap = (12 * resources.displayMetrics.density).toInt()
+        stack.orientation = orientation
+        for (i in 0 until stack.childCount) {
+            stack.getChildAt(i).layoutParams = android.widget.LinearLayout.LayoutParams(
+                if (stacked) ViewGroup.LayoutParams.MATCH_PARENT else 0,
+                if (stacked) 0 else ViewGroup.LayoutParams.MATCH_PARENT, 1f,
+            ).apply { if (i > 0) { if (stacked) topMargin = gap else marginStart = gap } }
+        }
+        (stack.layoutParams as ViewGroup.MarginLayoutParams).marginStart = if (stacked) gap else 0
+        stack.requestLayout()
+    }
+
     /** Moves only while the flame is on screen (Home tab, app open) and the gas is on. */
     private fun updateFlameAnimation() {
         findViewById<GasFlameView>(R.id.homeGasFlame).running = gasOn && resumed && tab == TAB_HOME
     }
 
-    private fun costHint(): String = if (prefs.apiKey.isNullOrBlank()) "Add API key for costs" else ""
+    private fun costHint(): String = if (!prefs.hasCosts) "Add API key for costs" else ""
 
     /** "8.42 kWh · £2.10": the amount bold, the cost in the secondary colour. */
     private fun ledger(id: Int, amount: String, cost: String?) {
@@ -521,9 +552,9 @@ class MainActivity : Activity() {
         val message = findViewById<TextView>(R.id.usageMessage)
         val content = findViewById<View>(R.id.usageContent)
         val d = Insights(this).load()
-        if (prefs.apiKey.isNullOrBlank() && !prefs.devMode || d == null) {
+        if (!prefs.hasCosts && !prefs.devMode || d == null) {
             message.visibility = View.VISIBLE
-            message.setText(if (prefs.apiKey.isNullOrBlank() && !prefs.devMode) R.string.insights_need_key else R.string.insights_waiting)
+            message.setText(if (!prefs.hasCosts && !prefs.devMode) R.string.insights_need_key else R.string.insights_waiting)
             content.visibility = View.GONE
             findViewById<View>(R.id.usageNav).visibility = View.GONE
             return
@@ -845,6 +876,8 @@ class MainActivity : Activity() {
     private val relayUrl by lazy { findViewById<EditText>(R.id.relayUrl) }
     private val swLive by lazy { findViewById<Switch>(R.id.swLive) }
     private val swBoot by lazy { findViewById<Switch>(R.id.swBoot) }
+    /** Device | Light | Dark, in ThemeMode order. */
+    private val themeButtons = listOf(R.id.themeDevice, R.id.themeLight, R.id.themeDark)
     private val swWidgetApp by lazy { findViewById<Switch>(R.id.swWidgetApp) }
 
     private fun setUpSettings() {
@@ -878,6 +911,14 @@ class MainActivity : Activity() {
             }
         }
         swBoot.setOnCheckedChangeListener { _, on -> if (!loading) prefs.startOnBoot = on }
+        themeButtons.forEachIndexed { mode, id ->
+            findViewById<View>(id).setOnClickListener {
+                if (prefs.theme != mode) {
+                    prefs.theme = mode
+                    recreate()   // redraw everything in the new colours
+                }
+            }
+        }
         swWidgetApp.setOnCheckedChangeListener { _, on ->
             if (!loading) { prefs.widgetOpensApp = on; OctopusWidget.updateAll(this) }
         }
@@ -942,6 +983,14 @@ class MainActivity : Activity() {
         if (!relayUrl.hasFocus()) relayUrl.setText(prefs.relayUrl.orEmpty())
         swLive.isChecked = prefs.running
         swBoot.isChecked = prefs.startOnBoot
+        themeButtons.forEachIndexed { mode, id ->
+            val on = mode == prefs.theme
+            findViewById<TextView>(id).apply {
+                setBackgroundResource(if (on) R.drawable.bg_segment_on_lg else 0)
+                setTextColor(getColor(if (on) R.color.brand_pink else R.color.text_muted))
+                typeface = Typeface.create("sans-serif-medium", if (on) Typeface.BOLD else Typeface.NORMAL)
+            }
+        }
         swWidgetApp.isChecked = prefs.widgetOpensApp
         findViewById<Switch>(R.id.swUpdates).isChecked = prefs.updateCheck
         updateOptionRows()
@@ -1017,7 +1066,7 @@ class MainActivity : Activity() {
             if (code != null && text.toString() != code) text = code
         }
         setIfChanged(R.id.setOpenMetersSub, ins?.tariff?.let { tariffName(it) ?: it }
-            ?: if (prefs.apiKey.isNullOrBlank()) getString(R.string.insights_need_key) else "—")
+            ?: if (!prefs.hasCosts) getString(R.string.insights_need_key) else "—")
         setIfChanged(R.id.setOpenConnectionSub, getString(R.string.set_connection_sub))
         setIfChanged(R.id.setOpenPrefsSub, getString(R.string.set_prefs_sub))
         setIfChanged(R.id.setMpan, ins?.mpan?.let { meterNumber(it, intArrayOf(2, 4, 4, 3)) } ?: "—")
@@ -1031,7 +1080,7 @@ class MainActivity : Activity() {
         ).joinToString(" · ").ifEmpty { "—" })
         findViewById<TextView>(R.id.setMetersHelp).apply {
             when {
-                prefs.apiKey.isNullOrBlank() -> { visibility = View.VISIBLE; setText(R.string.insights_need_key) }
+                !prefs.hasCosts -> { visibility = View.VISIBLE; setText(R.string.insights_need_key) }
                 ins?.mpan != null -> { visibility = View.VISIBLE; setText(R.string.set_meters_help) }
                 else -> visibility = View.GONE
             }
@@ -1181,6 +1230,7 @@ class MainActivity : Activity() {
     companion object {
         private const val REQ_NOTIFY = 1
         private const val K_TAB = "tab"
+        private const val K_SECTION = "settingsSection"
         private const val K_USAGE_GAS = "usageChartGas"
         private const val K_USAGE_PERIOD = "usagePeriod"
         const val EXTRA_TAB = "tab"

@@ -9,10 +9,14 @@
     <color name="brand_live_green">#FF00E676</color>
 
     <!-- Light Mode Screen & Card Surfaces -->
-    <color name="app_bg">#FFF6F6F8</color>
+    <color name="app_bg">#FFF1F3F8</color>
     <color name="card_surface">#FFFFFFFF</color>
-    <color name="card_stroke">#FFE9E9EE</color>
-    <color name="divider_subtle">#FFEFEFF3</color>
+    <color name="card_stroke">#FFE4E7EF</color>
+    <color name="divider_subtle">#FFECEEF4</color>
+    <!-- Cards fade gently from top to bottom (glow dashboard) -->
+    <color name="card_top">#FFFFFFFF</color>
+    <color name="card_bottom">#FFF7F8FC</color>
+    <color name="nav_bar_bg">#FFFFFFFF</color>
 
     <!-- Hero Status Card (Signature Deep Navy in both modes for brand anchor) -->
     <color name="status_card_bg">#FF10002B</color>
@@ -43,6 +47,7 @@
     <color name="elec_low">#FF1FA463</color>
     <color name="elec_mid">#FFE69A00</color>
     <color name="elec_high">#FFE5484D</color>
+    <color name="elec_very_high">#FFA3161D</color>   <!-- the dial's red once it grows to 8 kW or more -->
     <color name="gas_accent">#FFF07A2A</color>
     <color name="gas_banner_bg">#14F07A2A</color>
     <color name="warn_banner_bg">#14E5484D</color>

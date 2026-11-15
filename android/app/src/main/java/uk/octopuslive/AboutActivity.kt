@@ -27,6 +27,11 @@ class AboutActivity : Activity() {
 
     private val dp by lazy { resources.displayMetrics.density }
 
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(newBase)
+        ThemeMode.apply(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val column = LinearLayout(this).apply {

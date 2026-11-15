@@ -60,11 +60,13 @@ class OctopusApi(context: Context) {
             try {
                 return fetchFromServer(relay)
             } catch (e: Exception) {
-                // Server unreachable (e.g. away from home): fall back to Octopus, at most once a minute
+                // Server unreachable (e.g. away from home): fall back to Octopus, at most once a minute.
+                // If it answered with a problem of its own, say what it was rather than "offline".
+                val why = if (e is ApiException && e.code == RELAY_SAID) e.message ?: "Relay error" else "Relay offline"
                 val hasKey = !prefs.apiKey.isNullOrBlank()
                 val sinceDirect = System.currentTimeMillis() - prefs.lastDirectAt
-                if (!hasKey) throw ApiException("Relay offline")
-                if (sinceDirect < 60_000L) throw ApiException("Relay offline - using Octopus once a minute")
+                if (!hasKey) throw ApiException(why)
+                if (sinceDirect < 60_000L) throw ApiException("$why - using Octopus once a minute")
             }
         }
         if (prefs.apiKey.isNullOrBlank()) throw ApiException("Add your API key in the app")
@@ -87,7 +89,7 @@ class OctopusApi(context: Context) {
             if (code == 401) throw ApiException("Relay needs ?token=… in its address")
             if (code !in 200..299) throw ApiException("Relay error $code")
             val j = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
-            if (!j.optBoolean("ok", false)) throw ApiException("Server: " + j.optString("status", "not ready"))
+            if (!j.optBoolean("ok", false)) throw ApiException("Relay: " + j.optString("status", "not ready"), RELAY_SAID)
             val zone = ZoneId.systemDefault()
             fun hhmm(s: String?): String? = s?.takeIf { it.isNotBlank() && it != "null" }?.let {
                 try { OffsetDateTime.parse(it).atZoneSameInstant(zone).format(DateTimeFormatter.ofPattern("HH:mm")) } catch (e: Exception) { null }
@@ -107,6 +109,40 @@ class OctopusApi(context: Context) {
                 gasRunSince = if (hasGas) hhmm(j.optString("gasRunSince", null)) else null,
                 readAtMs = epoch(j.optString("readAt", null)),
             )
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    /**
+     * The relay's [path] (e.g. "/api/insights"), keeping its ?token=…. Works for a bare address or
+     * one ending in /api/live; null for any other custom path.
+     */
+    internal fun relayAddress(base: String, path: String): String? {
+        val uri = android.net.Uri.parse(if (base.contains("://")) base else "http://$base")
+        val p = uri.path.orEmpty().trimEnd('/')
+        val prefix = when {
+            p.isEmpty() -> ""
+            p.endsWith("/api/live") -> p.removeSuffix("/api/live")
+            p.endsWith("/api") -> p.removeSuffix("/api")
+            else -> return null
+        }
+        return uri.buildUpon().path(prefix + path).build().toString()
+    }
+
+    /** GET JSON from the relay; null when it doesn't have that address (an older relay or the Worker). */
+    internal fun relayJson(url: String): JSONObject? {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 6_000
+            readTimeout = 15_000
+            setRequestProperty("User-Agent", "OctopusLive-Android")
+        }
+        try {
+            val code = conn.responseCode
+            if (code == 404) return null
+            if (code == 401) throw ApiException("Relay needs ?token=… in its address")
+            if (code !in 200..299) throw ApiException("Relay error $code")
+            return JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
         } finally {
             conn.disconnect()
         }
@@ -404,6 +440,8 @@ class OctopusApi(context: Context) {
 
         const val ENDPOINT = "https://api.octopus.energy/v1/graphql/"
         const val NO_GAS = "none"
+        /** ApiException code: the relay answered, but reported a problem (so it isn't offline). */
+        const val RELAY_SAID = "RELAY"
         const val GAS_EVERY_MS = 30 * 60 * 1000L
         const val SYNC_EVERY_MS = 30 * 60 * 1000L
         const val GAS_ON_WH = 100.0   // a half-hour with at least this much gas (0.2 kW average) counts as "on"

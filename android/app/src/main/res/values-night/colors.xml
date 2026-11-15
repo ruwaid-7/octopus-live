@@ -9,10 +9,14 @@
     <color name="brand_live_green">#FF00E676</color>
 
     <!-- Dark Mode Screen & Card Surfaces (Deep Octopus Cosmic Navy) -->
-    <color name="app_bg">#FF0F0F12</color>
-    <color name="card_surface">#FF19191E</color>
-    <color name="card_stroke">#FF26262D</color>
-    <color name="divider_subtle">#FF232329</color>
+    <color name="app_bg">#FF090C15</color>
+    <color name="card_surface">#FF121828</color>
+    <color name="card_stroke">#FF1E2640</color>
+    <color name="divider_subtle">#FF1A2135</color>
+    <!-- Cards fade from a lifted navy at the top to the deep base at the bottom (glow dashboard) -->
+    <color name="card_top">#FF161E33</color>
+    <color name="card_bottom">#FF0F1422</color>
+    <color name="nav_bar_bg">#FF121828</color>
 
     <!-- Hero Status Card (Elevated Midnight Violet) -->
     <color name="status_card_bg">#FF1E0B42</color>
@@ -20,9 +24,9 @@
     <color name="status_card_text">#FFFFFFFF</color>
 
     <!-- Input Fields (Dark Mode) -->
-    <color name="input_bg">#FF141418</color>
-    <color name="input_bg_focused">#FF19191E</color>
-    <color name="input_stroke">#FF2E2E36</color>
+    <color name="input_bg">#FF0D1220</color>
+    <color name="input_bg_focused">#FF121828</color>
+    <color name="input_stroke">#FF26304D</color>
 
     <!-- Typography (Dark Mode) -->
     <color name="text_primary">#FFF4F4F6</color>
@@ -31,9 +35,9 @@
 
     <!-- Buttons (Dark Mode) -->
     <color name="btn_primary_text">#FFFFFFFF</color>
-    <color name="btn_secondary_bg">#FF222228</color>
-    <color name="btn_secondary_bg_pressed">#FF2C2C33</color>
-    <color name="btn_secondary_stroke">#FF2E2E36</color>
+    <color name="btn_secondary_bg">#FF1A2238</color>
+    <color name="btn_secondary_bg_pressed">#FF232D48</color>
+    <color name="btn_secondary_stroke">#FF26304D</color>
     <color name="btn_secondary_text">#FFF4F4F6</color>
 
     <!-- Minimal UI (tabs, tiles, status) -->
@@ -41,6 +45,7 @@
     <color name="elec_low">#FF3DD68C</color>
     <color name="elec_mid">#FFFFB224</color>
     <color name="elec_high">#FFFF6369</color>
+    <color name="elec_very_high">#FFC4232B</color>
     <color name="gas_accent">#FFFF8F4A</color>
     <color name="gas_banner_bg">#24FF8F4A</color>
     <color name="warn_banner_bg">#24FF6369</color>
@@ -51,6 +56,6 @@
     <color name="tint_red">#1AFF6369</color>
     <color name="tint_orange">#1AFF8F4A</color>
     <color name="tint_pink">#24E8478B</color>
-    <color name="switch_off">#FF3A3A44</color>
+    <color name="switch_off">#FF2E3854</color>
     <color name="evening">#FFC99A2E</color>
 </resources>

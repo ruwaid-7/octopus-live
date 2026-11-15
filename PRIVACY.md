@@ -20,7 +20,7 @@ Octopus Live is a free, open-source app made by an independent developer (ruwaid
 ## Who the app talks to
 
 - Octopus Energy (api.octopus.energy). Your API key is sent to Octopus to sign in, then the app reads your smart meter readings, account details and tariff. Octopus Energy's privacy policy covers what they do: https://octopus.energy/policies/privacy-policy/
-- Your relay, if you add one. The app sends your device link and receives your live readings. A relay is software you run in your own Cloudflare account or on your own server. The developer has no access to it.
+- Your relay, if you add one. The app sends your device link and receives your live readings (and, from a home server relay 1.9 or newer, your costs, prices and history). A relay is software you run in your own Cloudflare account or on your own server. The developer has no access to it.
 - GitHub (api.github.com), once a day, to see if a newer version of the app is out. Nothing about you or your energy is sent: GitHub only sees the request itself, including your internet address, as with any website. Turn it off under Settings → Preferences → Check for updates. GitHub's privacy statement: https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
 - Links you tap (Octopus, Cloudflare, GitHub) open in your browser under those sites' own policies.
 
@@ -29,6 +29,7 @@ The app doesn't send anything anywhere else.
 ## Relays
 
 - A relay stores your API key, account number, device link, sign-in username and a salted hash of your password (never the password itself). The home server keeps these in a settings file on your server. The Cloudflare Worker keeps them in your own Cloudflare account, where Cloudflare's privacy policy also applies: https://www.cloudflare.com/privacypolicy/
+- The home server relay (1.9 and newer) also keeps a record of your usage on your server, in a file called history.db next to its settings: each live reading, half-hourly electricity and gas use, your tariffs and their prices. It never leaves your server except to your own devices. Delete that file to clear it.
 - The relay's web page sets one cookie, ol_session, to keep you signed in for up to 30 days. It's strictly necessary for signing in, so it doesn't need consent. There are no other cookies or trackers. Signing out deletes it.
 - Relay logs show short status messages, such as your account number and connection errors, never your API key or password. Cloudflare's Worker logs, visible only in your Cloudflare account, may record the addresses your devices used, including the device link.
 

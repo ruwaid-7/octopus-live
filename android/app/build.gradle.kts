@@ -11,8 +11,8 @@ android {
         applicationId = "uk.octopuslive.app"
         minSdk = 29          // Android 10+
         targetSdk = 35
-        versionCode = 19
-        versionName = "1.9.3"
+        versionCode = 20
+        versionName = "2.0.0"
         buildConfigField("boolean", "DEV_TOOLS", "false")
     }
 

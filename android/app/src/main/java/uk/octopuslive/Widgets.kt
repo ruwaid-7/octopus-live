@@ -98,8 +98,8 @@ object Widgets {
         val r: Reading? = prefs.loadReading()
         val error: String? = prefs.lastError
         val hasKey = prefs.isConfigured
-        /** Costs, prices and half-hours need the Octopus API key (or test data). */
-        val canCost = !prefs.apiKey.isNullOrBlank() || prefs.devMode
+        /** Costs, prices and half-hours need the Octopus API key, a relay that keeps history, or test data. */
+        val canCost = prefs.hasCosts || prefs.devMode
         val ageMin = if (r != null) (System.currentTimeMillis() - r.fetchedAt) / 60_000 else -1L
         private val loaded = Insights(c).load()
         /** Insights, if they were worked out today (yesterday's "today" figures are no use). */
@@ -160,7 +160,8 @@ object Widgets {
         val watts = r?.demandWatts
         views.setTextViewText(R.id.widgetDemand, if (watts != null) LiveService.formatWatts(watts) else "-- W")
         views.textColour(c, R.id.widgetDemand, levelColour(watts))
-        views.setProgressBar(R.id.widgetBar, BAR_MAX_WATTS, (watts ?: 0).coerceIn(0, BAR_MAX_WATTS), false)
+        val barMax = ArcGaugeView.scaleFor(watts ?: 0).toInt()   // 4 kW, or more when usage is higher
+        views.setProgressBar(R.id.widgetBar, barMax, (watts ?: 0).coerceIn(0, barMax), false)
         views.setTextViewText(R.id.widgetToday, if (r != null) String.format(Locale.UK, "%.2f kWh", r.todayKwh) else "-- kWh")
         views.setTextViewText(R.id.widgetFooter, s.status())
 
@@ -193,14 +194,15 @@ object Widgets {
 
     /** ArcGaugeView with the live number in the middle, as on Home. */
     private fun dialBitmap(c: Context, watts: Int?): Bitmap {
+        val dp = c.resources.displayMetrics.density
         val gauge = ArcGaugeView(c).apply { setWatts(watts) }
         gauge.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED)
         gauge.layout(0, 0, gauge.measuredWidth, gauge.measuredHeight)
-        val bmp = Bitmap.createBitmap(gauge.measuredWidth, gauge.measuredHeight, Bitmap.Config.ARGB_8888)
+        // The speedometer, with the live number underneath it (the needle's hub is in the middle)
+        val bmp = Bitmap.createBitmap(gauge.measuredWidth, gauge.measuredHeight + (56 * dp).toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         gauge.draw(canvas)
 
-        val dp = c.resources.displayMetrics.density
         val (num, unit) = splitWatts(watts)
         val big = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = c.getColor(R.color.text_primary); textSize = 44 * dp
@@ -213,7 +215,7 @@ object Widgets {
         val gap = if (unit.isEmpty()) 0f else 4 * dp
         val width = big.measureText(num) + gap + small.measureText(unit)
         val x = (bmp.width - width) / 2
-        val baseline = 118 * dp   // the dial's centre line, level with the "0" and "4 kW" labels
+        val baseline = bmp.height - 10 * dp   // under the dial
         canvas.drawText(num, x, baseline, big)
         canvas.drawText(unit, x + big.measureText(num) + gap, baseline, small)
         return bmp
@@ -385,7 +387,6 @@ object Widgets {
 
     private fun slotTime(i: Int) = String.format(Locale.UK, "%02d:%02d", i / 2, if (i % 2 == 0) 0 else 30)
 
-    private const val BAR_MAX_WATTS = 4000
     private const val GAS_BAR_MAX_KW = 10.0
 }
 
